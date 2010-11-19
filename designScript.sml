@@ -72,4 +72,28 @@ val SRS_def = Define`
 val SRDelay_def = Define`
   SRDelay m clken t = (clken t = ∃q. t = ((q+1) * (pwr (2,m) * tapDistance)))`
 
+val RSDesign_def = Define`
+  RSDesign (datain, RSum00, RSum01, RSum02, RSum03, RSum04, RSum05,
+                    RSum06, RSum07, RSum08, RSum09, RSum10, RSum11) =
+  ∃shiftin clken1 clken2 clken3 clken4 clken5 tmp.
+  (* added existentially quantified shiftin *)
+  ∀t.
+    (∀i. i < 20 ⇒ (RSum00 t i = datain)) ∧
+    (∀i. i < 20 ⇒ (tmp (t+1) = datain t)) ∧
+    (* change I to i, changed and to AND *)
+    (FullAdderN 21 (datain t, tmp t, RSum01 t, RSum01 t 21)) ∧
+    (* added parenthesis, changed RSSum01 to RSum01 t *)
+    SRDelay 1 clken1 t ∧
+    SRS 22 (clken1,shiftin,RSum02,RSum03) t ∧
+    SRDelay 2 clken2 t ∧
+    SRS 26 (clken2,RSum03,RSum04,RSum05) t ∧
+    SRDelay 3 clken3 t ∧
+    SRS 32 (clken3,RSum05,RSum06,RSum07) t ∧
+    SRDelay 4 clken4 t ∧
+    SRS 36 (clken4,RSum07,RSum08,RSum09) t ∧
+    SRDelay 5 clken5 t ∧
+    SRS 40 (clken5,RSum09,RSum10,RSum11) t
+    (* added clken argument to each SRS above *)
+    (* added t argument to all the above *)`
+
 val _ = export_theory()
