@@ -78,7 +78,9 @@ val RSDesign_def = Define`
   ∃shiftin clken1 clken2 clken3 clken4 clken5 tmp.
   (* added existentially quantified shiftin *)
   ∀t.
-    (∀i. i < 20 ⇒ (RSum00 t i = datain)) ∧
+    (∀i. i < 20 ⇒ (RSum00 i = datain t)) ∧
+    (* removed t argument from RSum00 *)
+    (* added t argument to datain *)
     (∀i. i < 20 ⇒ (tmp (t+1) = datain t)) ∧
     (* change I to i, changed and to AND *)
     (FullAdderN 21 (datain t, tmp t, RSum01 t, RSum01 t 21)) ∧
