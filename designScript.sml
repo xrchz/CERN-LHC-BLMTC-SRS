@@ -7,11 +7,8 @@ val _ = overload_on("tapDistance",``8``)
 val altshift_taps_def = Define`
   altshift_taps n (clken:boolsig,shiftin:wordsig,tap1x:wordsig,tap0x:wordsig) t =
   ∃regs. (∀i. i < n ⇒ (tap1x t i = regs t ((2 * tapDistance) - 1) i)) ∧
-         (* shifted parentheses *)
          (∀i. i < n ⇒ (tap0x t i = regs t ((1 * tapDistance) - 1) i)) ∧
-         (* shifted parentheses *)
          if ¬(clken t) then regs (t+1) = regs t else
-         (* passed t to clken *)
          ∀i. i < n ⇒ ((regs (t+1) 0 i = shiftin t i) ∧
                       (∀j. ((0 < j) ∧ (j < (2 * tapDistance))) ⇒
                              regs (t+1) j i = regs t (j-1) i))`;
@@ -55,14 +52,11 @@ val acc_def = Define`
   acc n (clken:boolsig,data:wordsig,result:wordsig) t =
     ∀i. i < n ⇒
       if ¬(clken t) then result (t+1) = result t else
-      (* passed t to clken *)
       FullAdderN n (data t, result t, result (t+1), result (t+1) n)`;
 
 val SRS_def = Define`
   SRS n (clken:boolsig,shiftin:wordsig,RSlower:wordsig,RSupper:wordsig) t =
-  (* added t to arguments, and passed it along to all calls below *)
     ∃data1x taps1x taps0x accin1x accin0x.
-    (* existentially quantified data1x *)
       altshift_taps n (clken,data1x,taps1x,taps0x) t ∧
       A_minus_B n (data1x,taps1x,accin1x) t ∧
       A_minus_B n (data1x,taps0x,accin0x) t ∧
@@ -75,18 +69,13 @@ val SRDelay_def = Define`
 val RSDesign_def = Define`
   RSDesign (datain, RSum00, RSum01, RSum02, RSum03, RSum04, RSum05,
                     RSum06, RSum07, RSum08, RSum09, RSum10, RSum11) =
-  ∃shiftin clken1 clken2 clken3 clken4 clken5 tmp.
-  (* added existentially quantified shiftin *)
+  ∃clken1 clken2 clken3 clken4 clken5 tmp.
   ∀t.
-    (∀i. i < 20 ⇒ (RSum00 i = datain t)) ∧
-    (* removed t argument from RSum00 *)
-    (* added t argument to datain *)
-    (∀i. i < 20 ⇒ (tmp (t+1) = datain t)) ∧
-    (* change I to i, changed and to AND *)
+    (∀i. i < 20 ⇒ (RSum00 t i = datain t i)) ∧
+    (∀i. i < 20 ⇒ (tmp (t+1) i = datain t i)) ∧
     (FullAdderN 21 (datain t, tmp t, RSum01 t, RSum01 t 21)) ∧
-    (* added parenthesis, changed RSSum01 to RSum01 t *)
     SRDelay 1 clken1 t ∧
-    SRS 22 (clken1,shiftin,RSum02,RSum03) t ∧
+    SRS 22 (clken1,datain,RSum02,RSum03) t ∧
     SRDelay 2 clken2 t ∧
     SRS 26 (clken2,RSum03,RSum04,RSum05) t ∧
     SRDelay 3 clken3 t ∧
@@ -94,8 +83,6 @@ val RSDesign_def = Define`
     SRDelay 4 clken4 t ∧
     SRS 36 (clken4,RSum07,RSum08,RSum09) t ∧
     SRDelay 5 clken5 t ∧
-    SRS 40 (clken5,RSum09,RSum10,RSum11) t
-    (* added clken argument to each SRS above *)
-    (* added t argument to all the above *)`
+    SRS 40 (clken5,RSum09,RSum10,RSum11) t`
 
 val _ = export_theory()
