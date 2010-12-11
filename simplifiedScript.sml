@@ -59,6 +59,8 @@ Call graph, with termination measure:
       (INR (INL (p,n,t))) -> (n,p.width,3))` >>
 srw_tac [][IN_COUNT]);
 
+open listTheory sortingTheory
+
 val source_0_thm = Q.store_thm(
 "source_0_thm",
 `!n t. n <= t ==> (source p 0 n t = p.input (t - n))`,
@@ -74,7 +76,39 @@ qsuff_tac `t - (n + 1) <= z` >- DECIDE_TAC >>
 first_x_assum match_mp_tac >>
 DECIDE_TAC )
 
-(* need more theorems like the above to build the result up slowly *)
+val SIGMA_opposites = Q.store_thm(
+"SIGMA_opposites",
+`(!n. n < w ==> (f1 n = f2 (w - n - 1))) ==> (SIGMA f1 (count w) = SIGMA f2 (count w))`,
+srw_tac [][SUM_IMAGE_eq_SUM_MAP_SET_TO_LIST] >>
+match_mp_tac PERM_SUM >>
+qsuff_tac `PERM (MAP f1 (COUNT_LIST w)) (MAP f2 (REVERSE (COUNT_LIST w)))` >- (
+  qmatch_abbrev_tac `PERM l1 l2 ==> PERM l3 l4` THEN
+  qsuff_tac `PERM l1 l3 /\ PERM l2 l4` >- PROVE_TAC [PERM_SYM,PERM_TRANS] >>
+  srw_tac [][Abbr`l1`,Abbr`l2`,Abbr`l3`,Abbr`l4`] >>
+  match_mp_tac PERM_MAP >>
+  PROVE_TAC [PERM_SET_TO_LIST_count_COUNT_LIST,PERM_REVERSE,PERM_SYM,PERM_TRANS] ) >>
+match_mp_tac PERM_INTRO >>
+match_mp_tac LIST_EQ >>
+srw_tac [][EL_MAP,rich_listTheory.EL_REVERSE,rich_listTheory.LENGTH_COUNT_LIST,rich_listTheory.EL_COUNT_LIST] >>
+`PRE (w - x) < w` by DECIDE_TAC THEN
+fsrw_tac [][rich_listTheory.EL_COUNT_LIST,PRE_SUB1]);
+
+val output_0_thm = Q.store_thm(
+"output_0_thm",
+`!t. p.width <= t ==> (output p 0 t = SIGMA (λx. p.input (t - p.width + x)) (count p.width))`,
+srw_tac [][Slice_def] >>
+match_mp_tac SIGMA_opposites >>
+srw_tac [ARITH_ss][last_update_def] >>
+MAX_SET_elim_tac >>
+srw_tac [ARITH_ss,DNF_ss][NOT_EQUAL_SETS,update_times_def,EXP] >- (
+  qexists_tac `0` >> DECIDE_TAC ) >>
+srw_tac [ARITH_ss][source_0_thm] >>
+AP_TERM_TAC >>
+fsrw_tac [ARITH_ss][ADD1] >>
+qmatch_rename_tac `z = t - (n + 1)` [] >>
+qsuff_tac `t - (n + 1) <= z` >- DECIDE_TAC >>
+first_x_assum match_mp_tac >>
+DECIDE_TAC);
 
 (* Think of a as the period number and (p.width ** (SUC n)) as the size of the period.
    The correctness statement is that the output after period a (delayed by n time steps)
