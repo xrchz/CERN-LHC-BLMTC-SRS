@@ -59,7 +59,10 @@ Call graph, with termination measure:
       (INR (INL (p,n,t))) -> (n,p.width,3))` >>
 srw_tac [][IN_COUNT]);
 
-open listTheory sortingTheory rich_listTheory
+val source_def = Q.store_thm(
+"source_def",
+`(source p n m = if m = 0 then if n = 0 then p.input else output p (n - 1) else SR p n (m - 1))`,
+Cases_on `n` >> Cases_on `m` >> srw_tac [][FUN_EQ_THM,Slice_def] );
 
 val source_0_thm = Q.store_thm(
 "source_0_thm",
@@ -93,6 +96,62 @@ qsuff_tac `t - (n + 1) <= z` >- DECIDE_TAC >>
 first_x_assum match_mp_tac >>
 DECIDE_TAC);
 
+open listTheory sortingTheory rich_listTheory
+
+val sanity = Q.prove(
+`(p.width = 4) /\
+ (p.input 0 = 3) /\
+ (p.input 1 = 7) /\
+ (p.input 2 = 1) /\
+ (p.input 3 = 3) /\
+ (p.input 4 = 6) /\
+ (p.input 5 = 5) /\
+ (p.input 6 = 0) /\
+ (p.input 7 = 9) /\
+ (p.input 8 = 8) /\
+ (p.input 9 = 4) /\
+ (p.input 10 = 6) /\
+ (p.input 11 = 8) /\
+ (p.input 12 = 5) /\
+ (p.input 13 = 2) /\
+ (p.input 14 = 5) /\
+ (p.input 15 = 1) /\
+ (p.input 16 = 1) /\
+ (p.input 17 = 6) ==>
+ (SR p 1 2 17 = 20)`,
+srw_tac [][Slice_def,last_update_def] >>
+MAX_SET_elim_tac >>
+srw_tac [ARITH_ss][update_times_def,NOT_EQUAL_SETS] >>
+fsrw_tac [DNF_ss,ARITH_ss][ADD1,LEFT_ADD_DISTRIB] >>
+qmatch_assum_rename_tac `4 * x + 13 < 18` [] >>
+`1 <= x` by (first_x_assum match_mp_tac >> DECIDE_TAC) >>
+`x = 1` by DECIDE_TAC >>
+srw_tac [][] >> fsrw_tac [][] >> srw_tac [][] >>
+pop_assum (K ALL_TAC) >>
+srw_tac [][source_def] (* SR p 1 1 16 = 20 *) >>
+srw_tac [][Slice_def,last_update_def] >>
+MAX_SET_elim_tac >>
+srw_tac [DNF_ss,ARITH_ss][update_times_def,NOT_EQUAL_SETS,ADD1] >>
+fsrw_tac [DNF_ss,ARITH_ss][ADD1,LEFT_ADD_DISTRIB] >>
+qmatch_assum_rename_tac `4 * x + 9 < 17` [] >>
+`1 <= x` by (first_x_assum match_mp_tac >> DECIDE_TAC) >>
+`x = 1` by DECIDE_TAC >>
+srw_tac [][] >> fsrw_tac [][] >> srw_tac [][] >>
+pop_assum (K ALL_TAC) >>
+srw_tac [][source_def] (* SR p 1 0 12 = 20 *) >>
+srw_tac [][Slice_def,last_update_def] >>
+MAX_SET_elim_tac >>
+srw_tac [DNF_ss,ARITH_ss][update_times_def,NOT_EQUAL_SETS,ADD1] >>
+fsrw_tac [DNF_ss,ARITH_ss][ADD1,LEFT_ADD_DISTRIB] >>
+qmatch_assum_rename_tac `4 * x + 5 < 13` [] >>
+`1 <= x` by (first_x_assum match_mp_tac >> DECIDE_TAC) >>
+`x = 1` by DECIDE_TAC >>
+srw_tac [][] >> fsrw_tac [][] >> srw_tac [][] >>
+pop_assum (K ALL_TAC) >>
+srw_tac [][source_def] (* output p 0 8 = 20 *) >>
+srw_tac [][output_0_thm] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST]);
+
 val SIGMA_opposites = Q.store_thm(
 "SIGMA_opposites",
 `(!n. n < w ==> (f1 n = f2 (w - n - 1))) ==> (SIGMA f1 (count w) = SIGMA f2 (count w))`,
@@ -116,11 +175,6 @@ val output_0_thm_alt = Q.store_thm(
 srw_tac [][output_0_thm] >>
 match_mp_tac SIGMA_opposites >>
 srw_tac [ARITH_ss][]);
-
-val source_def = Q.store_thm(
-"source_def",
-`(source p n m = if m = 0 then if n = 0 then p.input else output p (n - 1) else SR p n (m - 1))`,
-Cases_on `n` >> Cases_on `m` >> srw_tac [][FUN_EQ_THM,Slice_def] );
 
 val ZERO_EXP = Q.store_thm(
 "ZERO_EXP",
@@ -170,7 +224,6 @@ qmatch_rename_tac `z = t - (n + 1)` [] >>
 qsuff_tac `t - (n + 1) <= z` >- DECIDE_TAC >>
 first_x_assum match_mp_tac >>
 DECIDE_TAC);
-
 
 (* Think of a as the period number and (p.width ** (SUC n)) as the size of the period.
    The correctness statement is that the output after period a (delayed by n time steps)
