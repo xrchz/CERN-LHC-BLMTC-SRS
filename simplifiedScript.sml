@@ -261,6 +261,26 @@ fsrw_tac [][NOT_LESS] >- (
   fsrw_tac [][] ) >>
 Cases_on `n` >> srw_tac [ARITH_ss][])
 
+val SR_first = Q.store_thm(
+"SR_first",
+`SR p n m t = if t ≤ m * SUC p.w ** n then 0 else SR p n 0 (t - (m * SUC p.w ** n))`,
+qid_spec_tac `t` >>
+Induct_on `m` >> fsrw_tac [][SR_prev]
+>- (srw_tac [][] >> srw_tac [][Once SR_def]) >>
+qabbrev_tac `b = SUC p.w ** n` >>
+gen_tac >>
+Cases_on `t < n + b` >- (
+  srw_tac [][] >> fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,ADD1] >>
+  match_mp_tac (GSYM SR_0_until) >>
+  srw_tac [ARITH_ss][] ) >>
+Cases_on `t ≤ b + m * b` >-
+  fsrw_tac [ARITH_ss][ADD1] >>
+Cases_on `t ≤ SUC m * b` >- (
+  fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS] >>
+  match_mp_tac SR_0_until >>
+  fsrw_tac [ARITH_ss][ADD1] ) >>
+fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
+
 local open sortingTheory in
 val sanity = Q.prove(
 `(p.w = 3) /\
