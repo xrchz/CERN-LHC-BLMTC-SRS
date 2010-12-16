@@ -62,6 +62,26 @@ srw_tac [ARITH_ss][Once SR_def,Slice_def,update_time_def] >-
   srw_tac [ARITH_ss][ADD1] >>
 Cases_on `t` >> srw_tac [][]);
 
+val SR_0_until = Q.store_thm(
+"SR_0_until",
+`t < n + m * p.width ** n ⇒ (SR p n m t = 0)`,
+qid_spec_tac `t` >> Induct_on `m` >>
+Induct >> srw_tac [][]
+>- srw_tac [][Once SR_def]
+>- (
+  srw_tac [][Once SR_def,update_time_def] >>
+  fsrw_tac [ARITH_ss][ADD1] )
+>- srw_tac [][Once SR_def] >>
+srw_tac [][Once SR_def,update_time_def] >>
+fsrw_tac [ARITH_ss][ADD1] >> srw_tac [][] >>
+fsrw_tac [ARITH_ss][EXP] >>
+srw_tac [][source_def] >>
+first_x_assum match_mp_tac >>
+qmatch_rename_tac `t < n + m * z` [] >>
+qsuff_tac `(x+1) * z <= m * z` >- DECIDE_TAC >>
+match_mp_tac LESS_MONO_MULT >>
+fsrw_tac [][LESS_EQ,ADD1]);
+
 local open sortingTheory in
 val sanity = Q.prove(
 `(p.width = 4) /\
