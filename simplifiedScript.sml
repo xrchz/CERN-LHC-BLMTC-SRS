@@ -127,6 +127,16 @@ qmatch_rename_tac `SUC (t - n) <> SUC z * b` [] >>
 `SUC t <> n + SUC z * b` by PROVE_TAC [] >>
 DECIDE_TAC);
 
+val last_update_zero = Q.store_thm(
+"last_update_zero",
+`(last_update p n t = 0) ⇔ (t < n + (SUC p.w)**n)`,
+srw_tac [][last_update_thm] >>
+fsrw_tac [][NOT_LESS,NOT_LESS_EQUAL] >>
+`(t - n) MOD SUC p.w ** n < SUC p.w ** n` by (
+  match_mp_tac MOD_LESS >>
+  MATCH_ACCEPT_TAC ZERO_LESS_EXP ) >>
+DECIDE_TAC)
+
 val SR_last_update = Q.store_thm(
 "SR_last_update",
 `SR p n m t = SR p n m (last_update p n t)`,
@@ -149,9 +159,111 @@ EQ_TAC >- ACCEPT_TAC update_time_last_update >>
 Induct_on `t` >> srw_tac [][update_time_def,last_update_def] >>
 fsrw_tac [ARITH_ss][update_time_def]);
 
+val last_update_upper_bound = Q.store_thm(
+"last_update_upper_bound",
+`last_update p n t ≤ t`,
+srw_tac [][last_update_thm]);
+
+val last_update_eq_iff_update_time = Q.store_thm(
+"last_update_eq_iff_update_time",
+`(last_update p n t = t) ⇔ (t = 0) ∨ update_time p n t`,
+EQ_TAC >> strip_tac >- (
+  Cases_on `t = 0` >> srw_tac [][] >>
+  qsuff_tac `n + (SUC p.w ** n) ≤ t`
+  >- PROVE_TAC [update_time_last_update_iff] >>
+  qpat_assum `last_update p n t = t` mp_tac >>
+  srw_tac [][last_update_thm] >>
+  fsrw_tac [][NOT_LESS] )
+>- srw_tac [][last_update_thm] >>
+Cases_on `t` >> srw_tac [][last_update_def]);
+
+val update_time_lower_bound = Q.store_thm(
+"update_time_lower_bound",
+`update_time p n t ==> n + SUC p.w ** n ≤ t`,
+ntac 2 (srw_tac [ARITH_ss][update_time_def]));
+
+val last_update_sub1 = Q.store_thm(
+"last_update_sub1",
+`update_time p n t ==> (last_update p n (t - 1) = if n + SUC p.w ** n < t then t - SUC p.w ** n else 0)`,
+strip_tac >>
+imp_res_tac update_time_lower_bound >>
+fsrw_tac [][LESS_OR_EQ] >- (
+  `~(t -1 < n + SUC p.w ** n)` by DECIDE_TAC >>
+  srw_tac [][last_update_thm] >>
+  fsrw_tac [][update_time_def,NOT_LESS] >>
+  qabbrev_tac `b = SUC p.w ** n` >>
+  qsuff_tac `b = 1 + (x * b + b - 1) MOD b` >- srw_tac [ARITH_ss][ADD1,LEFT_ADD_DISTRIB] >>
+  `0 < b` by srw_tac [][Abbr`b`] >>
+  `x * b + b - 1 = x * b + (b - 1)` by DECIDE_TAC >>
+  fsrw_tac [][MOD_MULT] >>
+  srw_tac [ARITH_ss][]) >>
+srw_tac [][last_update_zero] >>
+Cases_on `n` >> srw_tac [ARITH_ss][])
+
+val last_update_mono = Q.store_thm(
+"last_update_mono",
+`x ≤ y ⇒ last_update p n x ≤ last_update p n y`,
+Induct_on `y` >> srw_tac [][] >>
+`(x = SUC y) \/ x <= y` by DECIDE_TAC >>
+fsrw_tac [][] >> srw_tac [][last_update_def] >>
+PROVE_TAC [last_update_upper_bound,LESS_EQ_TRANS]);
+
+val last_update_lower_bound = Q.store_thm(
+"last_update_lower_bound",
+`u ≤ t ∧ update_time p n u ⇒ u ≤ last_update p n t`,
+Induct_on `t` >> srw_tac [][] >>
+srw_tac [][last_update_def] >>
+Cases_on `u = SUC t` >> fsrw_tac [][] >>
+`u ≤ t` by DECIDE_TAC >> fsrw_tac [][]);
+
+val SR_prev = Q.store_thm(
+"SR_prev",
+`SR p n (SUC m) t = if t < n + (SUC p.w) ** n then 0 else SR p n m (t - (SUC p.w) ** n)`,
+srw_tac [][Once SR_last_update] >- (
+  imp_res_tac last_update_zero >>
+  srw_tac [][Once SR_def] ) >>
+fsrw_tac [][NOT_LESS] >>
+imp_res_tac update_time_last_update >>
+srw_tac [][Once SR_def] >>
+fsrw_tac [][last_update_zero]
+>- DECIDE_TAC >>
+srw_tac [][source_def] >>
+fsrw_tac [][NOT_LESS] >> srw_tac [][] >>
+srw_tac [][Once SR_last_update,SimpLHS] >>
+srw_tac [][Once SR_last_update,SimpRHS] >>
+AP_TERM_TAC >>
+srw_tac [][last_update_sub1] >- (
+  srw_tac [][last_update_thm] >>
+  fsrw_tac [ARITH_ss][NOT_LESS] >- (
+    fsrw_tac [][update_time_def] >>
+    qabbrev_tac `b = SUC p.w ** n` >>
+    `n + SUC x * b <= t` by PROVE_TAC [last_update_upper_bound] >>
+    `0 < b` by srw_tac [][Abbr`b`] >>
+    `SUC x * b < 2 * b` by DECIDE_TAC >>
+    Cases_on `x` >> fsrw_tac [ARITH_ss][ADD1] ) >>
+  fsrw_tac [][update_time_def] >>
+  qabbrev_tac `b = SUC p.w ** n` >>
+  `0 < b` by srw_tac [][Abbr`b`] >>
+  `t - (n + b) = (t - n) - b` by DECIDE_TAC >>
+  `b <= t - n` by DECIDE_TAC >>
+  fsrw_tac [][SUB_MOD] ) >>
+srw_tac [][last_update_zero] >>
+fsrw_tac [][NOT_LESS] >- (
+  pop_assum mp_tac >>
+  fsrw_tac [ARITH_ss][update_time_def,ADD1] >>
+  srw_tac [][] >>
+  `x = 0` by DECIDE_TAC >>
+  srw_tac [][] >> fsrw_tac [][GSYM ADD1] >>
+  spose_not_then strip_assume_tac >>
+  fsrw_tac [][NOT_LESS] >>
+  `update_time p n (n + 2 * SUC p.w ** n)` by srw_tac [][update_time_def] >>
+  `n + 2 * SUC p.w ** n <= n + SUC p.w ** n` by PROVE_TAC [last_update_lower_bound] >>
+  fsrw_tac [][] ) >>
+Cases_on `n` >> srw_tac [ARITH_ss][])
+
 local open sortingTheory in
 val sanity = Q.prove(
-`(p.width = 4) /\
+`(p.w = 3) /\
  (p.input 0 = 3) /\
  (p.input 1 = 7) /\
  (p.input 2 = 1) /\
