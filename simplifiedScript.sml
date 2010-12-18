@@ -281,6 +281,68 @@ Cases_on `t ≤ SUC m * b` >- (
   fsrw_tac [ARITH_ss][ADD1] ) >>
 fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
 
+val output_last_update = Q.store_thm(
+"output_last_update",
+`output p n t = output p n (last_update p n t)`,
+srw_tac [][Slice_def,Once SR_last_update])
+
+val output_first = Q.store_thm(
+"output_first",
+`output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
+srw_tac [][Slice_def] >>
+match_mp_tac SUM_IMAGE_CONG >>
+srw_tac [][Once SR_first] >>
+srw_tac [][Once SR_last_update] >- (
+  match_mp_tac (GSYM SR_0_until) >>
+  fsrw_tac [][NOT_LESS_EQUAL] >>
+  full_simp_tac bool_ss [Once (SYM (SPEC_ALL SUB_EQ_0))] >>
+  srw_tac [ARITH_ss][last_update_def] ) >>
+match_mp_tac SR_0_until >>
+fsrw_tac [][NOT_LESS_EQUAL] >>
+match_mp_tac LESS_EQ_LESS_TRANS >>
+qexists_tac `t - x * SUC p.w ** n` >>
+srw_tac [ARITH_ss][last_update_upper_bound] >>
+match_mp_tac LESS_EQ_LESS_TRANS >>
+qexists_tac `n + x * SUC p.w ** n` >>
+srw_tac [][])
+
+val prev1_update_time = Q.store_thm(
+"prev1_update_time",
+`t ≠ n + SUC p.w ** n ∧ update_time p n t ⇒ update_time p n (t - SUC p.w ** n)`,
+srw_tac [][update_time_def] >>
+qabbrev_tac `w = SUC p.w ** n` >>
+qabbrev_tac `a = SUC x` >>
+`a > 0` by srw_tac [][Abbr`a`] >>
+Cases_on `a = 1` >> fsrw_tac [][] >>
+`a > 1` by DECIDE_TAC >>
+`n + a * w - w = n + (a - 1) * w` by srw_tac [ARITH_ss][LEFT_SUB_DISTRIB,LESS_EQ_ADD_SUB] >>
+fsrw_tac [][] >>
+Cases_on `a-1` >> fsrw_tac [ARITH_ss][] >>
+PROVE_TAC [])
+
+val prev_update_time = Q.store_thm(
+"prev_update_time",
+`t > n + z * SUC p.w ** n ∧ update_time p n t ⇒ update_time p n (t - z * SUC p.w ** n)`,
+Induct_on `z` >> srw_tac [][] >>
+fsrw_tac [][] >>
+qabbrev_tac `w = SUC p.w ** n` >>
+srw_tac [][ADD1,RIGHT_ADD_DISTRIB,SUB_PLUS] >>
+unabbrev_all_tac >>
+match_mp_tac prev1_update_time >>
+conj_tac >- (
+  fsrw_tac [ARITH_ss][ADD1] ) >>
+first_x_assum match_mp_tac >>
+fsrw_tac [ARITH_ss][ADD1])
+
+val output_source_at_update_times = Q.store_thm(
+"output_source_at_update_times",
+`update_time p n t ⇒ (output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else source p n 0 (t - m * SUC p.w ** n - 1)) (count (SUC p.w)))`,
+srw_tac [][output_first] >>
+match_mp_tac SUM_IMAGE_CONG >>
+srw_tac [ARITH_ss][Once SR_def] >>
+fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
+imp_res_tac prev_update_time)
+
 local open sortingTheory in
 val sanity = Q.prove(
 `(p.w = 3) /\
