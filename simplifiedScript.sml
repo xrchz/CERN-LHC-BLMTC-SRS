@@ -378,6 +378,46 @@ val update_time_slice_0 = Q.store_thm(
 `update_time p 0 t ⇔ (0 < t)`,
 Cases_on `t` >> srw_tac [ARITH_ss][update_time_def,EQ_IMP_THM])
 
+val output_input_at_update_times = Q.store_thm(
+"output_input_at_update_times",
+`update_time p n t ⇒
+ (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
+map_every qid_spec_tac [`t`,`n`] >>
+Induct >- (
+  fsrw_tac [][output_source_at_update_times] >>
+  fsrw_tac [][update_time_slice_0,EXP,source_0_thm,GSYM ADD1,
+              prim_recTheory.LESS_THM,LESS_OR_EQ,DISJ_SYM] ) >>
+simp_tac bool_ss [output_source_at_update_times] >>
+Cases >- ( srw_tac [][update_time_def] ) >>
+strip_tac >>
+qmatch_assum_rename_tac `update_time p (SUC n) (SUC t)` [] >>
+fsrw_tac [ARITH_ss][source_def,GSYM ADD1] >>
+qmatch_abbrev_tac `X = SIGMA f (count (SUC p.w ** SUC m))` >>
+srw_tac [][EXP] >>
+match_mp_tac EQ_SYM >>
+srw_tac [][Once MULT_SYM] >>
+qunabbrev_tac `X` >>
+match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
+qunabbrev_tac `m` >>
+qx_gen_tac `m` >>
+strip_tac >>
+qunabbrev_tac `f` >>
+srw_tac [][GSYM SUC_ADD_SYM] >- (
+  srw_tac [ARITH_ss][SUM_IMAGE_ZERO] ) >>
+`update_time p n (t - m * SUC p.w ** SUC n)` by (
+  fsrw_tac [ARITH_ss][update_time_def,GSYM SUC_ADD_SYM] >>
+  `m ≤ SUC x` by (
+    srw_tac [][] >> fsrw_tac [ARITH_ss][] ) >>
+  srw_tac [][LESS_EQ_ADD_SUB,GSYM RIGHT_SUB_DISTRIB] >>
+  qexists_tac `PRE ((SUC x - m) * SUC p.w)` >>
+  `0 < ((SUC x - m) * SUC p.w)` by fsrw_tac [ARITH_ss][MULT] >>
+  fsrw_tac [][SUC_PRE,EXP,MULT_ASSOC] ) >>
+first_x_assum (qspec_then `t - m * SUC p.w ** SUC n` mp_tac) >>
+srw_tac [][] >>
+match_mp_tac SUM_IMAGE_CONG >>
+fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
+fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM])
+
 local open sortingTheory in
 val sanity = Q.prove(
 `(p.w = 3) /\
