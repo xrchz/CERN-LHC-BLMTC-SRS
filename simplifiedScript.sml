@@ -87,16 +87,6 @@ val last_update_def = Define
 `(last_update p n 0 = 0) ∧
  (last_update p n (SUC t) = if update_time p n (SUC t) then (SUC t) else last_update p n t)`
 
-val MOD_SUC = Q.store_thm(
-"MOD_SUC",
-`0 < y /\ (SUC x <> (SUC (x DIV y)) * y) ==> ((SUC x) MOD y = SUC (x MOD y))`,
-STRIP_TAC THEN
-MATCH_MP_TAC MOD_UNIQUE THEN
-Q.EXISTS_TAC `x DIV y` THEN
-`x = x DIV y * y + x MOD y` by PROVE_TAC [DIVISION] THEN
-`x MOD y < y` by PROVE_TAC [MOD_LESS] THEN
-FULL_SIMP_TAC arith_ss [ADD1])
-
 val last_update_thm = Q.store_thm(
 "last_update_thm",
 `last_update p n t = if t < n + (SUC p.w)**n then 0 else t - (t-n) MOD (SUC p.w)**n`,
@@ -342,6 +332,51 @@ match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [ARITH_ss][Once SR_def] >>
 fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
 imp_res_tac prev_update_time)
+
+val last_updates_eq = Q.store_thm(
+"last_updates_eq",
+`(if t ≤ n then k + t < n + SUC p.w ** n else k < SUC p.w ** n - (t - n) MOD SUC p.w ** n) ⇔
+ (last_update p n (t + k) = last_update p n t)`,
+Cases_on `t ≤ n` >- (
+  srw_tac [][] >>
+  `0 < SUC p.w ** n` by srw_tac [][] >>
+  `t < n + SUC p.w ** n` by DECIDE_TAC >>
+  fsrw_tac [][SYM last_update_zero] >>
+  srw_tac [ARITH_ss][last_update_zero] ) >>
+fsrw_tac [][] >>
+Cases_on `t < n + SUC p.w ** n` >- (
+  fsrw_tac [][SYM last_update_zero] >>
+  fsrw_tac [ARITH_ss][last_update_zero] ) >>
+`¬(t + k < n + SUC p.w ** n)` by fsrw_tac [ARITH_ss][] >>
+srw_tac [][last_update_thm] >>
+qabbrev_tac `w = SUC p.w ** n` >>
+`0 < w` by srw_tac [][Abbr`w`] >>
+match_mp_tac EQ_SYM >>
+`(t - n) MOD w < w` by PROVE_TAC [MOD_LESS] >>
+match_mp_tac EQ_TRANS >>
+qexists_tac `(t - n) MOD w + k = (t - n + k) MOD w` >>
+conj_tac >- fsrw_tac [ARITH_ss][] >>
+CONV_TAC (LAND_CONV SYM_CONV) >>
+match_mp_tac MOD_LIFT_PLUS_IFF >>
+first_assum ACCEPT_TAC)
+
+val update_time_prev_slice = Q.store_thm(
+"update_time_prev_slice",
+`update_time p (SUC n) (SUC t) ⇒ update_time p n t`,
+srw_tac [][update_time_def] >>
+qabbrev_tac `w = SUC p.w` >>
+qexists_tac `PRE (SUC x * w)` >>
+fsrw_tac [ARITH_ss][EXP] >>
+fsrw_tac [][GSYM SUC_ADD_SYM] >>
+srw_tac [][ADD_SYM] >>
+AP_THM_TAC >> AP_TERM_TAC >>
+match_mp_tac EQ_SYM >>
+srw_tac [ARITH_ss][Abbr`w`,MULT,SUC_PRE])
+
+val update_time_slice_0 = Q.store_thm(
+"update_time_slice_0",
+`update_time p 0 t ⇔ (0 < t)`,
+Cases_on `t` >> srw_tac [ARITH_ss][update_time_def,EQ_IMP_THM])
 
 local open sortingTheory in
 val sanity = Q.prove(
