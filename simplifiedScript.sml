@@ -245,51 +245,7 @@ Cases_on `t ≤ SUC m * b` >- (
   fsrw_tac [ARITH_ss][ADD1] ) >>
 fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
 
-open annotation
-
-local open Parse term_pp_types in
-  val width = 80
-  val exp_rule = {
-    block_style = (NoPhrasing, (PP.INCONSISTENT, 0)),
-    paren_style = OnlyIfNecessary,
-    pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
-    term_name = "**",
-    fixity = Closefix }
-  fun SIGMA_count_printer _ sysprinter {add_string,add_break,...} _ d pps tm = let
-    val sys_add_term = sysprinter (Top,Top,Top) (d-1)
-    fun pp_zero ppf pps x = PP.add_stringsz pps (PP.pp_to_string width ppf x,0)
-    fun add_term tm = pp_zero (EmitTeX.raw_pp_term_as_tex overrides) pps tm
-    val (_,[f,s]) = boolSyntax.strip_comb tm
-    val (m,fm) = dest_abs f
-    val (_,n) = dest_comb s
-  in (add_string "<SUM0>";
-      add_term m;
-      PP.add_stringsz pps ("=0",0);
-      add_string "<SUM1>";
-      add_term n;
-      add_string "<SUM2>";
-      sys_add_term fm)
-  end
-  val sum_user_printer = ("sum_user_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
-  fun rules_around f x = (
-    temp_add_rule exp_rule;
-    temp_add_user_printer sum_user_printer;
-    f x;
-    temp_remove_user_printer "sum_user_printer";
-    temp_remove_termtok {term_name="**",tok="<EXP0>"})
-  fun spaceless s = String.translate (fn #" " => "" | c => String.str c) s
-  fun write_file name ppf =
-    TextIO.output(TextIO.openOut ((spaceless name)^"Proof.tex"), PP.pp_to_string width (fn pps=>fn()=>ppf pps)())
-  val write_proof = rules_around (fn name => write_file name pp_proof)
-  fun write_thm_only thm = rules_around (fn name =>
-    write_file name (fn pps =>
-      (PP.begin_block pps PP.CONSISTENT 0;
-       PP.add_string pps "Theorem: "; PP.add_string pps name;
-       PP.add_newline pps; PP.add_string pps "\\begin{alltt}";
-       EmitTeX.raw_pp_term_as_tex overrides pps (concl thm);
-       PP.add_newline pps; PP.add_string pps "\\end{alltt}"; PP.add_newline pps;
-       PP.end_block pps)))
-end
+open annotation pp
 
 val _ = write_thm_only SR_first "SR First";
 val _ = write_thm_only SR_last_update "SR Last Update";
@@ -552,4 +508,5 @@ ntac 1 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
 srw_tac [][source_def])
 end
 
+val _ = adjoin_rules ()
 val _ = export_theory ()
