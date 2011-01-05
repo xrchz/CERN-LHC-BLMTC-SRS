@@ -64,7 +64,7 @@ val SRS_def = Define`
       acc n (clken,accin0x,RSlower) t`;
 
 val SRDelay_def = Define`
-  SRDelay m clken t = (clken t = ∃q. t = ((q+1) * (pwr (2,m) * tapDistance)))`
+  SRDelay m clken t = (clken t = ∃q. t = ((q+1) * (2 ** m * tapDistance)))`
 
 val RSDesign_def = Define`
   RSDesign (datain, RSum00, RSum01, RSum02, RSum03, RSum04, RSum05,

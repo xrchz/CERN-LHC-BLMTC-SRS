@@ -2,9 +2,6 @@ open HolKernel bossLib Parse
 
 val _ = new_theory "preliminaries"
 
-val pwr_def = Define`
-  pwr (x,y) = if y = 0 then 1 else x * pwr (x,y-1)`;
-
 val _ = type_abbrev("time",``:num``)
 val _ = type_abbrev("word",``:num->bool``)
 val _ = type_abbrev("boolsig",``:time->bool``)

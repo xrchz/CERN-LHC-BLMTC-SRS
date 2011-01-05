@@ -5,7 +5,7 @@ val _ = new_theory "specification"
 val valN_def = Define`
   valN n w =
     if n = 0 then 0 else
-    (if w (n-1) then pwr (2,n-1) else 0) + valN (n-1) w`
+    (if w (n-1) then 2 ** (n-1) else 0) + valN (n-1) w`
 
 val _ = overload_on("val20",``λw. valN 20 w``)
 
