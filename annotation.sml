@@ -27,7 +27,7 @@ val ALL_TAC = Tactical.ALL_TAC
 
 val proof = ref ([] : proof_element list)
 
-fun reset_proof goal = ALL_TAC goal before proof := []
+fun init_proof goal = ALL_TAC goal before proof := [([String "Initial goal:"],Goal goal)]
 
 fun anno_tac predesc goal = ALL_TAC goal before proof := (predesc_to_desc goal predesc,Goal goal) :: !proof
 

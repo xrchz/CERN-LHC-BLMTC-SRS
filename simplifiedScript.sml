@@ -308,7 +308,7 @@ val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
 `update_time p n t ⇒
  (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
-reset_proof >>
+init_proof >>
 map_every qid_spec_tac [`t`,`n`] >>
 anno_subgoals_tac [ST"By Induction on ",Q`n`] Induct >- (
   fsrw_tac [][output_source_at_update_times] >>

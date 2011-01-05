@@ -7,7 +7,7 @@ sig
   val anno_tac          : annotation list -> tactic
   val anno_subgoals_tac : annotation list -> tactic -> tactic
   val anno_final_tac    : annotation list -> tactic -> tactic
-  val reset_proof       : tactic
+  val init_proof        : tactic
   val pp_proof          : PP.ppstream -> unit
   val overrides         : EmitTeX.override_map
 end
