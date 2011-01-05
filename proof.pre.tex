@@ -20,38 +20,45 @@ A proof state consists of what is currently remaining to be proved, then a line 
 \item[Global Parameters:]\hfill
 \begin{itemize}
 \item
-     the width of every slice, encoded as the index, w, of the last shift register
+     the width of every slice, encoded as the index, \HOLtm{p.w}, of the last shift register;\\
+     the total number of shift registers is \HOLtm{SUC p.w = p.w + 1};
 \item
-     the input series, input.
+     the input series, \HOLtm{p.input}.
 \end{itemize}
 \item[Each slice has:]\hfill
 \begin{itemize}
 \item
-     w+1 shift registers, named SR 0, SR 1, ..., SR w;
+     \HOLtm{SUC p.w} shift registers, named \HOLtm{SR p n 0}, \HOLtm{SR p n 1}, ..., \HOLtm{SR p n p.w};
 \item
-     an output register.
+     an output register \HOLtm{output n}.
 \end{itemize}
 \item[Each SR has a source]\hfill
 \begin{itemize}
 \item
-     The source for SR 0 of slice 0 is the global input.
+     The source for \HOLtm{SR p 0 0} of slice \HOLtm{0} is the global input.
 \item
-     The source for SR 0 of slice (SUC n) is the output of slice n.
+     The source for \HOLtm{SR p (SUC n) 0} of slice \HOLtm{SUC n} (the output of slice \HOLtm{n}).
 \item
-     The source for SR (SUC m) is SR m of the same slice.
+     The source for \HOLtm{SR p (SUC n) (SUC m)} is \HOLtm{SR p (SUC n ) m} (of the same slice).
 \end{itemize}
 \item[Each slice updates periodically]\hfill
 \begin{itemize}
 \item
-     Slice n updates at time t iff ∃x. n + ((SUC x) * ((SUC w) ** n))
+     Slice \HOLtm{n} updates at time \HOLtm{t} if and only if \HOLtm{∃x. t = n + ((SUC x) * ((SUC p.w) ** n))}
 \item
-   At time 0, all shift registers have value 0.
+   At time \HOLtm{0}, all shift registers have value \HOLtm{0}.
 \item
    At each update time for its slice, a SR gets the value of its source at the previous time.
 \item
    The output of a slice at some time is the sum of its shift registers at the same time.
 \end{itemize}
 \end{description}
+
+This is all summarized by the folowing theorems.
+\begin{alltt}
+\HOLthm[alltt]{simplified.update_time_def}
+\HOLthm[alltt]{simplified.Slice_def}
+\end{alltt}
 \section*{Some Small Lemmas}
 \input{SRLastUpdateProof.tex}
 \input{SRFirstProof.tex}
