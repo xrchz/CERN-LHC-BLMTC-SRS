@@ -21,6 +21,8 @@ val _ = new_theory "simplified"
 val _ = Hol_datatype`
   parameters = <| w : num ; input : num -> num |>`;
 
+val _ = Parse.overload_on("width",``SUC p.w``)
+
 (* update_time p n t <=> t is an update time for slice n *)
 val update_time_def = Define`
   update_time p n t = ∃x. t = n + ((SUC x) * ((SUC p.w) ** n))`;
