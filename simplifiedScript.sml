@@ -274,7 +274,7 @@ local open Parse term_pp_types in
   fun write_proof name = (
     temp_add_rule exp_rule;
     temp_add_user_printer sum_user_printer;
-    TextIO.output(TextIO.openOut (name^".tex"), PP.pp_to_string width (fn pps=>fn()=>pp_proof pps) ());
+    TextIO.output(TextIO.openOut (name^"Proof.tex"), PP.pp_to_string width (fn pps=>fn()=>pp_proof pps) ());
     temp_remove_user_printer "sum_user_printer";
     temp_remove_termtok {term_name="**",tok="<EXP0>"})
 end
@@ -299,7 +299,7 @@ srw_tac [ARITH_ss][last_update_upper_bound] >>
 match_mp_tac LESS_EQ_LESS_TRANS >>
 qexists_tac `n + x * SUC p.w ** n` >>
 srw_tac [][])
-val _ = write_proof "Output-First";
+val _ = write_proof "OutputFirst";
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
@@ -342,7 +342,7 @@ anno_tac [ST"Remember that SR at an update time equals source at the previous ti
 fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
 anno_final_tac [ST"but this is impossible since we assume ",Q`t`,ST" is an update time"] (
 imp_res_tac prev_update_time))
-val _ = write_proof "Output-Source";
+val _ = write_proof "OutputSource";
 
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
@@ -399,7 +399,7 @@ anno_final_tac [ST"Arithmetic simplification shows the two sums are equal"] (
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))
-val _ = write_proof "Output-Input";
+val _ = write_proof "OutputInput";
 
 val output_last_update = Q.store_thm(
 "output_last_update",
