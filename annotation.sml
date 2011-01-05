@@ -44,6 +44,8 @@ fun ors "<EXP0>" = SOME ("\\ensuremath{\\tt{",0)
   | ors "<SUM2>" = SOME ("}}}}",0)
   | ors _ = NONE
 
+val overrides = ors
+
 fun pp_description_element pps = let
   fun f (String s) = PP.add_string pps s
     | f (Term t) = (

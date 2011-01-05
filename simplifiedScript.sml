@@ -364,30 +364,33 @@ fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))
 val _ = Parse.set_fixity "^" (Parse.Infixr 700)
 val _ = Parse.overload_on("^",``$**``);
 *)
-local open Parse in
+local open Parse term_pp_types in
+val width = 80
 val _ = temp_add_rule {
-  block_style = (AroundEachPhrase, (PP.CONSISTENT, 0)),
+  block_style = (NoPhrasing, (PP.INCONSISTENT, 0)),
   paren_style = OnlyIfNecessary,
   pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
   term_name = "**",
   fixity = Closefix }
 
-fun SIGMA_count_printer _ sysp {add_string,add_break,...} g d _ tm = let
-  val sys = sysp g d
+fun SIGMA_count_printer _ sysprinter {add_string,add_break,...} _ d pps tm = let
+  val sys_add_term = sysprinter (Top,Top,Top) (d-1)
+  fun pp_zero ppf pps x = PP.add_stringsz pps (PP.pp_to_string width ppf x,0)
+  fun add_term tm = pp_zero (EmitTeX.raw_pp_term_as_tex overrides) pps tm
   val (_,[f,s]) = boolSyntax.strip_comb tm
   val (m,fm) = dest_abs f
   val (_,n) = dest_comb s
 in (add_string "<SUM0>";
-    sys m;
-    add_string "=0";
+    add_term m;
+    PP.add_stringsz pps ("=0",0);
     add_string "<SUM1>";
-    sys n;
+    add_term n;
     add_string "<SUM2>";
-    sys fm)
+    sys_add_term fm)
 end
 val _ = temp_add_user_printer("SIGMA_count_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
+val _ = TextIO.output(TextIO.openOut "output-input-at-update-times.tex", PP.pp_to_string width (fn pps=>fn()=>pp_proof pps) ())
 end
-val _ = TextIO.output(TextIO.openOut "output-input-at-update-times.tex", PP.pp_to_string 120 (fn pps=>fn()=>pp_proof pps) ())
 
 val output_last_update = Q.store_thm(
 "output_last_update",
