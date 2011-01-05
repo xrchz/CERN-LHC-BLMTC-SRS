@@ -245,9 +245,44 @@ Cases_on `t ≤ SUC m * b` >- (
   fsrw_tac [ARITH_ss][ADD1] ) >>
 fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
 
+open annotation
+
+local open Parse term_pp_types in
+  val width = 80
+  val exp_rule = {
+    block_style = (NoPhrasing, (PP.INCONSISTENT, 0)),
+    paren_style = OnlyIfNecessary,
+    pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
+    term_name = "**",
+    fixity = Closefix }
+  fun SIGMA_count_printer _ sysprinter {add_string,add_break,...} _ d pps tm = let
+    val sys_add_term = sysprinter (Top,Top,Top) (d-1)
+    fun pp_zero ppf pps x = PP.add_stringsz pps (PP.pp_to_string width ppf x,0)
+    fun add_term tm = pp_zero (EmitTeX.raw_pp_term_as_tex overrides) pps tm
+    val (_,[f,s]) = boolSyntax.strip_comb tm
+    val (m,fm) = dest_abs f
+    val (_,n) = dest_comb s
+  in (add_string "<SUM0>";
+      add_term m;
+      PP.add_stringsz pps ("=0",0);
+      add_string "<SUM1>";
+      add_term n;
+      add_string "<SUM2>";
+      sys_add_term fm)
+  end
+  val sum_user_printer = ("sum_user_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
+  fun write_proof name = (
+    temp_add_rule exp_rule;
+    temp_add_user_printer sum_user_printer;
+    TextIO.output(TextIO.openOut (name^".tex"), PP.pp_to_string width (fn pps=>fn()=>pp_proof pps) ());
+    temp_remove_user_printer "sum_user_printer";
+    temp_remove_termtok {term_name="**",tok="<EXP0>"})
+end
+
 val output_first = Q.store_thm(
 "output_first",
 `output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
+init_proof "Theorem: Output First" >>
 srw_tac [][Slice_def] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [][Once SR_first] >>
@@ -264,6 +299,7 @@ srw_tac [ARITH_ss][last_update_upper_bound] >>
 match_mp_tac LESS_EQ_LESS_TRANS >>
 qexists_tac `n + x * SUC p.w ** n` >>
 srw_tac [][])
+val _ = write_proof "Output-First";
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
@@ -296,13 +332,17 @@ fsrw_tac [ARITH_ss][ADD1])
 val output_source_at_update_times = Q.store_thm(
 "output_source_at_update_times",
 `update_time p n t ⇒ (output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else source p n 0 (t - m * SUC p.w ** n - 1)) (count (SUC p.w)))`,
+init_proof "Theorem: Output Source" >>
 srw_tac [][output_first] >>
+anno_tac [ST"Simplify with Output First"] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [ARITH_ss][Once SR_def] >>
+anno_tac [ST"Remember that SR at an update time equals source at the previous time, so we only consider the case where ",
+          Q`t - x * width ** n`,ST" is not an update time"] >>
 fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
-imp_res_tac prev_update_time)
-
-open annotation
+anno_final_tac [ST"but this is impossible since we assume ",Q`t`,ST" is an update time"] (
+imp_res_tac prev_update_time))
+val _ = write_proof "Output-Source";
 
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
@@ -331,7 +371,7 @@ srw_tac [][Once MULT_SYM] >>
 qunabbrev_tac `X` >>
 anno_tac [ST"Simplify and abbreviate"] >>
 match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
-anno_tac [ST"It suffices to show that each summand on the right is itself a sum of ",Q`width ** m`,ST" values of ",Q`f`] >>
+anno_tac [ST"It suffices (by Sum In Chunks Lemma) to show that each summand on the right is itself a sum of ",Q`width ** m`,ST" values of ",Q`f`] >>
 qunabbrev_tac `m` >>
 qx_gen_tac `m` >>
 strip_tac >>
@@ -359,38 +399,7 @@ anno_final_tac [ST"Arithmetic simplification shows the two sums are equal"] (
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))
-
-(*
-val _ = Parse.set_fixity "^" (Parse.Infixr 700)
-val _ = Parse.overload_on("^",``$**``);
-*)
-local open Parse term_pp_types in
-val width = 80
-val _ = temp_add_rule {
-  block_style = (NoPhrasing, (PP.INCONSISTENT, 0)),
-  paren_style = OnlyIfNecessary,
-  pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
-  term_name = "**",
-  fixity = Closefix }
-
-fun SIGMA_count_printer _ sysprinter {add_string,add_break,...} _ d pps tm = let
-  val sys_add_term = sysprinter (Top,Top,Top) (d-1)
-  fun pp_zero ppf pps x = PP.add_stringsz pps (PP.pp_to_string width ppf x,0)
-  fun add_term tm = pp_zero (EmitTeX.raw_pp_term_as_tex overrides) pps tm
-  val (_,[f,s]) = boolSyntax.strip_comb tm
-  val (m,fm) = dest_abs f
-  val (_,n) = dest_comb s
-in (add_string "<SUM0>";
-    add_term m;
-    PP.add_stringsz pps ("=0",0);
-    add_string "<SUM1>";
-    add_term n;
-    add_string "<SUM2>";
-    sys_add_term fm)
-end
-val _ = temp_add_user_printer("SIGMA_count_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
-val _ = TextIO.output(TextIO.openOut "output-input-at-update-times.tex", PP.pp_to_string width (fn pps=>fn()=>pp_proof pps) ())
-end
+val _ = write_proof "Output-Input";
 
 val output_last_update = Q.store_thm(
 "output_last_update",
