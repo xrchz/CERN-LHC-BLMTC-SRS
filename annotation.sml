@@ -36,21 +36,13 @@ in r before proof := (predesc_to_desc goal predesc, Goals subgoals) :: !proof en
 
 fun anno_final_tac predesc tac goal = tac goal before proof := (predesc_to_desc goal predesc, Done) :: !proof
 
-fun ors "<EXP0>" = SOME ("\\ensuremath{\\tt{",0)
-  | ors "<EXP1>" = SOME ("\\sp{\\tt{",0)
-  | ors "<EXP2>" = SOME ("}}}}",0)
-  | ors "<SUM0>" = SOME ("\\ensuremath{\\tt{\\sum\\sb{\\tt{",1)
-  | ors "<SUM1>" = SOME ("}}\\sp{\\tt{",0)
-  | ors "<SUM2>" = SOME ("}}}}",0)
-  | ors _ = NONE
-
-val overrides = ors
+val overrides = let val m = mungeTools.read_overrides "overrides" in fn x => Binarymap.peek(m,x) end
 
 fun pp_description_element pps = let
   fun f (String s) = PP.add_string pps s
     | f (Term t) = (
         PP.add_string pps "\\texttt{";
-        EmitTeX.raw_pp_term_as_tex ors pps t;
+        EmitTeX.raw_pp_term_as_tex overrides pps t;
         PP.add_string pps "}")
 in f end
 
@@ -66,7 +58,7 @@ fun pp_asl pps = let
     | f n (a::asl) = (
         PP.add_string pps (Int.toString n);
         PP.add_string pps ": ";
-        EmitTeX.raw_pp_term_as_tex ors pps a;
+        EmitTeX.raw_pp_term_as_tex overrides pps a;
         PP.add_newline pps;
         f (n+1) asl )
 in f 0 end
@@ -74,7 +66,7 @@ in f 0 end
 fun pp_goal pps (asl,w) = (
   PP.add_string pps "\\begin{alltt}";
   PP.add_newline pps;
-  EmitTeX.raw_pp_term_as_tex ors pps w;
+  EmitTeX.raw_pp_term_as_tex overrides pps w;
   PP.add_newline pps;
   PP.add_string pps "----------";
   PP.add_newline pps;

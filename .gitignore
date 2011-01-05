@@ -5,5 +5,8 @@
 *.aux
 *.log
 *.pdf
-*Proof.tex
+*.tex
+!*.pre.tex
 *.sty
+*.exe
+*.o
