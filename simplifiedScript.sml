@@ -144,30 +144,10 @@ fsrw_tac [][update_time_def] >>
 first_x_assum (qspec_then `0` mp_tac) >>
 srw_tac [][]);
 
-val update_time_last_update_iff = Q.store_thm(
-"update_time_last_update_iff",
-`n + (SUC p.w ** n) ≤ t ⇔ update_time p n (last_update p n t)`,
-EQ_TAC >- ACCEPT_TAC update_time_last_update >>
-Induct_on `t` >> srw_tac [][update_time_def,last_update_def] >>
-fsrw_tac [ARITH_ss][update_time_def]);
-
 val last_update_upper_bound = Q.store_thm(
 "last_update_upper_bound",
 `last_update p n t ≤ t`,
 srw_tac [][last_update_thm]);
-
-val last_update_eq_iff_update_time = Q.store_thm(
-"last_update_eq_iff_update_time",
-`(last_update p n t = t) ⇔ (t = 0) ∨ update_time p n t`,
-EQ_TAC >> strip_tac >- (
-  Cases_on `t = 0` >> srw_tac [][] >>
-  qsuff_tac `n + (SUC p.w ** n) ≤ t`
-  >- PROVE_TAC [update_time_last_update_iff] >>
-  qpat_assum `last_update p n t = t` mp_tac >>
-  srw_tac [][last_update_thm] >>
-  fsrw_tac [][NOT_LESS] )
->- srw_tac [][last_update_thm] >>
-Cases_on `t` >> srw_tac [][last_update_def]);
 
 val update_time_lower_bound = Q.store_thm(
 "update_time_lower_bound",
@@ -191,14 +171,6 @@ fsrw_tac [][LESS_OR_EQ] >- (
   srw_tac [ARITH_ss][]) >>
 srw_tac [][last_update_zero] >>
 Cases_on `n` >> srw_tac [ARITH_ss][])
-
-val last_update_mono = Q.store_thm(
-"last_update_mono",
-`x ≤ y ⇒ last_update p n x ≤ last_update p n y`,
-Induct_on `y` >> srw_tac [][] >>
-`(x = SUC y) \/ x <= y` by DECIDE_TAC >>
-fsrw_tac [][] >> srw_tac [][last_update_def] >>
-PROVE_TAC [last_update_upper_bound,LESS_EQ_TRANS]);
 
 val last_update_lower_bound = Q.store_thm(
 "last_update_lower_bound",
@@ -273,11 +245,6 @@ Cases_on `t ≤ SUC m * b` >- (
   fsrw_tac [ARITH_ss][ADD1] ) >>
 fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
 
-val output_last_update = Q.store_thm(
-"output_last_update",
-`output p n t = output p n (last_update p n t)`,
-srw_tac [][Slice_def,Once SR_last_update])
-
 val output_first = Q.store_thm(
 "output_first",
 `output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
@@ -335,6 +302,118 @@ srw_tac [ARITH_ss][Once SR_def] >>
 fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
 imp_res_tac prev_update_time)
 
+open annotation
+
+val output_input_at_update_times = Q.store_thm(
+"output_input_at_update_times",
+`update_time p n t ⇒
+ (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
+reset_proof >>
+map_every qid_spec_tac [`t`,`n`] >>
+anno_subgoals_tac [ST"By Induction on ",Q`n`] Induct >- (
+  fsrw_tac [][output_source_at_update_times] >>
+  anno_tac [ST"Using output_source_at_update_times"] >>
+  anno_final_tac [ST"Using source_0_thm"] (
+  fsrw_tac [][EXP,source_0_thm,GSYM ADD1,
+              prim_recTheory.LESS_THM,LESS_OR_EQ,DISJ_SYM])) >>
+simp_tac bool_ss [output_source_at_update_times] >>
+anno_tac [ST"Using output_source_at_update_times"] >>
+Cases >- ( srw_tac [][update_time_def] ) >>
+strip_tac >>
+qmatch_assum_rename_tac `update_time p (SUC n) (SUC t)` [] >>
+anno_tac [ST"Since 0 is not a possible update_time"] >>
+fsrw_tac [ARITH_ss][source_def,GSYM ADD1] >>
+anno_tac [ST"Using source_def"] >>
+qmatch_abbrev_tac `X = SIGMA f (count (SUC p.w ** SUC m))` >>
+srw_tac [][EXP] >>
+match_mp_tac EQ_SYM >>
+srw_tac [][Once MULT_SYM] >>
+qunabbrev_tac `X` >>
+anno_tac [ST"(simplifying and abbreviating)"] >>
+match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
+anno_tac [ST"Using SUM_IMAGE_count_MULT"] >>
+qunabbrev_tac `m` >>
+qx_gen_tac `m` >>
+strip_tac >>
+qunabbrev_tac `f` >>
+anno_tac [ST"(unabbreviating)"] >>
+srw_tac [][GSYM SUC_ADD_SYM] >- (
+  srw_tac [ARITH_ss][SUM_IMAGE_ZERO] ) >>
+anno_tac [ST"When the first expression is 0, the second is clearly a sum of 0s"] >>
+`update_time p n (t - m * SUC p.w ** SUC n)` by (
+  anno_tac [ST"Now prove this so we can use the inductive hypothesis"] >>
+  fsrw_tac [ARITH_ss][update_time_def,GSYM SUC_ADD_SYM] >>
+  anno_tac [ST"By the definition of update_time"] >>
+  `m ≤ SUC x` by (
+    srw_tac [][] >> fsrw_tac [ARITH_ss][] ) >>
+  srw_tac [][LESS_EQ_ADD_SUB,GSYM RIGHT_SUB_DISTRIB] >>
+  anno_tac [ST"(arithmetic simplification)"] >>
+  anno_final_tac [ST"Use ",Q`((SUC x - m) * width) - 1`] (
+  qexists_tac `PRE ((SUC x - m) * SUC p.w)` >>
+  `0 < ((SUC x - m) * SUC p.w)` by fsrw_tac [ARITH_ss][MULT] >>
+  fsrw_tac [][SUC_PRE,EXP,MULT_ASSOC]) ) >>
+first_x_assum (qspec_then `t - m * SUC p.w ** SUC n` mp_tac) >>
+srw_tac [][] >>
+anno_tac [ST"Using the inductive hypothesis"] >>
+anno_final_tac [ST"Then arithmetic simplification shows the two sums are equal"] (
+match_mp_tac SUM_IMAGE_CONG >>
+fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
+fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))
+
+(*
+val _ = Parse.set_fixity "^" (Parse.Infixr 700)
+val _ = Parse.overload_on("^",``$**``);
+*)
+local open Parse in
+val _ = temp_add_rule {
+  block_style = (AroundEachPhrase, (PP.CONSISTENT, 0)),
+  paren_style = OnlyIfNecessary,
+  pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
+  term_name = "**",
+  fixity = Closefix }
+
+fun SIGMA_count_printer _ sysp {add_string,add_break,...} g d _ tm = let
+  val sys = sysp g d
+  val (_,[f,s]) = boolSyntax.strip_comb tm
+  val (m,fm) = dest_abs f
+  val (_,n) = dest_comb s
+in (add_string "<SUM0>";
+    sys m;
+    add_string "=0";
+    add_string "<SUM1>";
+    sys n;
+    add_string "<SUM2>";
+    sys fm)
+end
+val _ = temp_add_user_printer("SIGMA_count_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
+end
+val _ = TextIO.output(TextIO.openOut "output-input-at-update-times.tex", PP.pp_to_string 120 (fn pps=>fn()=>pp_proof pps) ())
+
+val output_last_update = Q.store_thm(
+"output_last_update",
+`output p n t = output p n (last_update p n t)`,
+srw_tac [][Slice_def,Once SR_last_update])
+
+val update_time_last_update_iff = Q.store_thm(
+"update_time_last_update_iff",
+`n + (SUC p.w ** n) ≤ t ⇔ update_time p n (last_update p n t)`,
+EQ_TAC >- ACCEPT_TAC update_time_last_update >>
+Induct_on `t` >> srw_tac [][update_time_def,last_update_def] >>
+fsrw_tac [ARITH_ss][update_time_def]);
+
+val last_update_eq_iff_update_time = Q.store_thm(
+"last_update_eq_iff_update_time",
+`(last_update p n t = t) ⇔ (t = 0) ∨ update_time p n t`,
+EQ_TAC >> strip_tac >- (
+  Cases_on `t = 0` >> srw_tac [][] >>
+  qsuff_tac `n + (SUC p.w ** n) ≤ t`
+  >- PROVE_TAC [update_time_last_update_iff] >>
+  qpat_assum `last_update p n t = t` mp_tac >>
+  srw_tac [][last_update_thm] >>
+  fsrw_tac [][NOT_LESS] )
+>- srw_tac [][last_update_thm] >>
+Cases_on `t` >> srw_tac [][last_update_def]);
+
 val last_updates_eq = Q.store_thm(
 "last_updates_eq",
 `(if t ≤ n then k + t < n + SUC p.w ** n else k < SUC p.w ** n - (t - n) MOD SUC p.w ** n) ⇔
@@ -375,50 +454,18 @@ AP_THM_TAC >> AP_TERM_TAC >>
 match_mp_tac EQ_SYM >>
 srw_tac [ARITH_ss][Abbr`w`,MULT,SUC_PRE])
 
+val last_update_mono = Q.store_thm(
+"last_update_mono",
+`x ≤ y ⇒ last_update p n x ≤ last_update p n y`,
+Induct_on `y` >> srw_tac [][] >>
+`(x = SUC y) \/ x <= y` by DECIDE_TAC >>
+fsrw_tac [][] >> srw_tac [][last_update_def] >>
+PROVE_TAC [last_update_upper_bound,LESS_EQ_TRANS]);
+
 val update_time_slice_0 = Q.store_thm(
 "update_time_slice_0",
 `update_time p 0 t ⇔ (0 < t)`,
 Cases_on `t` >> srw_tac [ARITH_ss][update_time_def,EQ_IMP_THM])
-
-val output_input_at_update_times = Q.store_thm(
-"output_input_at_update_times",
-`update_time p n t ⇒
- (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
-map_every qid_spec_tac [`t`,`n`] >>
-Induct >- (
-  fsrw_tac [][output_source_at_update_times] >>
-  fsrw_tac [][update_time_slice_0,EXP,source_0_thm,GSYM ADD1,
-              prim_recTheory.LESS_THM,LESS_OR_EQ,DISJ_SYM] ) >>
-simp_tac bool_ss [output_source_at_update_times] >>
-Cases >- ( srw_tac [][update_time_def] ) >>
-strip_tac >>
-qmatch_assum_rename_tac `update_time p (SUC n) (SUC t)` [] >>
-fsrw_tac [ARITH_ss][source_def,GSYM ADD1] >>
-qmatch_abbrev_tac `X = SIGMA f (count (SUC p.w ** SUC m))` >>
-srw_tac [][EXP] >>
-match_mp_tac EQ_SYM >>
-srw_tac [][Once MULT_SYM] >>
-qunabbrev_tac `X` >>
-match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
-qunabbrev_tac `m` >>
-qx_gen_tac `m` >>
-strip_tac >>
-qunabbrev_tac `f` >>
-srw_tac [][GSYM SUC_ADD_SYM] >- (
-  srw_tac [ARITH_ss][SUM_IMAGE_ZERO] ) >>
-`update_time p n (t - m * SUC p.w ** SUC n)` by (
-  fsrw_tac [ARITH_ss][update_time_def,GSYM SUC_ADD_SYM] >>
-  `m ≤ SUC x` by (
-    srw_tac [][] >> fsrw_tac [ARITH_ss][] ) >>
-  srw_tac [][LESS_EQ_ADD_SUB,GSYM RIGHT_SUB_DISTRIB] >>
-  qexists_tac `PRE ((SUC x - m) * SUC p.w)` >>
-  `0 < ((SUC x - m) * SUC p.w)` by fsrw_tac [ARITH_ss][MULT] >>
-  fsrw_tac [][SUC_PRE,EXP,MULT_ASSOC] ) >>
-first_x_assum (qspec_then `t - m * SUC p.w ** SUC n` mp_tac) >>
-srw_tac [][] >>
-match_mp_tac SUM_IMAGE_CONG >>
-fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
-fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM])
 
 local open sortingTheory in
 val sanity = Q.prove(
