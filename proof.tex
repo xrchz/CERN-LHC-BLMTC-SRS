@@ -4,7 +4,63 @@
 \usepackage[a4paper,margin=2cm]{geometry}
 \usepackage{parskip}
 \begin{document}
+\section*{Introduction}
+First, a warning about one quirky convention.
+When I write $\sum_{m=0}^b (f m)$ I mean for the variable $m$ to range from $0$ up to but \emph{not including} $b$.
+
+This file contains the statements of a few key lemmas, as well as proof sketches for the important lemmas.
+How to read the proofs?
+Imagine you are trying to prove the statement yourself.
+There are snapshots of the ``proof state'' interspersed with commentary on what to do next to get to the next proof state.
+A proof state consists of what is currently remaining to be proved, then a line of dashes (\texttt{----------}) then a numbered list of assumptions that are currently being assumed.
+(Note: sometimes we might be proving a subsidiary goal, and the proof state of the whole goal isn't printed until that subgoal is finished; I try to make this clear with the commentary.)
+
+\section*{The Model}
+\begin{description}
+\item[Global Parameters:]\hfill
+\begin{itemize}
+\item
+     the width of every slice, encoded as the index, w, of the last shift register
+\item
+     the input series, input.
+\end{itemize}
+\item[Each slice has:]\hfill
+\begin{itemize}
+\item
+     w+1 shift registers, named SR 0, SR 1, ..., SR w;
+\item
+     an output register.
+\end{itemize}
+\item[Each SR has a source]\hfill
+\begin{itemize}
+\item
+     The source for SR 0 of slice 0 is the global input.
+\item
+     The source for SR 0 of slice (SUC n) is the output of slice n.
+\item
+     The source for SR (SUC m) is SR m of the same slice.
+\end{itemize}
+\item[Each slice updates periodically]\hfill
+\begin{itemize}
+\item
+     Slice n updates at time t iff ∃x. n + ((SUC x) * ((SUC w) ** n))
+\item
+   At time 0, all shift registers have value 0.
+\item
+   At each update time for its slice, a SR gets the value of its source at the previous time.
+\item
+   The output of a slice at some time is the sum of its shift registers at the same time.
+\end{itemize}
+\end{description}
+\section*{Some Small Lemmas}
+\input{SRLastUpdateProof.tex}
+\input{SRFirstProof.tex}
+\input{SR0UntilProof.tex}
+\section*{Major Lemma 1}
 \input{OutputFirstProof.tex}
+\section*{Major Lemma 2}
 \input{OutputSourceProof.tex}
+\section*{Main Theorem}
+\input{SumInChunksProof.tex}
 \input{OutputInputProof.tex}
 \end{document}
