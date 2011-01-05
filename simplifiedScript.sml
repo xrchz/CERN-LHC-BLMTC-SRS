@@ -308,54 +308,54 @@ val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
 `update_time p n t ⇒
  (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
-init_proof >>
+init_proof "Theorem: Output Input" >>
 map_every qid_spec_tac [`t`,`n`] >>
-anno_subgoals_tac [ST"By Induction on ",Q`n`] Induct >- (
+anno_subgoals_tac [ST"By induction on ",Q`n`] Induct >- (
   fsrw_tac [][output_source_at_update_times] >>
-  anno_tac [ST"Using output_source_at_update_times"] >>
-  anno_final_tac [ST"Using source_0_thm"] (
+  anno_tac [ST"For the base case, use Output Source"] >>
+  anno_final_tac [ST"then remember that the source for slice ",Q`0`,ST" is the global input"] (
   fsrw_tac [][EXP,source_0_thm,GSYM ADD1,
               prim_recTheory.LESS_THM,LESS_OR_EQ,DISJ_SYM])) >>
 simp_tac bool_ss [output_source_at_update_times] >>
-anno_tac [ST"Using output_source_at_update_times"] >>
+anno_tac [ST"For the inductive case, use Output Source"] >>
 Cases >- ( srw_tac [][update_time_def] ) >>
 strip_tac >>
 qmatch_assum_rename_tac `update_time p (SUC n) (SUC t)` [] >>
-anno_tac [ST"Since 0 is not a possible update_time"] >>
+anno_tac [ST"Observe that 0 is not a possible update_time, so replace ",Q`t`,ST" by ",Q`SUC t`] >>
 fsrw_tac [ARITH_ss][source_def,GSYM ADD1] >>
-anno_tac [ST"Using source_def"] >>
+anno_tac [ST"Now remember that the source for slice ",Q`SUC n`,ST" is the output of slice ",Q`n`] >>
 qmatch_abbrev_tac `X = SIGMA f (count (SUC p.w ** SUC m))` >>
 srw_tac [][EXP] >>
 match_mp_tac EQ_SYM >>
 srw_tac [][Once MULT_SYM] >>
 qunabbrev_tac `X` >>
-anno_tac [ST"(simplifying and abbreviating)"] >>
+anno_tac [ST"Simplify and abbreviate"] >>
 match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
-anno_tac [ST"Using SUM_IMAGE_count_MULT"] >>
+anno_tac [ST"It suffices to show that each summand on the right is itself a sum of ",Q`width ** m`,ST" values of ",Q`f`] >>
 qunabbrev_tac `m` >>
 qx_gen_tac `m` >>
 strip_tac >>
 qunabbrev_tac `f` >>
-anno_tac [ST"(unabbreviating)"] >>
+anno_tac [ST"Unabbreviate"] >>
 srw_tac [][GSYM SUC_ADD_SYM] >- (
   srw_tac [ARITH_ss][SUM_IMAGE_ZERO] ) >>
-anno_tac [ST"When the first expression is 0, the second is clearly a sum of 0s"] >>
+anno_tac [ST"Observe that when the first expression is zero, the second is clearly a sum of zeros"] >>
 `update_time p n (t - m * SUC p.w ** SUC n)` by (
   anno_tac [ST"Now prove this so we can use the inductive hypothesis"] >>
   fsrw_tac [ARITH_ss][update_time_def,GSYM SUC_ADD_SYM] >>
-  anno_tac [ST"By the definition of update_time"] >>
+  anno_tac [ST"Remember the definition of an update time"] >>
   `m ≤ SUC x` by (
     srw_tac [][] >> fsrw_tac [ARITH_ss][] ) >>
   srw_tac [][LESS_EQ_ADD_SUB,GSYM RIGHT_SUB_DISTRIB] >>
-  anno_tac [ST"(arithmetic simplification)"] >>
+  anno_tac [ST"Simplify"] >>
   anno_final_tac [ST"Use ",Q`((SUC x - m) * width) - 1`] (
   qexists_tac `PRE ((SUC x - m) * SUC p.w)` >>
   `0 < ((SUC x - m) * SUC p.w)` by fsrw_tac [ARITH_ss][MULT] >>
   fsrw_tac [][SUC_PRE,EXP,MULT_ASSOC]) ) >>
 first_x_assum (qspec_then `t - m * SUC p.w ** SUC n` mp_tac) >>
 srw_tac [][] >>
-anno_tac [ST"Using the inductive hypothesis"] >>
-anno_final_tac [ST"Then arithmetic simplification shows the two sums are equal"] (
+anno_tac [ST"Finally, use the inductive hypothesis"] >>
+anno_final_tac [ST"Arithmetic simplification shows the two sums are equal"] (
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))

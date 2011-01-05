@@ -27,7 +27,7 @@ val ALL_TAC = Tactical.ALL_TAC
 
 val proof = ref ([] : proof_element list)
 
-fun init_proof goal = ALL_TAC goal before proof := [([String "Initial goal:"],Goal goal)]
+fun init_proof s goal = ALL_TAC goal before proof := [([String s, String "\n\n", String "Initial goal:"],Goal goal)]
 
 fun anno_tac predesc goal = ALL_TAC goal before proof := (predesc_to_desc goal predesc,Goal goal) :: !proof
 
@@ -76,7 +76,7 @@ fun pp_goal pps (asl,w) = (
   PP.add_newline pps;
   EmitTeX.raw_pp_term_as_tex ors pps w;
   PP.add_newline pps;
-  PP.add_string pps "\\hrule";
+  PP.add_string pps "----------";
   PP.add_newline pps;
   pp_asl pps asl;
   PP.add_string pps "\\end{alltt}")
@@ -84,10 +84,10 @@ fun pp_goal pps (asl,w) = (
 fun pp_proof_state pps = let
   fun f (Goal g) = pp_goal pps g
     | f (Goals gs) = (
-        PP.add_string pps ((Int.toString(List.length gs))^" subgoals:");
+        PP.add_string pps ("\\\\ "^(Int.toString(List.length gs))^" subgoals:");
         PP.add_newline pps;
         List.app (fn g => (pp_goal pps g; PP.add_newline pps)) gs)
-    | f Done = PP.add_string pps "Done"
+    | f Done = (PP.add_string pps " and we're done."; PP.add_newline pps)
 in f end
 
 fun pp_a_proof pps = let
