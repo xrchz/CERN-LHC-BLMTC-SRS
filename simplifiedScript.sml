@@ -271,26 +271,45 @@ local open Parse term_pp_types in
       sys_add_term fm)
   end
   val sum_user_printer = ("sum_user_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
-  fun write_proof name = (
+  fun rules_around f x = (
     temp_add_rule exp_rule;
     temp_add_user_printer sum_user_printer;
-    TextIO.output(TextIO.openOut (name^"Proof.tex"), PP.pp_to_string width (fn pps=>fn()=>pp_proof pps) ());
+    f x;
     temp_remove_user_printer "sum_user_printer";
     temp_remove_termtok {term_name="**",tok="<EXP0>"})
+  fun spaceless s = String.translate (fn #" " => "" | c => String.str c) s
+  fun write_file name ppf =
+    TextIO.output(TextIO.openOut ((spaceless name)^"Proof.tex"), PP.pp_to_string width (fn pps=>fn()=>ppf pps)())
+  val write_proof = rules_around (fn name => write_file name pp_proof)
+  fun write_thm_only thm = rules_around (fn name =>
+    write_file name (fn pps =>
+      (PP.begin_block pps PP.CONSISTENT 0;
+       PP.add_string pps "Theorem: "; PP.add_string pps name;
+       PP.add_newline pps; PP.add_string pps "\\begin{alltt}";
+       EmitTeX.raw_pp_term_as_tex overrides pps (concl thm);
+       PP.add_newline pps; PP.add_string pps "\\end{alltt}"; PP.add_newline pps;
+       PP.end_block pps)))
 end
+
+val _ = write_thm_only SR_first "SR First";
+val _ = write_thm_only SR_last_update "SR Last Update";
+val _ = write_thm_only SR_0_until "SR 0 Until";
 
 val output_first = Q.store_thm(
 "output_first",
 `output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
 init_proof "Theorem: Output First" >>
 srw_tac [][Slice_def] >>
+anno_tac [ST"Use the definition of the output register"] >>
 match_mp_tac SUM_IMAGE_CONG >>
+anno_subgoals_tac [ST"Use SR First and SR Last Update"] (
 srw_tac [][Once SR_first] >>
-srw_tac [][Once SR_last_update] >- (
+srw_tac [][Once SR_last_update] ) >- (
   match_mp_tac (GSYM SR_0_until) >>
   fsrw_tac [][NOT_LESS_EQUAL] >>
   full_simp_tac bool_ss [Once (SYM (SPEC_ALL SUB_EQ_0))] >>
   srw_tac [ARITH_ss][last_update_def] ) >>
+anno_final_tac [ST"Finally use SR 0 Until"] (
 match_mp_tac SR_0_until >>
 fsrw_tac [][NOT_LESS_EQUAL] >>
 match_mp_tac LESS_EQ_LESS_TRANS >>
@@ -298,8 +317,8 @@ qexists_tac `t - x * SUC p.w ** n` >>
 srw_tac [ARITH_ss][last_update_upper_bound] >>
 match_mp_tac LESS_EQ_LESS_TRANS >>
 qexists_tac `n + x * SUC p.w ** n` >>
-srw_tac [][])
-val _ = write_proof "OutputFirst";
+srw_tac [][]))
+val _ = write_proof "Output First";
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
@@ -342,7 +361,9 @@ anno_tac [ST"Remember that SR at an update time equals source at the previous ti
 fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
 anno_final_tac [ST"but this is impossible since we assume ",Q`t`,ST" is an update time"] (
 imp_res_tac prev_update_time))
-val _ = write_proof "OutputSource";
+val _ = write_proof "Output Source";
+
+val _ = write_thm_only sortingTheory.SUM_IMAGE_count_MULT "Sum In Chunks";
 
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
@@ -371,7 +392,7 @@ srw_tac [][Once MULT_SYM] >>
 qunabbrev_tac `X` >>
 anno_tac [ST"Simplify and abbreviate"] >>
 match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
-anno_tac [ST"It suffices (by Sum In Chunks Lemma) to show that each summand on the right is itself a sum of ",Q`width ** m`,ST" values of ",Q`f`] >>
+anno_tac [ST"It suffices (by Sum In Chunks) to show that each summand on the right is itself a sum of ",Q`width ** m`,ST" values of ",Q`f`] >>
 qunabbrev_tac `m` >>
 qx_gen_tac `m` >>
 strip_tac >>
@@ -399,7 +420,7 @@ anno_final_tac [ST"Arithmetic simplification shows the two sums are equal"] (
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))
-val _ = write_proof "OutputInput";
+val _ = write_proof "Output Input";
 
 val output_last_update = Q.store_thm(
 "output_last_update",
