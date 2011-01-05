@@ -1,2 +1,7 @@
 .HOLMK
 *Theory.*
+*.uo
+*.ui
+*.aux
+*.log
+*.pdf
