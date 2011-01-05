@@ -46,6 +46,14 @@ val Slice_def = tDefine "Slice" `
       (INR (INL (p,n,t))) -> (n,(SUC p.w),t,3))` >>
 srw_tac [][IN_COUNT]);
 
+val output2_def = Define`
+  output2 p (SUC n) (SUC t) =
+  if update_time p (SUC n) (SUC t)
+  then output2 p n t
+       + (output2 p n (SUC t)
+          - SR p (SUC n) p.w (SUC t))
+  else output2 p (SUC n) t`
+
 val source_def = Q.store_thm(
 "source_def",
 `(source p n m t = if m = 0 then if n = 0 then p.input t else output p (n - 1) t else SR p n (m - 1) t)`,
