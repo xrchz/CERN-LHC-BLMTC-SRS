@@ -14,6 +14,9 @@ fun SIGMA_count_printer _ sysprinter {add_string,add_break,...} _ d pps tm = let
   val (_,[f,s]) = strip_comb tm
   val (m,fm) = dest_abs f
   val (_,n) = dest_comb s
+  local open numSyntax Feedback in
+  val n = dest_suc n handle HOL_ERR _ => mk_minus(n,term_of_int 1)
+  end
 in (add_string "<SUM0>";
     add_term m;
     PP.add_stringsz pps ("=0",0);
