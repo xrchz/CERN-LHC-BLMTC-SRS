@@ -1,4 +1,4 @@
-open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory lcsymtacs
+open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory sortingTheory lcsymtacs
 
 val _ = new_theory "simplified"
 
@@ -399,7 +399,7 @@ srw_tac [][EXP] >>
 match_mp_tac EQ_SYM >>
 srw_tac [][Once MULT_SYM] >>
 qunabbrev_tac `X` >>
-match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
+match_mp_tac SUM_IMAGE_count_MULT >>
 qunabbrev_tac `m` >>
 qx_gen_tac `m` >>
 strip_tac >>
@@ -459,7 +459,6 @@ qspec_then `width ** n` imp_res_tac DIVISION >>
 REPEAT (first_x_assum (qspec_then `z` mp_tac)) >>
 srw_tac [ARITH_ss][])
 
-local open sortingTheory in
 val sanity = Q.prove(
 `(p.w = 3) /\
  (p.input 0 = 3) /\
@@ -509,6 +508,5 @@ ntac 2 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
 srw_tac [][source_def] >>
 ntac 1 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
 srw_tac [][source_def])
-end
 
 val _ = export_theory ()
