@@ -7,7 +7,7 @@ proof.tex: munge.exe overrides proof.pre.tex
 	./$< overrides < proof.pre.tex > $@
 munge.exe: simplifiedTheory.uo
 	$(HOLDIR)/src/TeX/mkmunge.exe $(basename $<)
-simplifiedTheory.uo: simplifiedScript.sml
+simplifiedTheory.uo: simplifiedScript.sml annotation.sml annotation.sig pp.sml pp.sig
 	$(HOLMAKE) $@
 .PHONY: clean
 clean:
