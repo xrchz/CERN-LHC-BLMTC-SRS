@@ -1,4 +1,4 @@
-open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory lcsymtacs
+open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory sortingTheory lcsymtacs
 
 val _ = new_theory "simplified"
 
@@ -407,7 +407,7 @@ srw_tac [][EXP] >>
 match_mp_tac EQ_SYM >>
 srw_tac [][Once MULT_SYM] >>
 qunabbrev_tac `X` >>
-match_mp_tac sortingTheory.SUM_IMAGE_count_MULT >>
+match_mp_tac SUM_IMAGE_count_MULT >>
 qunabbrev_tac `m` >>
 qx_gen_tac `m` >>
 strip_tac >>
@@ -428,7 +428,45 @@ match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM])
 
-local open sortingTheory in
+val output_input = Q.store_thm(
+"output_input",
+`update_time p n t ∧ u < (SUC p.w ** n) ⇒
+(output p n (t + u) = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
+srw_tac [][Once output_last_update] >>
+`update_time p n (last_update p n (t + u))` by (
+  fsrw_tac [ARITH_ss][update_time_def,MULT,SYM update_time_last_update_iff] ) >>
+`last_update p n (t + u) = t` by (
+  `t = last_update p n t` by (
+    match_mp_tac EQ_SYM >>
+    srw_tac [][last_update_eq_iff_update_time] ) >>
+  qsuff_tac `last_update p n (t + u) = last_update p n t` >- srw_tac [][] >>
+  srw_tac [][SYM last_updates_eq] >- DECIDE_TAC >>
+  fsrw_tac [][last_update_eq_iff_update_time,update_time_def] >>
+  qmatch_abbrev_tac `u < w - (q * w) MOD w` >>
+  qsuff_tac ` u < w - (q * w + 0) MOD w` >- srw_tac [][] >>
+  `0 < w` by srw_tac [][Abbr`w`] >>
+  srw_tac [][MOD_MULT] ) >>
+srw_tac [][output_input_at_update_times])
+
+val output_0_until = Q.store_thm(
+"output_0_until",
+`t < n + width ** n ⇒ (output p n t = 0)`,
+srw_tac [ARITH_ss][output_first,SUM_IMAGE_ZERO,SR_0_until])
+
+val all_times_covered = Q.store_thm(
+"all_times_covered",
+`t < n + width ** n ∨ ∃v u. update_time p n v ∧ u < (SUC p.w ** n) ∧ (t = v + u)`,
+Cases_on `t < n + width ** n` >>
+fsrw_tac [DNF_ss,ARITH_ss][update_time_def,MULT,NOT_LESS,LESS_EQ_EXISTS] >>
+qmatch_assum_rename_tac `t = n + (z + width ** n)` [] >>
+qexists_tac `z MOD width ** n` >>
+qexists_tac `z DIV width ** n` >>
+srw_tac [ARITH_ss][MOD_LESS] >>
+`0 < width ** n` by srw_tac [][] >>
+qspec_then `width ** n` imp_res_tac DIVISION >>
+REPEAT (first_x_assum (qspec_then `z` mp_tac)) >>
+srw_tac [ARITH_ss][])
+
 val sanity = Q.prove(
 `(p.w = 3) /\
  (p.input 0 = 3) /\
@@ -478,6 +516,5 @@ ntac 2 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
 srw_tac [][source_def] >>
 ntac 1 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
 srw_tac [][source_def])
-end
 
 val _ = export_theory ()
