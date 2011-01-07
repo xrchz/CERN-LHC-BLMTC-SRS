@@ -1,7 +1,7 @@
 structure annotation :> annotation =
 struct
 
-open bossLib
+open bossLib smpp infix >>
 
 datatype proof_state = Goal of goal | Goals of goal list | Done
 
@@ -38,62 +38,65 @@ fun anno_final_tac predesc tac goal = tac goal before proof := (predesc_to_desc 
 
 val overrides = let val m = mungeTools.read_overrides "overrides" in fn x => Binarymap.peek(m,x) end
 
-fun pp_description_element pps = let
-  fun f (String s) = PP.add_string pps s
+type printer = (unit,unit) smpp.t
+
+fun add_tex tm = liftpp (fn pps => EmitTeX.raw_pp_term_as_tex overrides pps tm)
+
+val pp_description_element = let
+  fun f (String s) = add_string s
     | f (Term t) = (
-        PP.add_string pps "\\texttt{";
-        EmitTeX.raw_pp_term_as_tex overrides pps t;
-        PP.add_string pps "}")
+        add_string "\\texttt{" >>
+        add_tex t >>
+        add_string "}")
 in f end
 
-fun pp_description pps = let
-  fun f [] = ()
+val pp_description = let
+  fun f [] = nothing
     | f (d::ds) = (
-        pp_description_element pps d;
+        pp_description_element d >>
         f ds)
 in f end
 
-fun pp_asl pps = let
-  fun f n [] = ()
+val pp_asl = let
+  fun f n [] = nothing
     | f n (a::asl) = (
-        PP.add_string pps (Int.toString n);
-        PP.add_string pps ": ";
-        EmitTeX.raw_pp_term_as_tex overrides pps a;
-        PP.add_newline pps;
+        add_string (Int.toString n) >>
+        add_string ": " >>
+        add_tex a >>
+        add_newline >>
         f (n+1) asl )
 in f 0 end
 
-fun pp_goal pps (asl,w) = (
-  PP.add_string pps "\\begin{alltt}";
-  PP.add_newline pps;
-  EmitTeX.raw_pp_term_as_tex overrides pps w;
-  PP.add_newline pps;
-  PP.add_string pps "----------";
-  PP.add_newline pps;
-  pp_asl pps asl;
-  PP.add_string pps "\\end{alltt}")
+fun pp_goal (asl,w) = (
+  add_string "\\begin{alltt}" >>
+  add_newline >>
+  add_tex w >>
+  add_newline >>
+  add_string "----------" >>
+  add_newline >>
+  pp_asl asl >>
+  add_string "\\end{alltt}")
 
-fun pp_proof_state pps = let
-  fun f (Goal g) = pp_goal pps g
+val pp_proof_state = let
+  fun f (Goal g) = pp_goal g
     | f (Goals gs) = (
-        PP.add_string pps ("\\\\ "^(Int.toString(List.length gs))^" subgoals:");
-        PP.add_newline pps;
-        List.app (fn g => (pp_goal pps g; PP.add_newline pps)) gs)
-    | f Done = (PP.add_string pps " and we're done."; PP.add_newline pps)
+        add_string ("\\\\ "^(Int.toString(List.length gs))^" subgoals:") >>
+        add_newline >>
+        pr_list pp_goal add_newline gs)
+    | f Done = (add_string " and we're done." >> add_newline)
 in f end
 
-fun pp_a_proof pps = let
-  fun f [] = ()
+val pp_a_proof = let
+  fun f [] = nothing
     | f ((desc,state)::xs) =
-      (PP.begin_block pps PP.CONSISTENT 0;
-       pp_description pps desc;
-       PP.add_newline pps;
-       pp_proof_state pps state;
-       PP.add_newline pps;
-       PP.end_block pps;
+      (block PP.CONSISTENT 0 (
+         pp_description desc >>
+         add_newline >>
+         pp_proof_state state >>
+         add_newline ) >>
        f xs)
 in f end
 
-fun pp_proof pps = pp_a_proof pps (List.rev (!proof))
+fun pp_proof () = pp_a_proof (List.rev (!proof))
 
 end
