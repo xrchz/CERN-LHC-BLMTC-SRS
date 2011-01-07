@@ -12,9 +12,12 @@ val infinity = 99999
 fun SIGMA_count_printer _ _ sysprinter {add_string,...} (gp,_,_) d tm = let
   val add_term = sysprinter (gp,Top,Top) (d-1)
   val pp_term = sysprinter (RealTop,RealTop,RealTop) d
-  fun add_0string s = liftpp (fn pps => PP.add_stringsz pps (s,0))
+  fun add_stringsz ssz = liftpp (fn pps => PP.add_stringsz pps ssz)
   fun term_to_string tm info = pp_to_string infinity (pp_term tm) info
-  fun add_0term tm = get_info >- add_0string o (term_to_string tm)
+  fun add_small_term (tm,k) = get_info >- (fn info => let
+    val s = term_to_string tm info
+    val sz = if k = 0 then 0 else Int.max(4,((String.size s) div k)+2)
+  in add_stringsz (s,sz) end)
   val (_,[f,s]) = strip_comb tm
   val (m,fm) = dest_abs f
   val (_,n) = dest_comb s
@@ -22,10 +25,10 @@ fun SIGMA_count_printer _ _ sysprinter {add_string,...} (gp,_,_) d tm = let
   val n = dest_suc n handle HOL_ERR _ => mk_minus(n,term_of_int 1)
   end
 in (add_string "<SUM0>" >>
-    add_0term m >>
-    add_0string "=0" >>
+    add_small_term (m,0) >>
+    add_stringsz ("=0",0) >>
     add_string "<SUM1>" >>
-    add_0term n >>
+    add_small_term (n,5) >>
     add_string "<SUM2>" >>
     add_term fm)
 end
