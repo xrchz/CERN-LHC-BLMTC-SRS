@@ -37,8 +37,8 @@ val write_proof = rules_around (fn name => write_file name (pp_proof()))
 fun write_thm_only thm = rules_around (fn name =>
   write_file name (block PP.CONSISTENT 0 (
      add_string "Theorem: " >> add_string name >>
-     add_newline >> add_string "\\begin{alltt}" >>
+     add_newline >> add_string "\\begin{HOLblock}" >>
      add_tex (concl thm) >>
-     add_newline >> add_string "\\end{alltt}" >> add_newline)))
+     add_newline >> add_string "\\end{HOLblock}" >> add_newline)))
 fun adjoin_rules () = load_rules (add_rule, add_user_printer)
 end

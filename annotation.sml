@@ -45,7 +45,7 @@ fun add_tex tm = liftpp (fn pps => EmitTeX.raw_pp_term_as_tex overrides pps tm)
 val pp_description_element = let
   fun f (String s) = add_string s
     | f (Term t) = (
-        add_string "\\texttt{" >>
+        add_string "\\HOLinline{" >>
         add_tex t >>
         add_string "}")
 in f end
@@ -68,14 +68,14 @@ val pp_asl = let
 in f 0 end
 
 fun pp_goal (asl,w) = (
-  add_string "\\begin{alltt}" >>
+  add_string "\\begin{HOLblock}" >>
   add_newline >>
   add_tex w >>
   add_newline >>
-  add_string "----------" >>
+  add_string "\\HOLAsmSep{}" >>
   add_newline >>
   pp_asl asl >>
-  add_string "\\end{alltt}")
+  add_string "\\end{HOLblock}")
 
 val pp_proof_state = let
   fun f (Goal g) = pp_goal g

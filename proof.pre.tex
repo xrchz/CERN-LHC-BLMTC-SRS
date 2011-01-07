@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage{holtexbasic}
 \usepackage{alltt}
+\newcommand{\HOLAsmSep}{\texttt{----------}}
 \usepackage[a4paper,margin=2cm]{geometry}
 \usepackage{parskip}
 \begin{document}
@@ -11,7 +12,7 @@ This file contains the statements of a few key lemmas, as well as proof sketches
 How to read the proofs?
 Imagine you are trying to prove the statement yourself.
 There are snapshots of the ``proof state'' interspersed with commentary on what to do next to get to the next proof state.
-A proof state consists of what is currently remaining to be proved, then a line of dashes (\texttt{----------}) then a numbered list of assumptions that are currently being assumed.
+A proof state consists of what is currently remaining to be proved, then a line of dashes (\HOLAsmSep{}) then a numbered list of assumptions that are currently being assumed.
 (Note: sometimes we might be proving a subsidiary goal, and the proof state of the whole goal isn't printed until that subgoal is finished; I try to make this clear with the commentary.)
 
 \section*{The Model}
