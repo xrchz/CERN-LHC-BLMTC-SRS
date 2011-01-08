@@ -1,16 +1,19 @@
-structure pp :> pp = struct
+structure ppTools :> ppTools = struct
 open Parse term_pp_types annotation Thm Term boolSyntax smpp infix >> infix >-
+type rule = {
+term_name : string, fixity : fixity,
+pp_elements: pp_element list,
+paren_style : ParenStyle, block_style : PhraseBlockStyle * block_info}
 val exp_rule = {
   block_style = (NoPhrasing, (PP.INCONSISTENT, 0)),
   paren_style = OnlyIfNecessary,
   pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
   term_name = "**",
   fixity = Closefix }
-val exp_name = {term_name="**",tok="<EXP0>"}
 fun pp_to_string w pp a = PP.pp_to_string w (fn pps=>fn()=>()before(pp(a,pps)))()
 val get_info = fupdate Lib.I >- return
 val infinity = 99999
-fun SIGMA_count_printer _ _ sysprinter {add_string,...} (gp,_,_) d tm = let
+fun sum_printer _ _ sysprinter {add_string,...} (gp,_,_) d tm = let
   val add_term = sysprinter (gp,Top,Top) (d-1)
   val pp_term = sysprinter (RealTop,RealTop,RealTop) d
   fun add_stringsz ssz = liftpp (fn pps => PP.add_stringsz pps ssz)
@@ -33,23 +36,16 @@ in (add_string "<SUM0>" >>
     add_string "<SUM2>" >>
     add_term fm)
 end
-val sum_name = "pp.SIGMA_count_printer"
-val sum_rule = (sum_name,``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
-fun load_rules (a1,a2) = (a1 exp_rule; a2 sum_rule)
-fun unload_rules (r1,r2) = (r1 exp_name; r2 sum_name; ())
-fun rules_around f x =
-(load_rules(temp_add_rule,temp_add_user_printer); f x;
- unload_rules(temp_remove_termtok,temp_remove_user_printer))
+val sum_rule = ("ppTools.sum_printer",``SIGMA (λm. f m) (count n)``,sum_printer)
 fun spaceless s = String.translate (fn #" " => "" | c => String.str c) s
 val width = 80
 fun write_file name ppf =
   TextIO.output(TextIO.openOut ((spaceless name)^"Proof.tex"), pp_to_string width ppf ())
-val write_proof = rules_around (fn name => write_file name (pp_proof()))
-fun write_thm_only thm = rules_around (fn name =>
+fun write_proof ors proof = write_file (proof_name proof) (pp_proof_as_tex ors proof)
+fun write_thm_only ors (name,thm) =
   write_file name (block PP.CONSISTENT 0 (
      add_string "Theorem: " >> add_string name >>
      add_newline >> add_string "\\begin{HOLblock}" >>
-     add_tex (concl thm) >>
-     add_newline >> add_string "\\end{HOLblock}" >> add_newline)))
-fun adjoin_rules () = load_rules (add_rule, add_user_printer)
+     pp_term_as_tex ors (concl thm) >>
+     add_newline >> add_string "\\end{HOLblock}" >> add_newline))
 end

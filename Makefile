@@ -5,9 +5,9 @@ proof.pdf: proof.tex
 	pdflatex $<
 proof.tex: munge.exe overrides proof.pre.tex
 	./$< overrides < proof.pre.tex > $@
-munge.exe: simplifiedTheory.uo
+munge.exe: ppTheory.uo
 	$(HOLDIR)/src/TeX/mkmunge.exe $(basename $<)
-simplifiedTheory.uo: simplifiedScript.sml annotation.sml annotation.sig pp.sml pp.sig
+ppTheory.uo: ppScript.sml ppTools.sml ppTools.sig simplifiedScript.sml annotation.sml annotation.sig
 	$(HOLMAKE) $@
 .PHONY: clean
 clean:

@@ -1,4 +1,4 @@
-open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory lcsymtacs
+open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory lcsymtacs annotation
 
 val _ = new_theory "simplified"
 
@@ -245,16 +245,14 @@ Cases_on `t ≤ SUC m * b` >- (
   fsrw_tac [ARITH_ss][ADD1] ) >>
 fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
 
-open annotation pp
+fun anno_store_thm (name,smlname,q,tac) = let
+  val (thm,proof) = anno_prove(name,q,tac)
+  val _ = save_thm(smlname,thm)
+  val _ = LoadableThyData.write_data_update (encode_proofs [proof])
+in thm end
 
-val _ = write_thm_only SR_first "SR First";
-val _ = write_thm_only SR_last_update "SR Last Update";
-val _ = write_thm_only SR_0_until "SR 0 Until";
-
-val output_first = Q.store_thm(
-"output_first",
+val output_first = anno_store_thm("Output First","output_first",
 `output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
-init_proof "Theorem: Output First" >>
 srw_tac [][Slice_def] >>
 anno_tac [ST"Use the definition of the output register"] >>
 match_mp_tac SUM_IMAGE_CONG >>
@@ -274,7 +272,6 @@ srw_tac [ARITH_ss][last_update_upper_bound] >>
 match_mp_tac LESS_EQ_LESS_TRANS >>
 qexists_tac `n + x * SUC p.w ** n` >>
 srw_tac [][]))
-val _ = write_proof "Output First";
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
@@ -304,10 +301,8 @@ conj_tac >- (
 first_x_assum match_mp_tac >>
 fsrw_tac [ARITH_ss][ADD1])
 
-val output_source_at_update_times = Q.store_thm(
-"output_source_at_update_times",
+val output_source_at_update_times = anno_store_thm("Output Source","output_source_at_update_times",
 `update_time p n t ⇒ (output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else source p n 0 (t - m * SUC p.w ** n - 1)) (count (SUC p.w)))`,
-init_proof "Theorem: Output Source" >>
 srw_tac [][output_first] >>
 anno_tac [ST"Simplify with Output First"] >>
 match_mp_tac SUM_IMAGE_CONG >>
@@ -317,15 +312,10 @@ anno_tac [ST"Remember that SR at an update time equals source at the previous ti
 fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
 anno_final_tac [ST"but this is impossible since we assume ",Q`t`,ST" is an update time"] (
 imp_res_tac prev_update_time))
-val _ = write_proof "Output Source";
 
-val _ = write_thm_only sortingTheory.SUM_IMAGE_count_MULT "Sum In Chunks";
-
-val output_input_at_update_times = Q.store_thm(
-"output_input_at_update_times",
+val output_input_at_update_times = anno_store_thm("Output Input","output_input_at_update_times",
 `update_time p n t ⇒
  (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
-init_proof "Theorem: Output Input" >>
 map_every qid_spec_tac [`t`,`n`] >>
 anno_subgoals_tac [ST"By induction on ",Q`n`] Induct >- (
   fsrw_tac [][output_source_at_update_times] >>
@@ -376,7 +366,6 @@ anno_final_tac [ST"Arithmetic simplification shows the two sums are equal"] (
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM]))
-val _ = write_proof "Output Input";
 
 val output_last_update = Q.store_thm(
 "output_last_update",
@@ -508,5 +497,4 @@ ntac 1 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
 srw_tac [][source_def])
 end
 
-val _ = adjoin_rules ()
 val _ = export_theory ()
