@@ -6,6 +6,7 @@ val exp_rule = {
   pp_elements = [TOK "<EXP0>", TM, TOK "<EXP1>", TM, TOK "<EXP2>"],
   term_name = "**",
   fixity = Closefix }
+val exp_name = {term_name="**",tok="<EXP0>"}
 fun pp_to_string w pp a = PP.pp_to_string w (fn pps=>fn()=>()before(pp(a,pps)))()
 val get_info = fupdate Lib.I >- return
 val infinity = 99999
@@ -32,10 +33,13 @@ in (add_string "<SUM0>" >>
     add_string "<SUM2>" >>
     add_term fm)
 end
-val sum_user_printer = ("pp.SIGMA_count_printer",``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
-fun load_rules (a1,a2) = ( a1 exp_rule; a2 sum_user_printer)
-fun unload_rules (r1,r2) = ( r1 "sum_user_printer"; r2 {term_name="**",tok="<EXP0>"})
-fun rules_around f x = (load_rules(temp_add_rule,temp_add_user_printer); f x; unload_rules(temp_remove_user_printer,temp_remove_termtok))
+val sum_name = "pp.SIGMA_count_printer"
+val sum_rule = (sum_name,``SIGMA (λm. f m) (count n)``,SIGMA_count_printer)
+fun load_rules (a1,a2) = (a1 exp_rule; a2 sum_rule)
+fun unload_rules (r1,r2) = (r1 exp_name; r2 sum_name; ())
+fun rules_around f x =
+(load_rules(temp_add_rule,temp_add_user_printer); f x;
+ unload_rules(temp_remove_termtok,temp_remove_user_printer))
 fun spaceless s = String.translate (fn #" " => "" | c => String.str c) s
 val width = 80
 fun write_file name ppf =
