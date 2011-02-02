@@ -73,7 +73,7 @@ in r before proof := (predesc_to_desc goal predesc, Goals subgoals) :: !proof en
 
 fun anno_final_tac predesc tac goal = tac goal before proof := (predesc_to_desc goal predesc, Done) :: !proof
 
-fun init_proof s goal = ALL_TAC goal before proof := [([String "Theorem: s", String "\n\n", String "Initial goal:"],Goal goal)]
+fun init_proof s goal = ALL_TAC goal before proof := [([String "Theorem: ", String s, String "\n\n", String "Initial goal:"],Goal goal)]
 
 fun anno_prove (name,q,tac) = let
   val thm = Q.prove(q, Tactical.THEN(init_proof name,tac))
