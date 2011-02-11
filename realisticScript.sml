@@ -43,7 +43,7 @@ val Slice_def = tDefine "Slice" `
   (output D n x 0 = 0) ∧
   (output D n x (SUC t) =
    if update_time n (SUC t)
-   then ((output D n x t) + (SR D n 0 t)) - (SR D n (tap n x) t)
+   then ((output D n x t) + (source D n 0 t)) - (SR D n (tap n x) t)
    else output D n x t) ∧
   (SR D n m 0 = 0) ∧
   (SR D n m (SUC t) =
@@ -59,6 +59,75 @@ val Slice_def = tDefine "Slice" `
 
 val RS_def = Define`
   (RS D n = output D (n DIV 2) (n MOD 2))`
+
+val output_def = Q.store_thm(
+"output_def",
+`output D n x t = if t = 0 then 0 else if update_time n t then output D n x (t - 1) + source D n 0 (t - 1) - SR D n (tap n x) (t - 1) else output D n x (t - 1)`,
+Cases_on `t` >> srw_tac [][Slice_def])
+
+val SR_def = Q.store_thm(
+"SR_def",
+`SR D n m t = if t = 0 then 0 else if update_time n t then source D n m (t - 1) else SR D n m (t - 1)`,
+Cases_on `t` >> srw_tac [][Slice_def])
+
+val RS1_thm = Q.store_thm(
+"RS1_thm",
+`RS1 D t = if t = 0 then 0 else if t = 1 then 0 else D (t - 1) + D (t - 2)`,
+Cases_on `t` >> simp_tac bool_ss [RS1_def,ONE] >> Cases_on `n` >> simp_tac arith_ss [RS1_def] >>
+simp_tac bool_ss [TWO,ONE] >> srw_tac [ARITH_ss][])
+
+Q.prove(`(!t. D t = t) ==> (RS1 D 26 = 49)`,
+srw_tac [][RS1_thm])
+
+Q.prove(
+`(!t. D t = t) ==>
+ (SR D 1 4 10 = 5)`,
+strip_tac >>
+assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+ntac 5 (srw_tac [][Once SR_def,update_time_def]))
+
+Q.prove(
+`(!t. D t = t) ==>
+ (RS D 2 10 = 44)`,
+strip_tac >>
+assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+ntac 13 (
+ntac 2 (srw_tac [][RS_def,Once output_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,update_time_def])))
+
+Q.prove(`(!t. D t = t) ==> (RS D 2 26 = 172)`,
+strip_tac >>
+assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+ntac 51 (
+ntac 2 (srw_tac [][RS_def,Once output_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,update_time_def])))
+
+val sanity = Q.prove(
+`(!t. D t = t) ==> (RS D 4 9 = 28)`,
+assume_tac (Slice_def |> CONJUNCT2 |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 5 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+strip_tac >>
+ntac 7 (
+ntac 2 (srw_tac [][RS_def,Once output_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,update_time_def]) >>
+srw_tac [][RS1_thm] ))
+
+(* old model from here onwards *)
 
 val output2_def = Define`
   output2 p (SUC n) (SUC t) =
@@ -480,55 +549,5 @@ srw_tac [ARITH_ss][MOD_LESS] >>
 qspec_then `width ** n` imp_res_tac DIVISION >>
 REPEAT (first_x_assum (qspec_then `z` mp_tac)) >>
 srw_tac [ARITH_ss][])
-
-val sanity = Q.prove(
-`(p.w = 3) /\
- (p.input 0 = 3) /\
- (p.input 1 = 7) /\
- (p.input 2 = 1) /\
- (p.input 3 = 3) /\
- (p.input 4 = 6) /\
- (p.input 5 = 5) /\
- (p.input 6 = 0) /\
- (p.input 7 = 9) /\
- (p.input 8 = 8) /\
- (p.input 9 = 4) /\
- (p.input 10 = 6) /\
- (p.input 11 = 8) /\
- (p.input 12 = 5) /\
- (p.input 13 = 2) /\
- (p.input 14 = 5) /\
- (p.input 15 = 1) /\
- (p.input 16 = 1) /\
- (p.input 17 = 6) ==>
- (SR p 1 2 17 = 20)`,
-srw_tac [ARITH_ss][Slice_def,Once SR_def,update_time_def] >>
-srw_tac [ARITH_ss][source_def] >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >-
-(`x < 3 /\ x > 2` by DECIDE_TAC >> DECIDE_TAC) >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >-
-(`x < 3 /\ x > 2` by DECIDE_TAC >> DECIDE_TAC) >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >-
-(`x < 3 /\ x > 2` by DECIDE_TAC >> DECIDE_TAC) >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >>
-srw_tac [][source_def] >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >-
-(`x < 2 /\ x > 1` by DECIDE_TAC >> DECIDE_TAC) >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >-
-(`x < 2 /\ x > 1` by DECIDE_TAC >> DECIDE_TAC) >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >-
-(`x < 2 /\ x > 1` by DECIDE_TAC >> DECIDE_TAC) >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def] >>
-srw_tac [][source_def] >>
-srw_tac [][Slice_def] >>
-srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
-ntac 4 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
-srw_tac [][source_def] >>
-ntac 3 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
-srw_tac [][source_def] >>
-ntac 2 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
-srw_tac [][source_def] >>
-ntac 1 (srw_tac [ARITH_ss][Once SR_def,update_time_def]) >>
-srw_tac [][source_def])
 
 val _ = export_theory ()
