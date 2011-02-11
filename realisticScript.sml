@@ -1,51 +1,64 @@
-open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory integerTheory lcsymtacs
+open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory lcsymtacs
 
 val _ = new_theory "realistic"
 
+val RS0_def = Define`
+  (RS0 D 0 = 0) ∧
+  (RS0 D (SUC t) = D t)`
+
+val RS1_def = Define`
+  (RS1 D 0 = 0) ∧
+  (RS1 D (SUC 0) = 0) ∧
+  (RS1 D (SUC (SUC t)) = D (SUC t) + D t)`
+
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
-  (tap 0 0 = 1) ∧
-  (tap 0 1 = 2) ∧
-  (tap 1 0 = 8) ∧
-  (tap 1 1 = 16) ∧
-  (tap 2 0 = 32) ∧
-  (tap 2 1 = 128) ∧
-  (tap 3 0 = 32) ∧
-  (tap 3 1 = 128) ∧
-  (tap 4 0 = 16) ∧
-  (tap 4 1 = 64) ∧
-  (tap 5 0 = 16) ∧
-  (tap 5 1 = 64)`
+  (tap 1 0 = 8  -1) ∧
+  (tap 1 1 = 16 -1) ∧
+  (tap 2 0 = 32 -1) ∧
+  (tap 2 1 = 128-1) ∧
+  (tap 3 0 = 32 -1) ∧
+  (tap 3 1 = 128-1) ∧
+  (tap 4 0 = 16 -1) ∧
+  (tap 4 1 = 64 -1) ∧
+  (tap 5 0 = 16 -1) ∧
+  (tap 5 1 = 64 -1)`
 
-(* update_time p n t <=> t is an update time for slice n *)
+(* update_time n t <=> t is an update time for slice n *)
 val update_time_def = Define`
-  (update_time p 0 t = 0 < t) ∧
-  (update_time p 1 t = 0 < t) ∧
-  (
+  (update_time 1 t = ((SUC t) MOD 1    =0)) ∧
+  (update_time 2 t = ((SUC t) MOD 2    =0)) ∧
+  (update_time 3 t = ((SUC t) MOD 64   =0)) ∧
+  (update_time 4 t = ((SUC t) MOD 2048 =0)) ∧
+  (update_time 5 t = ((SUC t) MOD 32768=0))`
 
 (* source D n m = the source of input for SR m of slice n *)
 (* output D n x = output x of slice n *)
 (* SR D n m = shift register m of slice n *)
 val Slice_def = tDefine "Slice" `
-  (source D 0 0 = D) ∧
-  (source D 1 0 = D) ∧
-  (source D 2 0 = output D 0 1) ∧
-  (source D (SUC n) 0 = output D n 0) ∧
+  (source D (SUC 0) 0 t = D t) ∧
+  (source D (SUC (SUC 0)) 0 t = RS1 D t) ∧
+  (source D (SUC n) 0 t = output D n 0 t) ∧
   (source D n (SUC m) t = SR D n m t) ∧
-  (output D n x t = SIGMA (λm. SR D n m t) (count (tap n x))) ∧
+  (output D n x 0 = 0) ∧
+  (output D n x (SUC t) =
+   if update_time n (SUC t)
+   then ((output D n x t) + (SR D n 0 t)) - (SR D n (tap n x) t)
+   else output D n x t) ∧
   (SR D n m 0 = 0) ∧
-  (SR D n m (SUC t) = if update_time p n (SUC t)
-                      then source p n m t else SR p n m t)`
+  (SR D n m (SUC t) =
+   if update_time n (SUC t)
+   then source D n m t
+   else SR D n m t)`
 (WF_REL_TAC
 `inv_image ($< LEX $< LEX $< LEX $<)
  (λx. case x of
-      (INL (p,n,m,t)) -> (n,m,t,1) ||
-      (INR (INR (p,n,m,t))) -> (n,m,t,2) ||
-      (INR (INL (p,n,t))) -> (n,(SUC p.w),t,3))` >>
-srw_tac [][IN_COUNT]);
+      (INL (D,n,m,t)) -> (n,m,t,1) ||
+      (INR (INR (D,n,m,t))) -> (n,m,t,2) ||
+      (INR (INL (D,n,x,t))) -> (n,tap n x,t,3))`)
 
 val RS_def = Define`
-  (RS D n = output D (n DIV 2) (n MOD 2)`
+  (RS D n = output D (n DIV 2) (n MOD 2))`
 
 val output2_def = Define`
   output2 p (SUC n) (SUC t) =
