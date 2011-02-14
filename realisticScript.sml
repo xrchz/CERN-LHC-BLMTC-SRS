@@ -13,31 +13,31 @@ val RS1_def = Define`
 
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
-  (tap 1 0 = 8  -1) ∧
-  (tap 1 1 = 16 -1) ∧
+  (tap 0 0 = 8  -1) ∧
+  (tap 0 1 = 16 -1) ∧
+  (tap 1 0 = 32 -1) ∧
+  (tap 1 1 = 128-1) ∧
   (tap 2 0 = 32 -1) ∧
   (tap 2 1 = 128-1) ∧
-  (tap 3 0 = 32 -1) ∧
-  (tap 3 1 = 128-1) ∧
+  (tap 3 0 = 16 -1) ∧
+  (tap 3 1 = 64 -1) ∧
   (tap 4 0 = 16 -1) ∧
-  (tap 4 1 = 64 -1) ∧
-  (tap 5 0 = 16 -1) ∧
-  (tap 5 1 = 64 -1)`
+  (tap 4 1 = 64 -1)`
 
 (* update_time n t <=> t is an update time for slice n *)
 val update_time_def = Define`
-  (update_time 1 t = ((SUC t) MOD 1    =0)) ∧
-  (update_time 2 t = ((SUC t) MOD 2    =0)) ∧
-  (update_time 3 t = ((SUC t) MOD 64   =0)) ∧
-  (update_time 4 t = ((SUC t) MOD 2048 =0)) ∧
-  (update_time 5 t = ((SUC t) MOD 32768=0))`
+  (update_time 0 t = ((SUC t) MOD 1    =0)) ∧
+  (update_time 1 t = ((SUC t) MOD 2    =0)) ∧
+  (update_time 2 t = ((SUC t) MOD 64   =0)) ∧
+  (update_time 3 t = ((SUC t) MOD 2048 =0)) ∧
+  (update_time 4 t = ((SUC t) MOD 32768=0))`
 
 (* source D n m = the source of input for SR m of slice n *)
 (* output D n x = output x of slice n *)
 (* SR D n m = shift register m of slice n *)
 val Slice_def = tDefine "Slice" `
-  (source D (SUC 0) 0 t = D t) ∧
-  (source D (SUC (SUC 0)) 0 t = RS1 D t) ∧
+  (source D 0 0 t = D t) ∧
+  (source D (SUC 0) 0 t = RS1 D t) ∧
   (source D (SUC n) 0 t = output D n 0 t) ∧
   (source D n (SUC m) t = SR D n m t) ∧
   (output D n x 0 = 0) ∧
@@ -58,7 +58,9 @@ val Slice_def = tDefine "Slice" `
       (INR (INL (D,n,x,t))) -> (n,tap n x,t,3))`)
 
 val RS_def = Define`
-  (RS D n = output D (n DIV 2) (n MOD 2))`
+  (RS D 0 = RS0 D) ∧
+  (RS D 1 = RS1 D) ∧
+  (RS D n = output D (n DIV 2 - 1) (n MOD 2))`
 
 val output_def = Q.store_thm(
 "output_def",
@@ -76,84 +78,23 @@ val RS1_thm = Q.store_thm(
 Cases_on `t` >> simp_tac bool_ss [RS1_def,ONE] >> Cases_on `n` >> simp_tac arith_ss [RS1_def] >>
 simp_tac bool_ss [TWO,ONE] >> srw_tac [ARITH_ss][])
 
-Q.prove(`(!t. D t = t) ==> (RS1 D 26 = 49)`,
-srw_tac [][RS1_thm])
-
-Q.prove(
-`(!t. D t = t) ==>
- (SR D 1 4 10 = 5)`,
-strip_tac >>
-assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
-assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
- Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
- SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
- DISCH_ALL |> Q.GEN `m`) >>
-ntac 5 (srw_tac [][Once SR_def,update_time_def]))
-
-Q.prove(
-`(!t. D t = t) ==>
- (RS D 2 10 = 44)`,
-strip_tac >>
-assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
-assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
- Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
- SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
- DISCH_ALL |> Q.GEN `m`) >>
-ntac 13 (
-ntac 2 (srw_tac [][RS_def,Once output_def,update_time_def,tap_def]) >>
-ntac 4 (srw_tac [][Once SR_def,update_time_def])))
-
-Q.prove(`(!t. D t = t) ==> (RS D 2 26 = 172)`,
-strip_tac >>
-assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
-assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
- Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
- SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
- DISCH_ALL |> Q.GEN `m`) >>
-ntac 51 (
-ntac 2 (srw_tac [][RS_def,Once output_def,update_time_def,tap_def]) >>
-ntac 4 (srw_tac [][Once SR_def,update_time_def])))
-
-val sanity = Q.prove(
-`(!t. D t = t) ==> (RS D 4 9 = 28)`,
-assume_tac (Slice_def |> CONJUNCT2 |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
-assume_tac (Slice_def |> funpow 5 CONJUNCT2 |> CONJUNCT1 |>
- Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
- SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
- DISCH_ALL |> Q.GEN `m`) >>
-strip_tac >>
-ntac 7 (
-ntac 2 (srw_tac [][RS_def,Once output_def,update_time_def,tap_def]) >>
-ntac 4 (srw_tac [][Once SR_def,update_time_def]) >>
-srw_tac [][RS1_thm] ))
-
-(* old model from here onwards *)
-
-val output2_def = Define`
-  output2 p (SUC n) (SUC t) =
-  if update_time p (SUC n) (SUC t)
-  then output2 p n t
-       + (output2 p n (SUC t)
-          - SR p (SUC n) p.w (SUC t))
-  else output2 p (SUC n) t`
-
 val source_def = Q.store_thm(
 "source_def",
-`(source p n m t = if m = 0 then if n = 0 then p.input t else output p (n - 1) t else SR p n (m - 1) t)`,
-Cases_on `n` >> Cases_on `m` >> srw_tac [][FUN_EQ_THM,Slice_def] );
+`source D n m t = if m = 0 then if n = 0 then D t else if n = 1 then RS1 D t else output D (n - 1) 0 t else SR D n (m - 1) t`,
+Cases_on `n` >> Cases_on `m` >> srw_tac [][SIMP_RULE (srw_ss()++ARITH_ss) [] Slice_def] >>
+qmatch_rename_tac `source D (SUC a) X Y = Z` ["X","Y","Z"] >>
+Cases_on `a` >> fsrw_tac [][Slice_def])
 
 val SR_def = Q.store_thm(
 "SR_def",
-`SR p n m t = if t = 0 then 0 else if update_time p n t then source p n m (t-1) else SR p n m (t-1)`,
+`SR D n m t = if t = 0 then 0 else if update_time n t then source D n m (t-1) else SR D n m (t-1)`,
 Cases_on `t` >> srw_tac [][Slice_def]);
 
 val source_0_thm = Q.store_thm(
 "source_0_thm",
-`source p 0 n t = if n <= t then p.input (t - n) else 0`,
-qid_spec_tac `t` >> Induct_on `n` >>
-srw_tac [ARITH_ss][Once SR_def,Slice_def,update_time_def] >-
-  srw_tac [ARITH_ss][ADD1] >>
-Cases_on `t` >> srw_tac [][]);
+`source D 0 n t = if n <= t then D (t - n) else 0`,
+qid_spec_tac `t` >> Induct_on `n` >> srw_tac [][source_def] >>
+srw_tac [ARITH_ss][Once SR_def,update_time_def,ADD1])
 
 val SR_0_until = Q.store_thm(
 "SR_0_until",
@@ -549,5 +490,58 @@ srw_tac [ARITH_ss][MOD_LESS] >>
 qspec_then `width ** n` imp_res_tac DIVISION >>
 REPEAT (first_x_assum (qspec_then `z` mp_tac)) >>
 srw_tac [ARITH_ss][])
+
+(* some sanity checks *)
+
+Q.prove(`(!t. D t = t) ==> (RS1 D 26 = 49)`,
+srw_tac [][RS1_thm])
+
+Q.prove(
+`(!t. D t = t) ==>
+ (SR D 0 4 10 = 5)`,
+strip_tac >>
+assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+ntac 5 (srw_tac [][Once SR_def,source_def,update_time_def]))
+
+Q.prove(
+`(!t. D t = t) ==>
+ (RS D 2 10 = 44)`,
+strip_tac >>
+assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+ntac 16 (
+ntac 2 (srw_tac [][RS_def,source_def,Once output_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,update_time_def])))
+
+Q.prove(`(!t. D t = t) ==> (RS D 2 26 = 172)`,
+strip_tac >>
+assume_tac (Slice_def |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+ntac 48 (
+ntac 2 (srw_tac [][RS_def,source_def,Once output_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,update_time_def])))
+
+val sanity = Q.prove(
+`(!t. D t = t) ==> (RS D 4 9 = 28)`,
+assume_tac (Slice_def |> CONJUNCT2 |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
+assume_tac (Slice_def |> funpow 5 CONJUNCT2 |> CONJUNCT1 |>
+ Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
+ SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
+ DISCH_ALL |> Q.GEN `m`) >>
+strip_tac >>
+ntac 8 (
+ntac 2 (srw_tac [][RS_def,source_def,Once output_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,update_time_def]) >>
+srw_tac [][RS1_thm] ))
 
 val _ = export_theory ()
