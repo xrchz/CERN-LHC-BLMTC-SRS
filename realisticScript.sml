@@ -24,13 +24,16 @@ val tap_def = Define`
   (tap 4 0 = 16 -1) ∧
   (tap 4 1 = 64 -1)`
 
+val delay_def = Define`
+  (delay 0 = 1) ∧
+  (delay 1 = 2) ∧
+  (delay 2 = 64) ∧
+  (delay 3 = 2048) ∧
+  (delay 4 = 32768)`
+
 (* update_time n t <=> t is an update time for slice n *)
 val update_time_def = Define`
-  (update_time 0 t = ((SUC t) MOD 1    =0)) ∧
-  (update_time 1 t = ((SUC t) MOD 2    =0)) ∧
-  (update_time 2 t = ((SUC t) MOD 64   =0)) ∧
-  (update_time 3 t = ((SUC t) MOD 2048 =0)) ∧
-  (update_time 4 t = ((SUC t) MOD 32768=0))`
+  update_time n t = (SUC t MOD (delay n) = 0)`
 
 (* source D n m = the source of input for SR m of slice n *)
 (* output D n x = output x of slice n *)
@@ -94,7 +97,7 @@ val source_0_thm = Q.store_thm(
 "source_0_thm",
 `source D 0 n t = if n <= t then D (t - n) else 0`,
 qid_spec_tac `t` >> Induct_on `n` >> srw_tac [][source_def] >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def,ADD1])
+srw_tac [ARITH_ss][Once SR_def,update_time_def,delay_def,ADD1])
 
 val SR_0_until = Q.store_thm(
 "SR_0_until",
@@ -505,7 +508,7 @@ assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
  Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
  SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
  DISCH_ALL |> Q.GEN `m`) >>
-ntac 5 (srw_tac [][Once SR_def,source_def,update_time_def]))
+ntac 5 (srw_tac [][Once SR_def,source_def,delay_def,update_time_def]))
 
 Q.prove(
 `(!t. D t = t) ==>
@@ -517,8 +520,8 @@ assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
  SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
  DISCH_ALL |> Q.GEN `m`) >>
 ntac 16 (
-ntac 2 (srw_tac [][RS_def,source_def,Once output_def,update_time_def,tap_def]) >>
-ntac 4 (srw_tac [][Once SR_def,update_time_def])))
+ntac 2 (srw_tac [][RS_def,source_def,Once output_def,delay_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,delay_def,update_time_def])))
 
 Q.prove(`(!t. D t = t) ==> (RS D 2 26 = 172)`,
 strip_tac >>
@@ -528,8 +531,8 @@ assume_tac (Slice_def |> funpow 4 CONJUNCT2 |> CONJUNCT1 |>
  SIMP_RULE arith_ss [#1(EQ_IMP_RULE SUC_PRE),ASSUME``0<m``,PRE_SUB1] |>
  DISCH_ALL |> Q.GEN `m`) >>
 ntac 48 (
-ntac 2 (srw_tac [][RS_def,source_def,Once output_def,update_time_def,tap_def]) >>
-ntac 4 (srw_tac [][Once SR_def,update_time_def])))
+ntac 2 (srw_tac [][RS_def,source_def,Once output_def,delay_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,delay_def,update_time_def])))
 
 val sanity = Q.prove(
 `(!t. D t = t) ==> (RS D 4 9 = 28)`,
@@ -540,8 +543,8 @@ assume_tac (Slice_def |> funpow 5 CONJUNCT2 |> CONJUNCT1 |>
  DISCH_ALL |> Q.GEN `m`) >>
 strip_tac >>
 ntac 8 (
-ntac 2 (srw_tac [][RS_def,source_def,Once output_def,update_time_def,tap_def]) >>
-ntac 4 (srw_tac [][Once SR_def,update_time_def]) >>
+ntac 2 (srw_tac [][RS_def,source_def,Once output_def,delay_def,update_time_def,tap_def]) >>
+ntac 4 (srw_tac [][Once SR_def,delay_def,update_time_def]) >>
 srw_tac [][RS1_thm] ))
 
 val _ = export_theory ()
