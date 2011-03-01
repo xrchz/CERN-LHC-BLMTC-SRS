@@ -144,8 +144,46 @@ first_x_assum match_mp_tac >>
 fsrw_tac [][prim_recTheory.SUC_LESS])
 
 val last_update_def = Define
-`(last_update p n 0 = 0) ∧
- (last_update p n (SUC t) = if update_time p n (SUC t) then (SUC t) else last_update p n t)`
+`(last_update n 0 = 0) ∧
+ (last_update n (SUC t) = if update_time n (SUC t) then (SUC t) else last_update n t)`
+
+val last_update_upper_bound = Q.store_thm(
+"last_update_upper_bound",
+`last_update n t ≤ t`,
+Induct_on `t` >> srw_tac [ARITH_ss][last_update_def])
+
+val last_update_mono = Q.store_thm(
+"last_update_mono",
+`x ≤ y ⇒ last_update n x ≤ last_update n y`,
+Induct_on `y` >> srw_tac [][] >>
+`(x = SUC y) \/ x <= y` by DECIDE_TAC >>
+fsrw_tac [][] >> srw_tac [][last_update_def] >>
+PROVE_TAC [last_update_upper_bound,LESS_EQ_TRANS]);
+
+val SR_last_update = Q.store_thm(
+"SR_last_update",
+`SR D n m t = SR D n m (last_update n t)`,
+Induct_on `t` >> srw_tac [][last_update_def] >>
+srw_tac [][Once SR_def]);
+
+val update_time_last_update = Q.store_thm(
+"update_time_last_update",
+`0 < delay n ⇒ update_time n (last_update n t)`,
+Induct_on `t` >> srw_tac [][last_update_def] >>
+srw_tac [][update_time_def,ZERO_MOD])
+
+val last_update_zero = Q.store_thm(
+"last_update_zero",
+`0 < delay n ⇒ ((last_update n t = 0) ⇔ (t < delay n))`,
+Induct_on `t` >- srw_tac [][last_update_def] >>
+
+srw_tac [][last_update_def,update_time_def] >-
+srw_tac [][] >- (
+fsrw_tac [][NOT_LESS,NOT_LESS_EQUAL,update_time_def] >>
+`(t - n) MOD SUC p.w ** n < SUC p.w ** n` by (
+  match_mp_tac MOD_LESS >>
+  MATCH_ACCEPT_TAC ZERO_LESS_EXP ) >>
+DECIDE_TAC)
 
 val last_update_thm = Q.store_thm(
 "last_update_thm",
@@ -177,42 +215,12 @@ qmatch_rename_tac `SUC (t - n) <> SUC z * b` [] >>
 `SUC t <> n + SUC z * b` by PROVE_TAC [] >>
 DECIDE_TAC);
 
-val last_update_zero = Q.store_thm(
-"last_update_zero",
-`(last_update p n t = 0) ⇔ (t < n + (SUC p.w)**n)`,
-srw_tac [][last_update_thm] >>
-fsrw_tac [][NOT_LESS,NOT_LESS_EQUAL] >>
-`(t - n) MOD SUC p.w ** n < SUC p.w ** n` by (
-  match_mp_tac MOD_LESS >>
-  MATCH_ACCEPT_TAC ZERO_LESS_EXP ) >>
-DECIDE_TAC)
-
-val SR_last_update = Q.store_thm(
-"SR_last_update",
-`SR p n m t = SR p n m (last_update p n t)`,
-Induct_on `t` >> srw_tac [][last_update_def] >>
-srw_tac [][Once SR_def]);
-
-val update_time_last_update = Q.store_thm(
-"update_time_last_update",
-`n + (SUC p.w ** n) ≤ t ⇒ update_time p n (last_update p n t)`,
-Induct_on `t` >> srw_tac [][last_update_def] >>
-fsrw_tac [][LESS_OR_EQ,prim_recTheory.LESS_THM] >>
-fsrw_tac [][update_time_def] >>
-first_x_assum (qspec_then `0` mp_tac) >>
-srw_tac [][]);
-
 val update_time_last_update_iff = Q.store_thm(
 "update_time_last_update_iff",
 `n + (SUC p.w ** n) ≤ t ⇔ update_time p n (last_update p n t)`,
 EQ_TAC >- ACCEPT_TAC update_time_last_update >>
 Induct_on `t` >> srw_tac [][update_time_def,last_update_def] >>
 fsrw_tac [ARITH_ss][update_time_def]);
-
-val last_update_upper_bound = Q.store_thm(
-"last_update_upper_bound",
-`last_update p n t ≤ t`,
-srw_tac [][last_update_thm]);
 
 val last_update_eq_iff_update_time = Q.store_thm(
 "last_update_eq_iff_update_time",
@@ -249,14 +257,6 @@ fsrw_tac [][LESS_OR_EQ] >- (
   srw_tac [ARITH_ss][]) >>
 srw_tac [][last_update_zero] >>
 Cases_on `n` >> srw_tac [ARITH_ss][])
-
-val last_update_mono = Q.store_thm(
-"last_update_mono",
-`x ≤ y ⇒ last_update p n x ≤ last_update p n y`,
-Induct_on `y` >> srw_tac [][] >>
-`(x = SUC y) \/ x <= y` by DECIDE_TAC >>
-fsrw_tac [][] >> srw_tac [][last_update_def] >>
-PROVE_TAC [last_update_upper_bound,LESS_EQ_TRANS]);
 
 val last_update_lower_bound = Q.store_thm(
 "last_update_lower_bound",
