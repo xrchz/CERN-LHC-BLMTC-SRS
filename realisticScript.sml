@@ -99,26 +99,50 @@ val source_0_thm = Q.store_thm(
 qid_spec_tac `t` >> Induct_on `n` >> srw_tac [][source_def] >>
 srw_tac [ARITH_ss][Once SR_def,update_time_def,delay_def,ADD1])
 
+val delay_above_0 = Q.store_thm(
+"delay_above_0",
+`n < 5 ⇒ 0 < delay n`,
+Cases_on `n` >> srw_tac [][delay_def] >>
+qmatch_assum_rename_tac `SUC n < 5` [] >>
+Cases_on `n` >> srw_tac [][delay_def] >>
+qmatch_assum_rename_tac `SUC (SUC n) < 5` [] >>
+Cases_on `n` >> srw_tac [][delay_def] >>
+qmatch_assum_rename_tac `SUC (SUC (SUC n)) < 5` [] >>
+Cases_on `n` >> srw_tac [][delay_def] >>
+qmatch_assum_rename_tac `SUC (SUC (SUC (SUC n))) < 5` [] >>
+Cases_on `n` >> srw_tac [][delay_def] >>
+fsrw_tac [ARITH_ss][])
+
 val SR_0_until = Q.store_thm(
 "SR_0_until",
-`t < n + (SUC m) * (SUC p.w) ** n ⇒ (SR p n m t = 0)`,
-qid_spec_tac `t` >> Induct_on `m` >>
-Induct >> srw_tac [][]
->- srw_tac [][Once SR_def]
->- (
+`n < 5 ∧ t < (SUC m) * (delay n) ⇒ (SR D n m t = 0)`,
+map_every qid_spec_tac [`t`,`m`] >>
+Induct >- (
+  fsrw_tac [][] >>
+  Induct >- srw_tac [][Once SR_def] >>
   srw_tac [][Once SR_def,update_time_def] >>
-  fsrw_tac [ARITH_ss][ADD1] )
->- srw_tac [][Once SR_def] >>
-srw_tac [][Once SR_def,update_time_def] >>
-fsrw_tac [ARITH_ss][ADD1] >> srw_tac [][] >>
-fsrw_tac [ARITH_ss][EXP] >>
-srw_tac [][source_def] >>
-first_x_assum match_mp_tac >- (
-  qmatch_rename_tac `t < n + (m + 1) * z` [] >>
-  qsuff_tac `(x+1) * z <= (m+1) * z` >- DECIDE_TAC >>
-  match_mp_tac LESS_MONO_MULT >>
-  fsrw_tac [ARITH_ss][LESS_EQ,ADD1]
-) >> DECIDE_TAC)
+  imp_res_tac prim_recTheory.SUC_LESS >>
+  fsrw_tac [][] ) >>
+Induct >- srw_tac [][Once SR_def] >>
+srw_tac [][Once SR_def,update_time_def,source_def] >- (
+  imp_res_tac delay_above_0 >>
+  (MULT_EQ_DIV |> Q.INST[`x`|->`delay n`,`z`|->`SUC t`,`y`|->`SUC t DIV delay n`]
+   |> GSYM |> mp_tac) >>
+  fsrw_tac [][] >>
+  qabbrev_tac `y = SUC t DIV delay n` >>
+  strip_tac >>
+  pop_assum (assume_tac o REWRITE_RULE [Once MULT_SYM] o SYM) >>
+  fsrw_tac [][] >>
+  first_x_assum match_mp_tac >>
+  srw_tac [ARITH_ss][MULT] >>
+  Cases_on `y` >> fsrw_tac [][] >>
+  match_mp_tac LESS_MONO_REV >>
+  full_simp_tac bool_ss [] >>
+  srw_tac [ARITH_ss][MULT] >>
+  fsrw_tac [][GSYM ADD1,prim_recTheory.LESS_THM] ) >>
+fsrw_tac [][] >>
+first_x_assum match_mp_tac >>
+fsrw_tac [][prim_recTheory.SUC_LESS])
 
 val last_update_def = Define
 `(last_update p n 0 = 0) ∧
