@@ -115,7 +115,7 @@ fsrw_tac [ARITH_ss][])
 
 val SR_0_until = Q.store_thm(
 "SR_0_until",
-`n < 5 ∧ t < (SUC m) * (delay n) ⇒ (SR D n m t = 0)`,
+`0 < delay n ∧ t < (SUC m) * (delay n) ⇒ (SR D n m t = 0)`,
 map_every qid_spec_tac [`t`,`m`] >>
 Induct >- (
   fsrw_tac [][] >>
@@ -125,7 +125,6 @@ Induct >- (
   fsrw_tac [][] ) >>
 Induct >- srw_tac [][Once SR_def] >>
 srw_tac [][Once SR_def,update_time_def,source_def] >- (
-  imp_res_tac delay_above_0 >>
   (MULT_EQ_DIV |> Q.INST[`x`|->`delay n`,`z`|->`SUC t`,`y`|->`SUC t DIV delay n`]
    |> GSYM |> mp_tac) >>
   fsrw_tac [][] >>
