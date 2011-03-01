@@ -33,7 +33,7 @@ val delay_def = Define`
 
 (* update_time n t <=> t is an update time for slice n *)
 val update_time_def = Define`
-  update_time n t = (SUC t MOD (delay n) = 0)`
+  update_time n t = (t MOD (delay n) = 0)`
 
 (* source D n m = the source of input for SR m of slice n *)
 (* output D n x = output x of slice n *)
@@ -535,7 +535,7 @@ ntac 2 (srw_tac [][RS_def,source_def,Once output_def,delay_def,update_time_def,t
 ntac 4 (srw_tac [][Once SR_def,delay_def,update_time_def])))
 
 val sanity = Q.prove(
-`(!t. D t = t) ==> (RS D 4 9 = 28)`,
+`(!t. D t = t) ==> (RS D 4 9 = 21)`,
 assume_tac (Slice_def |> CONJUNCT2 |> CONJUNCT1 |> Q.GEN `t` |> SIMP_RULE arith_ss []) >>
 assume_tac (Slice_def |> funpow 5 CONJUNCT2 |> CONJUNCT1 |>
  Q.GEN `t` |> Q.INST[`m`|->`PRE m`] |>
