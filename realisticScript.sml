@@ -354,31 +354,23 @@ DECIDE_TAC)
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
-`t ≠ n + SUC p.w ** n ∧ update_time p n t ⇒ update_time p n (t - SUC p.w ** n)`,
+`0 < delay n ∧ 0 < t ∧ update_time n t ⇒ update_time n (t - delay n)`,
 srw_tac [][update_time_def] >>
-qabbrev_tac `w = SUC p.w ** n` >>
-qabbrev_tac `a = SUC x` >>
-`a > 0` by srw_tac [][Abbr`a`] >>
-Cases_on `a = 1` >> fsrw_tac [][] >>
-`a > 1` by DECIDE_TAC >>
-`n + a * w - w = n + (a - 1) * w` by srw_tac [ARITH_ss][LEFT_SUB_DISTRIB,LESS_EQ_ADD_SUB] >>
-fsrw_tac [][] >>
-Cases_on `a-1` >> fsrw_tac [ARITH_ss][] >>
-PROVE_TAC [])
+Cases_on `t < delay n` >- (
+  imp_res_tac (GSYM X_MOD_Y_EQ_X) >>
+  fsrw_tac [][] ) >>
+qsuff_tac `((t - delay n * 1) MOD delay n = t MOD delay n)` >- srw_tac [][] >>
+match_mp_tac MOD_SUB >>
+fsrw_tac [][NOT_LESS])
 
 val prev_update_time = Q.store_thm(
 "prev_update_time",
-`t > n + z * SUC p.w ** n ∧ update_time p n t ⇒ update_time p n (t - z * SUC p.w ** n)`,
+`0 < delay n ∧ z * delay n < t ∧ update_time n t ⇒ update_time n (t - z * delay n)`,
 Induct_on `z` >> srw_tac [][] >>
-fsrw_tac [][] >>
-qabbrev_tac `w = SUC p.w ** n` >>
-srw_tac [][ADD1,RIGHT_ADD_DISTRIB,SUB_PLUS] >>
-unabbrev_all_tac >>
-match_mp_tac prev1_update_time >>
-conj_tac >- (
-  fsrw_tac [ARITH_ss][ADD1] ) >>
-first_x_assum match_mp_tac >>
-fsrw_tac [ARITH_ss][ADD1])
+fsrw_tac [][MULT,SUB_PLUS] >>
+`z * delay n < t` by DECIDE_TAC >>
+`0 < t - z * delay n` by DECIDE_TAC >>
+srw_tac [][prev1_update_time])
 
 val output_source_at_update_times = Q.store_thm(
 "output_source_at_update_times",
