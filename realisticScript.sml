@@ -176,14 +176,18 @@ val last_update_zero = Q.store_thm(
 "last_update_zero",
 `0 < delay n ⇒ ((last_update n t = 0) ⇔ (t < delay n))`,
 Induct_on `t` >- srw_tac [][last_update_def] >>
-
-srw_tac [][last_update_def,update_time_def] >-
-srw_tac [][] >- (
-fsrw_tac [][NOT_LESS,NOT_LESS_EQUAL,update_time_def] >>
-`(t - n) MOD SUC p.w ** n < SUC p.w ** n` by (
-  match_mp_tac MOD_LESS >>
-  MATCH_ACCEPT_TAC ZERO_LESS_EXP ) >>
-DECIDE_TAC)
+srw_tac [][EQ_IMP_THM] >- (
+  (last_update_mono |> Q.INST [`x`|->`t`,`y`|->`SUC t`] |> mp_tac) >>
+  srw_tac [][] >>
+  fsrw_tac [][last_update_def,update_time_def] >>
+  match_mp_tac LESS_SUC_EQ_COR >>
+  fsrw_tac [][] >>
+  spose_not_then strip_assume_tac >>
+  imp_res_tac DIVMOD_ID >>
+  fsrw_tac [][] ) >>
+imp_res_tac prim_recTheory.SUC_LESS >>
+fsrw_tac [][] >>
+srw_tac [][last_update_def,update_time_def])
 
 val last_update_thm = Q.store_thm(
 "last_update_thm",
