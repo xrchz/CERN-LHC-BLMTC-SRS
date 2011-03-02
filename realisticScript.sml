@@ -293,9 +293,48 @@ srw_tac [ARITH_ss][MULT])
 
 val output_last_update = Q.store_thm(
 "output_last_update",
-`output p n t = output p n (last_update p n t)`,
-srw_tac [][Slice_def,Once SR_last_update])
+`output D n x t = output D n x (last_update n t)`,
+Induct_on `t` >> srw_tac [][Slice_def,last_update_def])
 
+val tap_above_0 = Q.store_thm(
+"tap_above_0",
+`n < 5 ∧ x < 2 ⇒ 0 < tap n x`,
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+reverse (Cases_on `m`) >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+reverse (Cases_on `x`) >>
+fsrw_tac [][tap_def] >- (
+  Cases_on `n` >> srw_tac [ARITH_ss][] >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  fsrw_tac [ARITH_ss][] )
+>- (
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  fsrw_tac [ARITH_ss][] ) >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][tap_def] >>
+fsrw_tac [ARITH_ss][])
+
+val output_sum = Q.store_thm(
+"output_sum",
+`0 < tap n x ⇒ (output D n x t = SIGMA (λm. SR D n m t) (count (tap n x)))`,
+strip_tac >>
+Induct_on `t` >> srw_tac [][Slice_def] >-
+  srw_tac [][SUM_IMAGE_ZERO] >>
+qabbrev_tac `s = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `tap s x` >> fsrw_tac [][]
+srw_tac [][Once source_def,SimpRHS]
 val output_first = Q.store_thm(
 "output_first",
 `output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
