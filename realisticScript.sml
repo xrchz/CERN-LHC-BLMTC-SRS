@@ -172,6 +172,12 @@ val update_time_last_update = Q.store_thm(
 Induct_on `t` >> srw_tac [][last_update_def] >>
 srw_tac [][update_time_def,ZERO_MOD])
 
+val last_update_eq_iff_update_time = Q.store_thm(
+"last_update_eq_iff_update_time",
+`0 < delay n ⇒ ((last_update n t = t) ⇔ update_time n t)`,
+strip_tac >> EQ_TAC >> strip_tac >- PROVE_TAC [update_time_last_update] >>
+Cases_on `t` >> srw_tac [][last_update_def])
+
 val last_update_zero = Q.store_thm(
 "last_update_zero",
 `0 < delay n ⇒ ((last_update n t = 0) ⇔ (t < delay n))`,
@@ -191,58 +197,25 @@ srw_tac [][last_update_def,update_time_def])
 
 val last_update_thm = Q.store_thm(
 "last_update_thm",
-`last_update p n t = if t < n + (SUC p.w)**n then 0 else t - (t-n) MOD (SUC p.w)**n`,
-srw_tac [][] >- (
-  Induct_on `t` >> srw_tac [][last_update_def,update_time_def] >-
-    srw_tac [][NOT_LESS] >>
-  first_x_assum match_mp_tac >>
-  DECIDE_TAC ) >>
-fsrw_tac [][NOT_LESS] >>
-Induct_on `t` >> srw_tac [][last_update_def,update_time_def] >- (
-  qmatch_rename_tac `z = z - (z - n) MOD (SUC w) ** n` [] >>
-  qsuff_tac `(z - n) MOD (SUC w) ** n = 0` >- srw_tac [][] >>
-  match_mp_tac MOD_UNIQUE >>
-  qexists_tac `SUC x` >>
-  srw_tac [ARITH_ss][] ) >>
-Cases_on `n + SUC p.w ** n = SUC t` >- (
-  fsrw_tac [ARITH_ss][] >> srw_tac [][] >>
-  first_x_assum (qspec_then `0` mp_tac) >>
-  srw_tac [ARITH_ss][] ) >>
-`n + SUC p.w ** n ≤ t` by DECIDE_TAC >>
-fsrw_tac [ARITH_ss][] >> srw_tac [][] >>
-qabbrev_tac `b = SUC p.w ** n` >>
-`0 < b` by srw_tac [][Abbr`b`] >>
-qsuff_tac `(SUC (t - n)) MOD b = SUC ((t - n) MOD b)` >- DECIDE_TAC >>
-match_mp_tac MOD_SUC >>
-srw_tac [][] >>
-qmatch_rename_tac `SUC (t - n) <> SUC z * b` [] >>
-`SUC t <> n + SUC z * b` by PROVE_TAC [] >>
-DECIDE_TAC);
-
-val update_time_last_update_iff = Q.store_thm(
-"update_time_last_update_iff",
-`n + (SUC p.w ** n) ≤ t ⇔ update_time p n (last_update p n t)`,
-EQ_TAC >- ACCEPT_TAC update_time_last_update >>
-Induct_on `t` >> srw_tac [][update_time_def,last_update_def] >>
-fsrw_tac [ARITH_ss][update_time_def]);
-
-val last_update_eq_iff_update_time = Q.store_thm(
-"last_update_eq_iff_update_time",
-`(last_update p n t = t) ⇔ (t = 0) ∨ update_time p n t`,
-EQ_TAC >> strip_tac >- (
-  Cases_on `t = 0` >> srw_tac [][] >>
-  qsuff_tac `n + (SUC p.w ** n) ≤ t`
-  >- PROVE_TAC [update_time_last_update_iff] >>
-  qpat_assum `last_update p n t = t` mp_tac >>
-  srw_tac [][last_update_thm] >>
-  fsrw_tac [][NOT_LESS] )
->- srw_tac [][last_update_thm] >>
-Cases_on `t` >> srw_tac [][last_update_def]);
-
-val update_time_lower_bound = Q.store_thm(
-"update_time_lower_bound",
-`update_time p n t ==> n + SUC p.w ** n ≤ t`,
-ntac 2 (srw_tac [ARITH_ss][update_time_def]));
+`0 < delay n ⇒ (last_update n t = t - t MOD (delay n))`,
+strip_tac >>
+Induct_on `t` >> srw_tac [][last_update_def,update_time_def] >>
+qabbrev_tac `dn = delay n` >>
+qabbrev_tac `tm = t MOD dn` >>
+qabbrev_tac `td = t DIV dn` >>
+qabbrev_tac `sm = SUC t MOD dn` >>
+qabbrev_tac `sd = SUC t DIV dn` >>
+`t = td * dn + tm` by PROVE_TAC [DIVISION] >>
+`sm = SUC tm` by (
+  map_every qunabbrev_tac [`sm`,`tm`] >>
+  match_mp_tac MOD_SUC >>
+  qabbrev_tac `tm = t MOD dn` >>
+  fsrw_tac [][ADD_SUC,MULT_SUC,MULT] >>
+  qpat_assum `0 < dn` assume_tac >>
+  fsrw_tac [][MOD_TIMES] >>
+  spose_not_then strip_assume_tac >>
+  fsrw_tac [][] ) >>
+srw_tac [][])
 
 val last_update_sub1 = Q.store_thm(
 "last_update_sub1",
