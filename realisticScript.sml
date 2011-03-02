@@ -241,48 +241,25 @@ DECIDE_TAC)
 
 val SR_prev = Q.store_thm(
 "SR_prev",
-`SR p n (SUC m) t = if t < n + (SUC p.w) ** n then 0 else SR p n m (t - (SUC p.w) ** n)`,
-srw_tac [][Once SR_last_update] >- (
+`0 < delay n ⇒ (SR D n (SUC m) t = if t < SUC (SUC m) * delay n then 0 else SR D n m (t - delay n))`,
+srw_tac [][SR_0_until] >>
+srw_tac [][Once SR_last_update] >>
+srw_tac [][Once SR_def] >- (
   imp_res_tac last_update_zero >>
-  srw_tac [][Once SR_def] ) >>
-fsrw_tac [][NOT_LESS] >>
-imp_res_tac update_time_last_update >>
-srw_tac [][Once SR_def] >>
-fsrw_tac [][last_update_zero]
->- DECIDE_TAC >>
-srw_tac [][source_def] >>
-fsrw_tac [][NOT_LESS] >> srw_tac [][] >>
-srw_tac [][Once SR_last_update,SimpLHS] >>
-srw_tac [][Once SR_last_update,SimpRHS] >>
-AP_TERM_TAC >>
-srw_tac [][last_update_sub1] >- (
+  fsrw_tac [ARITH_ss][NOT_LESS,MULT])
+>- (
+  srw_tac [][source_def] >>
+  srw_tac [][Once SR_last_update] >>
+  `0 < last_update n t` by (Cases_on `last_update n t` >> srw_tac [][]) >>
+  srw_tac [][last_update_sub1] >>
+  srw_tac [][Once SR_last_update,SimpRHS] >>
+  AP_TERM_TAC >>
   srw_tac [][last_update_thm] >>
-  fsrw_tac [ARITH_ss][NOT_LESS] >- (
-    fsrw_tac [][update_time_def] >>
-    qabbrev_tac `b = SUC p.w ** n` >>
-    `n + SUC x * b <= t` by PROVE_TAC [last_update_upper_bound] >>
-    `0 < b` by srw_tac [][Abbr`b`] >>
-    `SUC x * b < 2 * b` by DECIDE_TAC >>
-    Cases_on `x` >> fsrw_tac [ARITH_ss][ADD1] ) >>
-  fsrw_tac [][update_time_def] >>
-  qabbrev_tac `b = SUC p.w ** n` >>
-  `0 < b` by srw_tac [][Abbr`b`] >>
-  `t - (n + b) = (t - n) - b` by DECIDE_TAC >>
-  `b <= t - n` by DECIDE_TAC >>
-  fsrw_tac [][SUB_MOD] ) >>
-srw_tac [][last_update_zero] >>
-fsrw_tac [][NOT_LESS] >- (
-  pop_assum mp_tac >>
-  fsrw_tac [ARITH_ss][update_time_def,ADD1] >>
-  srw_tac [][] >>
-  `x = 0` by DECIDE_TAC >>
-  srw_tac [][] >> fsrw_tac [][GSYM ADD1] >>
-  spose_not_then strip_assume_tac >>
-  fsrw_tac [][NOT_LESS] >>
-  `update_time p n (n + 2 * SUC p.w ** n)` by srw_tac [][update_time_def] >>
-  `n + 2 * SUC p.w ** n <= n + SUC p.w ** n` by PROVE_TAC [last_update_lower_bound] >>
-  fsrw_tac [][] ) >>
-Cases_on `n` >> srw_tac [ARITH_ss][])
+  fsrw_tac [][NOT_LESS,MULT] >>
+  `delay n ≤ t` by DECIDE_TAC >>
+  srw_tac [ARITH_ss][SUB_MOD] ) >>
+imp_res_tac update_time_last_update >>
+fsrw_tac [][])
 
 val SR_first = Q.store_thm(
 "SR_first",
