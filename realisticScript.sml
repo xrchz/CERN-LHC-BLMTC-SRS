@@ -328,8 +328,7 @@ fsrw_tac [ARITH_ss][])
 
 val output_sum = Q.store_thm(
 "output_sum",
-`0 < tap n x ⇒ (output D n x t = SIGMA (λm. SR D n m t) (count (SUC (tap n x))))`,
-strip_tac >>
+`output D n x t = SIGMA (λm. SR D n m t) (count (SUC (tap n x)))`,
 Induct_on `t` >> srw_tac [][Slice_def] >-
   srw_tac [][SUM_IMAGE_ZERO] >>
 srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
@@ -340,7 +339,7 @@ srw_tac [ARITH_ss][GENLIST,SUM_SNOC])
 
 val output_first = Q.store_thm(
 "output_first",
-`output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
+`output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else SR D n 0 (t - m * (delay n))) (count (SUC (tap n x)))`,
 srw_tac [][Slice_def] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [][Once SR_first] >>
