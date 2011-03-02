@@ -263,23 +263,33 @@ fsrw_tac [][])
 
 val SR_first = Q.store_thm(
 "SR_first",
-`SR p n m t = if t ≤ m * SUC p.w ** n then 0 else SR p n 0 (t - (m * SUC p.w ** n))`,
+`0 < delay n ⇒ (SR D n m t = if t < SUC m then 0 else SR D n 0 (t - (m * delay n)))`,
+strip_tac >>
 qid_spec_tac `t` >>
 Induct_on `m` >> fsrw_tac [][SR_prev]
->- (srw_tac [][] >> srw_tac [][Once SR_def]) >>
-qabbrev_tac `b = SUC p.w ** n` >>
+>- (Cases >> srw_tac [ARITH_ss][SR_0_until]) >>
 gen_tac >>
-Cases_on `t < n + b` >- (
-  srw_tac [][] >> fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,ADD1] >>
-  match_mp_tac (GSYM SR_0_until) >>
-  srw_tac [ARITH_ss][] ) >>
-Cases_on `t ≤ b + m * b` >-
-  fsrw_tac [ARITH_ss][ADD1] >>
-Cases_on `t ≤ SUC m * b` >- (
-  fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS] >>
+Cases_on `t < SUC (SUC m)` >- (
+  srw_tac [][] >>
   match_mp_tac SR_0_until >>
-  fsrw_tac [ARITH_ss][ADD1] ) >>
-fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,NOT_LESS,ADD1,LEFT_ADD_DISTRIB])
+  srw_tac [ARITH_ss][] ) >>
+Cases_on `t < SUC (SUC m) * delay n` >- (
+  srw_tac [][] >>
+  match_mp_tac EQ_SYM >>
+  match_mp_tac SR_0_until >>
+  fsrw_tac [][MULT] ) >>
+Cases_on `t < delay n + SUC m` >- (
+  srw_tac [][] >>
+  match_mp_tac EQ_SYM >>
+  match_mp_tac SR_0_until >>
+  fsrw_tac [][MULT,NOT_LESS] >>
+  match_mp_tac LESS_TRANS >>
+  qexists_tac `delay n + SUC m` >>
+  srw_tac [][ADD1] >>
+  match_mp_tac LESS_EQ_LESS_TRANS >>
+  qexists_tac `m + delay n` >>
+  srw_tac [ARITH_ss][] ) >>
+srw_tac [ARITH_ss][MULT])
 
 val output_last_update = Q.store_thm(
 "output_last_update",
