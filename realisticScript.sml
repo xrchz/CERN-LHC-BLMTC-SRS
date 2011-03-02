@@ -1,4 +1,4 @@
-open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory lcsymtacs
+open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory listTheory sortingTheory lcsymtacs
 
 val _ = new_theory "realistic"
 
@@ -328,13 +328,16 @@ fsrw_tac [ARITH_ss][])
 
 val output_sum = Q.store_thm(
 "output_sum",
-`0 < tap n x ⇒ (output D n x t = SIGMA (λm. SR D n m t) (count (tap n x)))`,
+`0 < tap n x ⇒ (output D n x t = SIGMA (λm. SR D n m t) (count (SUC (tap n x))))`,
 strip_tac >>
 Induct_on `t` >> srw_tac [][Slice_def] >-
   srw_tac [][SUM_IMAGE_ZERO] >>
-qabbrev_tac `s = n` >> POP_ASSUM (K ALL_TAC) >>
-Cases_on `tap s x` >> fsrw_tac [][]
-srw_tac [][Once source_def,SimpRHS]
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][GENLIST_CONS,SimpRHS] >>
+srw_tac [][combinTheory.o_DEF] >>
+`∀x. source D n (SUC x) t = SR D n x t` by srw_tac [][source_def] >>
+srw_tac [ARITH_ss][GENLIST,SUM_SNOC])
+
 val output_first = Q.store_thm(
 "output_first",
 `output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else SR p n 0 (t - m * SUC p.w ** n)) (count (SUC p.w))`,
