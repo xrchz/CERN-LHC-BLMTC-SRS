@@ -339,23 +339,18 @@ srw_tac [ARITH_ss][GENLIST,SUM_SNOC])
 
 val output_first = Q.store_thm(
 "output_first",
-`output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else SR D n 0 (t - m * (delay n))) (count (SUC (tap n x)))`,
-srw_tac [][Slice_def] >>
+`0 < delay n ⇒ (output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else SR D n 0 (t - m * (delay n))) (count (SUC (tap n x))))`,
+srw_tac [][output_sum] >>
 match_mp_tac SUM_IMAGE_CONG >>
-srw_tac [][Once SR_first] >>
-srw_tac [][Once SR_last_update] >- (
+srw_tac [][Once SR_first] >- (
   match_mp_tac (GSYM SR_0_until) >>
-  fsrw_tac [][NOT_LESS_EQUAL] >>
-  full_simp_tac bool_ss [Once (SYM (SPEC_ALL SUB_EQ_0))] >>
-  srw_tac [ARITH_ss][last_update_def] ) >>
+  fsrw_tac [][NOT_LESS_EQUAL,GSYM MULT] >>
+  match_mp_tac LESS_LESS_EQ_TRANS >>
+  qmatch_assum_rename_tac `t < SUC z` [] >>
+  qexists_tac `SUC z` >>
+  srw_tac [][] ) >>
 match_mp_tac SR_0_until >>
-fsrw_tac [][NOT_LESS_EQUAL] >>
-match_mp_tac LESS_EQ_LESS_TRANS >>
-qexists_tac `t - x * SUC p.w ** n` >>
-srw_tac [ARITH_ss][last_update_upper_bound] >>
-match_mp_tac LESS_EQ_LESS_TRANS >>
-qexists_tac `n + x * SUC p.w ** n` >>
-srw_tac [][])
+DECIDE_TAC)
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
