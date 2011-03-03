@@ -374,11 +374,11 @@ srw_tac [][prev1_update_time])
 
 val output_source_at_update_times = Q.store_thm(
 "output_source_at_update_times",
-`update_time p n t ⇒ (output p n t = SIGMA (λm. if t ≤ n + m * SUC p.w ** n then 0 else source p n 0 (t - m * SUC p.w ** n - 1)) (count (SUC p.w)))`,
+`0 < delay n ∧ update_time n t ⇒ (output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else source D n 0 (t - m * (delay n) - 1)) (count (SUC (tap n x))))`,
 srw_tac [][output_first] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [ARITH_ss][Once SR_def] >>
-fsrw_tac [][NOT_LESS_EQUAL,GSYM GREATER_DEF] >>
+fsrw_tac [][NOT_LESS_EQUAL] >>
 imp_res_tac prev_update_time)
 
 val last_updates_eq = Q.store_thm(
