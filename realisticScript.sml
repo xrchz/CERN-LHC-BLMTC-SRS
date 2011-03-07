@@ -8,7 +8,7 @@ val RS0_def = Define`
 
 val RS1_def = Define`
   (RS1 D 0 = 0) ∧
-  (RS1 D (SUC 0) = 0) ∧
+  (RS1 D (SUC 0) = D 0) ∧
   (RS1 D (SUC (SUC t)) = D (SUC t) + D t)`
 
 (* tap n x is the location of tap x of slice n *)
@@ -77,7 +77,7 @@ Cases_on `t` >> srw_tac [][Slice_def])
 
 val RS1_thm = Q.store_thm(
 "RS1_thm",
-`RS1 D t = if t = 0 then 0 else if t = 1 then 0 else D (t - 1) + D (t - 2)`,
+`RS1 D t = if t = 0 then 0 else if t = 1 then D 0 else D (t - 1) + D (t - 2)`,
 Cases_on `t` >> simp_tac bool_ss [RS1_def,ONE] >> Cases_on `n` >> simp_tac arith_ss [RS1_def] >>
 simp_tac bool_ss [TWO,ONE] >> srw_tac [ARITH_ss][])
 
@@ -381,66 +381,66 @@ srw_tac [ARITH_ss][Once SR_def] >>
 fsrw_tac [][NOT_LESS_EQUAL] >>
 imp_res_tac prev_update_time)
 
-val last_updates_eq = Q.store_thm(
-"last_updates_eq",
-`(if t ≤ n then k + t < n + SUC p.w ** n else k < SUC p.w ** n - (t - n) MOD SUC p.w ** n) ⇔
- (last_update p n (t + k) = last_update p n t)`,
-Cases_on `t ≤ n` >- (
-  srw_tac [][] >>
-  `0 < SUC p.w ** n` by srw_tac [][] >>
-  `t < n + SUC p.w ** n` by DECIDE_TAC >>
-  fsrw_tac [][SYM last_update_zero] >>
-  srw_tac [ARITH_ss][last_update_zero] ) >>
-fsrw_tac [][] >>
-Cases_on `t < n + SUC p.w ** n` >- (
-  fsrw_tac [][SYM last_update_zero] >>
-  fsrw_tac [ARITH_ss][last_update_zero] ) >>
-`¬(t + k < n + SUC p.w ** n)` by fsrw_tac [ARITH_ss][] >>
-srw_tac [][last_update_thm] >>
-qabbrev_tac `w = SUC p.w ** n` >>
-`0 < w` by srw_tac [][Abbr`w`] >>
-match_mp_tac EQ_SYM >>
-`(t - n) MOD w < w` by PROVE_TAC [MOD_LESS] >>
-match_mp_tac EQ_TRANS >>
-qexists_tac `(t - n) MOD w + k = (t - n + k) MOD w` >>
-conj_tac >- fsrw_tac [ARITH_ss][] >>
-CONV_TAC (LAND_CONV SYM_CONV) >>
-match_mp_tac MOD_LIFT_PLUS_IFF >>
-first_assum ACCEPT_TAC)
+val output_input_at_update_times = Q.store_thm(
+"output_input_at_update_times",
+`(∀k. k ≤ n ⇒ 0 < delay k) ∧
+ (∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t) ∧ update_time n t
+⇒ (output D n x t = SIGMA (λm. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x) * delay n)))`,
+map_every qid_spec_tac [`t`,`x`,`n`] >>
+Induct >- (
+  fsrw_tac [][output_source_at_update_times,delay_def,source_0_thm,
+              GSYM ADD1,LESS_OR_EQ,prim_recTheory.LESS_THM,DISJ_SYM] ) >>
+srw_tac [][output_source_at_update_times] >>
+srw_tac [][source_def] >>
+Cases_on `n=0` >- (
+  srw_tac [][delay_def] >>
+  srw_tac [][MULT_SYM] >>
+  match_mp_tac EQ_SYM >>
+  match_mp_tac SUM_IMAGE_count_MULT >>
+  srw_tac [ARITH_ss][] >- (
+    srw_tac [][SUM_IMAGE_ZERO] ) >>
+  srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >- (
+    fsrw_tac [ARITH_ss][update_time_def,delay_def,NOT_LESS_EQUAL,GSYM EVEN_MOD2] >>
+    `t = SUC (2 * m)` by DECIDE_TAC >>
+    srw_tac [][] >>
+    fsrw_tac [][EVEN,EVEN_DOUBLE] )
+  >- (
+    DECIDE_TAC )
+  >- (
+    fsrw_tac [ARITH_ss][NOT_LESS] >>
+    `t = 2 * m + 2` by DECIDE_TAC >>
+    srw_tac [ARITH_ss][RS1_thm] ) >>
+  fsrw_tac [ARITH_ss][NOT_LESS,RS1_thm] ) >>
+srw_tac [][]
 
-val update_time_prev_slice = Q.store_thm(
-"update_time_prev_slice",
-`update_time p (SUC n) (SUC t) ⇒ update_time p n t`,
-srw_tac [][update_time_def] >>
-qabbrev_tac `w = SUC p.w` >>
-qexists_tac `PRE (SUC x * w)` >>
-fsrw_tac [ARITH_ss][EXP] >>
-fsrw_tac [][GSYM SUC_ADD_SYM] >>
-srw_tac [][ADD_SYM] >>
-AP_THM_TAC >> AP_TERM_TAC >>
-match_mp_tac EQ_SYM >>
-srw_tac [ARITH_ss][Abbr`w`,MULT,SUC_PRE])
-
-val update_time_slice_0 = Q.store_thm(
-"update_time_slice_0",
-`update_time p 0 t ⇔ (0 < t)`,
-Cases_on `t` >> srw_tac [ARITH_ss][update_time_def,EQ_IMP_THM])
 
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
-`update_time p n t ⇒
- (output p n t = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
-map_every qid_spec_tac [`t`,`n`] >>
+`(∀k. k ≤ n ⇒ 0 < delay k) ∧
+ (∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t) ∧
+ update_time n t
+⇒ (output D n x t = SIGMA (λm. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x))))`,
+map_every qid_spec_tac [`t`,`x`,`n`] >>
 Induct >- (
-  fsrw_tac [][output_source_at_update_times] >>
-  fsrw_tac [][update_time_slice_0,EXP,source_0_thm,GSYM ADD1,
-              prim_recTheory.LESS_THM,LESS_OR_EQ,DISJ_SYM] ) >>
-simp_tac bool_ss [output_source_at_update_times] >>
-Cases >- ( srw_tac [][update_time_def] ) >>
-strip_tac >>
-qmatch_assum_rename_tac `update_time p (SUC n) (SUC t)` [] >>
+  fsrw_tac [][output_source_at_update_times,delay_def,source_0_thm,
+              GSYM ADD1,LESS_OR_EQ,prim_recTheory.LESS_THM,DISJ_SYM] ) >>
+srw_tac [][] >>
+srw_tac [][output_source_at_update_times] >>
+srw_tac [][source_def]
+tap_def
+
+`update_time n t` by (
+  first_x_assum (match_mp_tac o MP_CANON) >>
+  srw_tac [][] ) >>
+`∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t` by
+  PROVE_TAC [prim_recTheory.LESS_SUC] >>
+`∀k. k ≤ n ⇒ 0 < delay k` by
+  PROVE_TAC [LESS_EQ_SUC_REFL,LESS_EQ_TRANS] >>
+fsrw_tac [][] >>
+simp_tac (srw_ss()) [source_def]
 fsrw_tac [ARITH_ss][source_def,GSYM ADD1] >>
-qmatch_abbrev_tac `X = SIGMA f (count (SUC p.w ** SUC m))` >>
+srw_tac [][]
+qmatch_abbrev_tac `X = SIGMA f (count (SUC (tap (SUC n) x)))` >>
 srw_tac [][EXP] >>
 match_mp_tac EQ_SYM >>
 srw_tac [][Once MULT_SYM] >>
@@ -465,6 +465,33 @@ srw_tac [][] >>
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM])
+
+val last_updates_eq = Q.store_thm(
+"last_updates_eq",
+`(if t ≤ n then k + t < n + SUC p.w ** n else k < SUC p.w ** n - (t - n) MOD SUC p.w ** n) ⇔
+ (last_update n (t + k) = last_update n t)`,
+Cases_on `t ≤ n` >- (
+  srw_tac [][] >>
+  `0 < SUC p.w ** n` by srw_tac [][] >>
+  `t < n + SUC p.w ** n` by DECIDE_TAC >>
+  fsrw_tac [][SYM last_update_zero] >>
+  srw_tac [ARITH_ss][last_update_zero] ) >>
+fsrw_tac [][] >>
+Cases_on `t < n + SUC p.w ** n` >- (
+  fsrw_tac [][SYM last_update_zero] >>
+  fsrw_tac [ARITH_ss][last_update_zero] ) >>
+`¬(t + k < n + SUC p.w ** n)` by fsrw_tac [ARITH_ss][] >>
+srw_tac [][last_update_thm] >>
+qabbrev_tac `w = SUC p.w ** n` >>
+`0 < w` by srw_tac [][Abbr`w`] >>
+match_mp_tac EQ_SYM >>
+`(t - n) MOD w < w` by PROVE_TAC [MOD_LESS] >>
+match_mp_tac EQ_TRANS >>
+qexists_tac `(t - n) MOD w + k = (t - n + k) MOD w` >>
+conj_tac >- fsrw_tac [ARITH_ss][] >>
+CONV_TAC (LAND_CONV SYM_CONV) >>
+match_mp_tac MOD_LIFT_PLUS_IFF >>
+first_assum ACCEPT_TAC)
 
 val output_input = Q.store_thm(
 "output_input",
