@@ -394,6 +394,51 @@ qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
 Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
 fsrw_tac [ARITH_ss][])
 
+(*
+val sanity = Q.prove(
+`(RS D 3 t = output D 0 1 t) /\ (update_time 0 29)`,
+srw_tac [][RS_def,update_time_def,delay_def])
+
+val sanity = Q.prove(
+`(!t. D t = t) /\ (n = 0) /\ (x = 1) /\ (t = 29) ==>
+ (RS D 3 t = SIGMA (\m. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x) * delay n)))`,
+srw_tac [][RS_def,delay_def,tap_def] >>
+srw_tac [][Once output_def,update_time_def,delay_def] >>
+srw_tac [][source_def,Once SR_def,tap_def] >>
+srw_tac [][Once SR_def,tap_def,update_time_def,delay_def] >>
+ntac 10 (
+  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def]) >>
+  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] ) >>
+ntac 40 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def]) >>
+srw_tac [ARITH_ss][] >>
+ntac 20 (
+  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] >>
+  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def])) >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
+
+val sanity = Q.prove(
+`(RS D 4 t = output D 1 0 t) /\ (update_time 1 30)`,
+srw_tac [][RS_def,update_time_def,delay_def])
+
+val sanity = Q.prove(
+`(!t. D t = t) /\ (n = 1) /\ (x = 0) /\ (t = 30) ==>
+ (RS D 4 t = SIGMA (\m. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x) * delay n)))`,
+srw_tac [][RS_def,delay_def,tap_def] >>
+srw_tac [][Once output_def,update_time_def,delay_def] >>
+srw_tac [][source_def,Once SR_def,tap_def] >>
+srw_tac [][Once SR_def,tap_def,update_time_def,delay_def] >>
+ntac 10 (
+  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def]) >>
+  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] ) >>
+ntac 40 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def,RS1_thm]) >>
+srw_tac [ARITH_ss][] >>
+ntac 20 (
+  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] >>
+  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def])) >>
+srw_tac [][RS1_thm] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
+*)
+
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
 `(∀k. k ≤ n ⇒ 0 < delay k) ∧
