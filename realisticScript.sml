@@ -397,7 +397,8 @@ fsrw_tac [ARITH_ss][])
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
 `(∀k. k ≤ n ⇒ 0 < delay k) ∧
- (∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t) ∧ update_time n t
+ (∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t) ∧ update_time n t ∧
+ (∀k. 0 < k ∧ k ≤ n ⇒ (delay (SUC k) = delay k * SUC (tap k 0)))
 ⇒ (output D n x t = SIGMA (λm. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x) * delay n)))`,
 map_every qid_spec_tac [`t`,`x`,`n`] >>
 Induct >- (
@@ -424,8 +425,48 @@ Cases_on `n=0` >- (
     `t = 2 * m + 2` by DECIDE_TAC >>
     srw_tac [ARITH_ss][RS1_thm] ) >>
   fsrw_tac [ARITH_ss][NOT_LESS,RS1_thm] ) >>
-srw_tac [][]
+srw_tac [][] >>
 
+srw_tac [][MULT_SYM] >>
+match_mp_tac EQ_SYM >>
+match_mp_tac SUM_IMAGE_count_MULT >>
+srw_tac [ARITH_ss][] >-
+  srw_tac [][SUM_IMAGE_ZERO] >>
+srw_tac [][Once output_last_update] >>
+qmatch_abbrev_tac `output D n 0 tt = SIGMA f (count Z)` >>
+qsuff_tac `SIGMA f (count Z) = SIGMA (λm. if tt < m + SUC n then 0 else D (tt - m - SUC n)) (count Z)` >- (
+  srw_tac [][Abbr`Z`] >>
+  first_x_assum match_mp_tac >>
+  srw_tac [ARITH_ss][update_time_last_update,Abbr`tt`] ) >>
+srw_tac [][Abbr`tt`,last_update_thm,ADD_COMM] >>
+srw_tac [][SUB_PLUS] >>
+fsrw_tac [][MULT_COMM] >>
+`0 < delay n` by (first_assum match_mp_tac >> srw_tac [][]) >>
+`delay n * (m * SUC (tap n 0)) ≤ t - 1` by DECIDE_TAC >>
+asm_simp_tac (srw_ss()) [MOD_SUB] >>
+pop_assum (K ALL_TAC) >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST]
+
+qmatch_abbrev_tac `output D n 0 tt = SIGMA f (count Z)` >>
+srw_tac [][Abbr`f`,Abbr`tt`,FUN_EQ_THM] >>
+fsrw_tac [ARITH_ss][last_update_thm,NOT_LESS_EQUAL] >>
+simp_tac (srw_ss()) [ADD_COMM,SUB_PLUS] >>
+fsrw_tac [][MULT_COMM] >>
+`0 < delay n` by (first_assum match_mp_tac >> srw_tac [][]) >>
+`delay n * (m * SUC (tap n 0)) ≤ t - 1` by DECIDE_TAC >>
+asm_simp_tac (srw_ss()) [MOD_SUB] >>
+
+srw_tac [ARITH_ss][ADD1] >-
+DECIDE_TAC
+
+
+`∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t` by
+  PROVE_TAC [prim_recTheory.LESS_SUC] >>
+`∀k. k ≤ n ⇒ 0 < delay k` by
+  PROVE_TAC [LESS_EQ_SUC_REFL,LESS_EQ_TRANS] >>
+`∀k. 0 < k ∧ k ≤ n ⇒ (delay (SUC k) = delay k * SUC (tap k 0))` by
+  PROVE_TAC [LESS_EQ_SUC_REFL,LESS_EQ_TRANS] >>
+fsrw_tac [][]
 
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
@@ -445,10 +486,6 @@ tap_def
 `update_time n t` by (
   first_x_assum (match_mp_tac o MP_CANON) >>
   srw_tac [][] ) >>
-`∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t` by
-  PROVE_TAC [prim_recTheory.LESS_SUC] >>
-`∀k. k ≤ n ⇒ 0 < delay k` by
-  PROVE_TAC [LESS_EQ_SUC_REFL,LESS_EQ_TRANS] >>
 fsrw_tac [][] >>
 simp_tac (srw_ss()) [source_def]
 fsrw_tac [ARITH_ss][source_def,GSYM ADD1] >>
