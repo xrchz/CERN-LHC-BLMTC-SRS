@@ -381,6 +381,19 @@ srw_tac [ARITH_ss][Once SR_def] >>
 fsrw_tac [][NOT_LESS_EQUAL] >>
 imp_res_tac prev_update_time)
 
+val delay_SUC = Q.store_thm(
+"delay_SUC",
+`0 < n ∧ n < 4 ⇒ (delay (SUC n) = delay n * SUC (tap n 0))`,
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
+fsrw_tac [ARITH_ss][])
+
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
 `(∀k. k ≤ n ⇒ 0 < delay k) ∧
