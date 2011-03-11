@@ -2,48 +2,60 @@ open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory listThe
 
 val _ = new_theory "realistic"
 
-val RS0_def = Define`
-  (RS0 D 0 = 0) ∧
-  (RS0 D (SUC t) = D t)`
-
-val RS1_def = Define`
-  (RS1 D 0 = 0) ∧
-  (RS1 D (SUC 0) = D 0) ∧
-  (RS1 D (SUC (SUC t)) = D (SUC t) + D t)`
-
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
-  (tap 0 0 = 8  -1) ∧
-  (tap 0 1 = 16 -1) ∧
-  (tap 1 0 = 32 -1) ∧
-  (tap 1 1 = 128-1) ∧
-  (tap 2 0 = 32 -1) ∧
-  (tap 2 1 = 128-1) ∧
-  (tap 3 0 = 16 -1) ∧
-  (tap 3 1 = 64 -1) ∧
-  (tap 4 0 = 16 -1) ∧
-  (tap 4 1 = 64 -1)`
+  (tap 1 0 = 1  -1) ∧
+  (tap 1 1 = 2  -1) ∧
+  (tap 2 0 = 8  -1) ∧
+  (tap 2 1 = 16 -1) ∧
+  (tap 3 0 = 32 -1) ∧
+  (tap 3 1 = 128-1) ∧
+  (tap 4 0 = 32 -1) ∧
+  (tap 4 1 = 256-1) ∧
+  (tap 5 0 = 16 -1) ∧
+  (tap 5 1 = 64 -1) ∧
+  (tap 6 0 = 32 -1) ∧
+  (tap 6 1 = 128 -1)`
 
-val delay_def = Define`
+(* input n = the slice and output connected to the input of slice n *)
+val input_def = Define`
+  (input 0 = (0,0)) ∧
+  (input 1 = (0,0)) ∧
+  (input 2 = (0,0)) ∧
+  (input 3 = (1,1)) ∧
+  (input 4 = (3,0)) ∧
+  (input 5 = (4,0)) ∧
+  (input 6 = (4,1)) ∧
+  (input n = (n-1,0))`
+
+(* delay n = time steps between updates of slice n *)
+val delay_def = tDefine "delay"`
   (delay 0 = 1) ∧
-  (delay 1 = 2) ∧
-  (delay 2 = 64) ∧
-  (delay 3 = 2048) ∧
-  (delay 4 = 32768)`
-
+  (delay n = delay (FST (input n)) * tap (FST (input n)) (SND (input n)))`
+(WF_REL_TAC `$<` >>
+ Induct >> srw_tac [][input_def] >>
+ Cases_on `v` >> fsrw_tac [][input_def] >>
+ qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
+ Cases_on `v` >> fsrw_tac [][input_def] >>
+ qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
+ Cases_on `v` >> fsrw_tac [][input_def] >>
+ qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
+ Cases_on `v` >> fsrw_tac [][input_def] >>
+ qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
+ Cases_on `v` >> fsrw_tac [][input_def] >>
+ srw_tac [ARITH_ss][])
 (* update_time n t <=> t is an update time for slice n *)
 val update_time_def = Define`
-  update_time n t = (t MOD (delay n) = 0)`
+  (update_time n t = (t MOD (delay n) = 0))`
 
 (* source D n m = the source of input for SR m of slice n *)
 (* output D n x = output x of slice n *)
 (* SR D n m = shift register m of slice n *)
 val Slice_def = tDefine "Slice" `
-  (source D 0 0 t = D t) ∧
-  (source D (SUC 0) 0 t = RS1 D t) ∧
-  (source D (SUC n) 0 t = output D n 0 t) ∧
+  (source D n 0 t = output D (FST (input n)) (SND (input n)) t) ∧
   (source D n (SUC m) t = SR D n m t) ∧
-  (output D n x 0 = 0) ∧
+  (output D 0 0 t = D t) ∧
+  (output D n 0 t = 0) ∧
   (output D n x (SUC t) =
    if update_time n (SUC t)
    then ((output D n x t) + (source D n 0 t)) - (SR D n (tap n x) t)
@@ -61,9 +73,7 @@ val Slice_def = tDefine "Slice" `
       (INR (INL (D,n,x,t))) -> (n,tap n x,t,3))`)
 
 val RS_def = Define`
-  (RS D 0 = RS0 D) ∧
-  (RS D 1 = RS1 D) ∧
-  (RS D n = output D (n DIV 2 - 1) (n MOD 2))`
+  (RS D n = output D (n DIV 2) (n MOD 2))`
 
 val output_def = Q.store_thm(
 "output_def",
