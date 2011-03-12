@@ -2,8 +2,15 @@ open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory listThe
 
 val _ = new_theory "realistic"
 
+(* Slice 0 is a fake slice copying the global input. It has width 1, a single
+tap, is updated at every time step, and its source is the global input. Slices
+1 through 6 are as in the schematics. Slices 7 onwards are posited by
+extrapolating formulas, except they don't have taps defined, so most things
+won't be provable about them. *)
+
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
+  (tap 0 0 = 1  -1) ∧
   (tap 1 0 = 1  -1) ∧
   (tap 1 1 = 2  -1) ∧
   (tap 2 0 = 8  -1) ∧
@@ -17,7 +24,7 @@ val tap_def = Define`
   (tap 6 0 = 32 -1) ∧
   (tap 6 1 = 128 -1)`
 
-(* input n = the slice and output connected to the input of slice n *)
+(* input n = the slice and tap connected to the input of slice n *)
 val input_def = Define`
   (input 0 = (0,0)) ∧
   (input 1 = (0,0)) ∧
@@ -28,20 +35,24 @@ val input_def = Define`
   (input 6 = (4,1)) ∧
   (input n = (n-1,0))`
 
+val input_earlier = Q.store_thm(
+"input_earlier",
+`0 < n ⇒ FST (input n) < n`,
+Induct_on `n` >> srw_tac [][input_def] >>
+ntac 6 (
+qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
+Cases_on `v` >> fsrw_tac [][input_def] ) >>
+srw_tac [ARITH_ss][])
+
 (* delay n = time steps between updates of slice n *)
 val delay_def = tDefine "delay"`
   (delay 0 = 1) ∧
-  (delay n = delay (FST (input n)) * tap (FST (input n)) (SND (input n)))`
+  (delay n = delay (FST (input n)) * SUC (tap (FST (input n)) (SND (input n))))`
 (WF_REL_TAC `$<` >>
  Induct >> srw_tac [][input_def] >>
+ ntac 4 (
  Cases_on `v` >> fsrw_tac [][input_def] >>
- qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
- Cases_on `v` >> fsrw_tac [][input_def] >>
- qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
- Cases_on `v` >> fsrw_tac [][input_def] >>
- qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
- Cases_on `v` >> fsrw_tac [][input_def] >>
- qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) >>
+ qabbrev_tac `v=n` >> pop_assum (K ALL_TAC) ) >>
  Cases_on `v` >> fsrw_tac [][input_def] >>
  srw_tac [ARITH_ss][])
 (* update_time n t <=> t is an update time for slice n *)
@@ -49,13 +60,13 @@ val update_time_def = Define`
   (update_time n t = (t MOD (delay n) = 0))`
 
 (* source D n m = the source of input for SR m of slice n *)
-(* output D n x = output x of slice n *)
+(* output D n x = output at tap x of slice n *)
 (* SR D n m = shift register m of slice n *)
 val Slice_def = tDefine "Slice" `
   (source D n 0 t = output D (FST (input n)) (SND (input n)) t) ∧
   (source D n (SUC m) t = SR D n m t) ∧
   (output D 0 0 t = D t) ∧
-  (output D n 0 t = 0) ∧
+  (output D n x 0 = 0) ∧
   (output D n x (SUC t) =
    if update_time n (SUC t)
    then ((output D n x t) + (source D n 0 t)) - (SR D n (tap n x) t)
@@ -68,64 +79,80 @@ val Slice_def = tDefine "Slice" `
 (WF_REL_TAC
 `inv_image ($< LEX $< LEX $< LEX $<)
  (λx. case x of
-      (INL (D,n,m,t)) -> (n,m,t,1) ||
+      (INL (D,n,m,t)) -> (n,m,t,3) ||
       (INR (INR (D,n,m,t))) -> (n,m,t,2) ||
-      (INR (INL (D,n,x,t))) -> (n,tap n x,t,3))`)
+      (INR (INL (D,n,x,t))) -> (n,tap n x,t,1))` >>
+srw_tac [ARITH_ss][] >>
+Cases_on `n` >- srw_tac [][input_def,tap_def] >>
+disj1_tac >> match_mp_tac input_earlier >>
+srw_tac [][])
 
 val RS_def = Define`
   (RS D n = output D (n DIV 2) (n MOD 2))`
 
 val output_def = Q.store_thm(
 "output_def",
-`output D n x t = if t = 0 then 0 else if update_time n t then output D n x (t - 1) + source D n 0 (t - 1) - SR D n (tap n x) (t - 1) else output D n x (t - 1)`,
-Cases_on `t` >> srw_tac [][Slice_def])
+`output D n x t =
+ if (n = 0) ∧ (x = 0) then D t
+ else if t = 0 then 0
+ else if update_time n t then output D n x (t - 1) + source D n 0 (t - 1) - SR D n (tap n x) (t - 1)
+ else output D n x (t - 1)`,
+Cases_on `n` >> Cases_on `x` >> Cases_on `t` >> srw_tac [][Slice_def])
 
 val SR_def = Q.store_thm(
 "SR_def",
 `SR D n m t = if t = 0 then 0 else if update_time n t then source D n m (t - 1) else SR D n m (t - 1)`,
 Cases_on `t` >> srw_tac [][Slice_def])
 
-val RS1_thm = Q.store_thm(
-"RS1_thm",
-`RS1 D t = if t = 0 then 0 else if t = 1 then D 0 else D (t - 1) + D (t - 2)`,
-Cases_on `t` >> simp_tac bool_ss [RS1_def,ONE] >> Cases_on `n` >> simp_tac arith_ss [RS1_def] >>
-simp_tac bool_ss [TWO,ONE] >> srw_tac [ARITH_ss][])
-
 val source_def = Q.store_thm(
 "source_def",
-`source D n m t = if m = 0 then if n = 0 then D t else if n = 1 then RS1 D t else output D (n - 1) 0 t else SR D n (m - 1) t`,
-Cases_on `n` >> Cases_on `m` >> srw_tac [][SIMP_RULE (srw_ss()++ARITH_ss) [] Slice_def] >>
-qmatch_rename_tac `source D (SUC a) X Y = Z` ["X","Y","Z"] >>
-Cases_on `a` >> fsrw_tac [][Slice_def])
+`source D n m t = if m = 0 then output D (FST (input n)) (SND (input n)) t else SR D n (m - 1) t`,
+Cases_on `m` >> srw_tac [][Slice_def])
 
 val SR_def = Q.store_thm(
 "SR_def",
 `SR D n m t = if t = 0 then 0 else if update_time n t then source D n m (t-1) else SR D n m (t-1)`,
 Cases_on `t` >> srw_tac [][Slice_def]);
 
-val source_0_thm = Q.store_thm(
-"source_0_thm",
-`source D 0 n t = if n <= t then D (t - n) else 0`,
-qid_spec_tac `t` >> Induct_on `n` >> srw_tac [][source_def] >>
-srw_tac [ARITH_ss][Once SR_def,update_time_def,delay_def,ADD1])
+val delay_thm = Q.store_thm(
+"delay_thm",
+`(delay 0 = 1) ∧
+ (delay 1 = 1) ∧
+ (delay 2 = 1) ∧
+ (delay 3 = 2) ∧
+ (delay 4 = 64) ∧
+ (delay 5 = 2048) ∧
+ (delay 6 = 16384)`,
+conj_asm1_tac >- srw_tac [][delay_def] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`0`] delay_def),input_def,tap_def] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`1`] delay_def),input_def,tap_def] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`2`] delay_def),input_def,tap_def] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`3`] delay_def),input_def,tap_def] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`4`] delay_def),input_def,tap_def] >>
+srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`5`] delay_def),input_def,tap_def])
+
+val source_1_thm = Q.store_thm(
+"source_1_thm",
+`source D 1 n t = if n <= t then D (t - n) else 0`,
+qid_spec_tac `t` >> Induct_on `n` >> srw_tac [][source_def,input_def,delay_thm] >>
+fsrw_tac [ARITH_ss][Once output_def, Once SR_def, update_time_def,delay_thm,ADD1])
 
 val delay_above_0 = Q.store_thm(
 "delay_above_0",
-`n < 5 ⇒ 0 < delay n`,
-Cases_on `n` >> srw_tac [][delay_def] >>
-qmatch_assum_rename_tac `SUC n < 5` [] >>
-Cases_on `n` >> srw_tac [][delay_def] >>
-qmatch_assum_rename_tac `SUC (SUC n) < 5` [] >>
-Cases_on `n` >> srw_tac [][delay_def] >>
-qmatch_assum_rename_tac `SUC (SUC (SUC n)) < 5` [] >>
-Cases_on `n` >> srw_tac [][delay_def] >>
-qmatch_assum_rename_tac `SUC (SUC (SUC (SUC n))) < 5` [] >>
-Cases_on `n` >> srw_tac [][delay_def] >>
-fsrw_tac [ARITH_ss][])
+`0 < delay n`,
+qid_spec_tac `n` >>
+ho_match_mp_tac COMPLETE_INDUCTION >>
+Cases >> srw_tac [][delay_def,MULT_SUC] >>
+qmatch_abbrev_tac `0 < x + y` >>
+qsuff_tac `0 < x` >- DECIDE_TAC >>
+qunabbrev_tac `x` >>
+first_x_assum match_mp_tac >>
+match_mp_tac input_earlier >>
+srw_tac [][])
 
 val SR_0_until = Q.store_thm(
 "SR_0_until",
-`0 < delay n ∧ t < (SUC m) * (delay n) ⇒ (SR D n m t = 0)`,
+`t < (SUC m) * (delay n) ⇒ (SR D n m t = 0)`,
 map_every qid_spec_tac [`t`,`m`] >>
 Induct >- (
   fsrw_tac [][] >>
@@ -137,7 +164,7 @@ Induct >- srw_tac [][Once SR_def] >>
 srw_tac [][Once SR_def,update_time_def,source_def] >- (
   (MULT_EQ_DIV |> Q.INST[`x`|->`delay n`,`z`|->`SUC t`,`y`|->`SUC t DIV delay n`]
    |> GSYM |> mp_tac) >>
-  fsrw_tac [][] >>
+  fsrw_tac [][delay_above_0] >>
   qabbrev_tac `y = SUC t DIV delay n` >>
   strip_tac >>
   pop_assum (assume_tac o REWRITE_RULE [Once MULT_SYM] o SYM) >>
@@ -178,20 +205,20 @@ srw_tac [][Once SR_def]);
 
 val update_time_last_update = Q.store_thm(
 "update_time_last_update",
-`0 < delay n ⇒ update_time n (last_update n t)`,
+`update_time n (last_update n t)`,
 Induct_on `t` >> srw_tac [][last_update_def] >>
-srw_tac [][update_time_def,ZERO_MOD])
+srw_tac [][update_time_def,ZERO_MOD,delay_above_0])
 
 val last_update_eq_iff_update_time = Q.store_thm(
 "last_update_eq_iff_update_time",
-`0 < delay n ⇒ ((last_update n t = t) ⇔ update_time n t)`,
-strip_tac >> EQ_TAC >> strip_tac >- PROVE_TAC [update_time_last_update] >>
+`(last_update n t = t) ⇔ update_time n t`,
+EQ_TAC >> strip_tac >- PROVE_TAC [update_time_last_update] >>
 Cases_on `t` >> srw_tac [][last_update_def])
 
 val last_update_zero = Q.store_thm(
 "last_update_zero",
-`0 < delay n ⇒ ((last_update n t = 0) ⇔ (t < delay n))`,
-Induct_on `t` >- srw_tac [][last_update_def] >>
+`(last_update n t = 0) ⇔ (t < delay n)`,
+Induct_on `t` >- srw_tac [][last_update_def,delay_above_0] >>
 srw_tac [][EQ_IMP_THM] >- (
   (last_update_mono |> Q.INST [`x`|->`t`,`y`|->`SUC t`] |> mp_tac) >>
   srw_tac [][] >>
@@ -199,29 +226,29 @@ srw_tac [][EQ_IMP_THM] >- (
   match_mp_tac LESS_SUC_EQ_COR >>
   fsrw_tac [][] >>
   spose_not_then strip_assume_tac >>
+  assume_tac delay_above_0 >>
   imp_res_tac DIVMOD_ID >>
-  fsrw_tac [][] ) >>
+  fsrw_tac [ARITH_ss][] ) >>
 imp_res_tac prim_recTheory.SUC_LESS >>
 fsrw_tac [][] >>
 srw_tac [][last_update_def,update_time_def])
 
 val last_update_thm = Q.store_thm(
 "last_update_thm",
-`0 < delay n ⇒ (last_update n t = t - t MOD (delay n))`,
-strip_tac >>
+`last_update n t = t - t MOD (delay n)`,
 Induct_on `t` >> srw_tac [][last_update_def,update_time_def] >>
 qabbrev_tac `dn = delay n` >>
 qabbrev_tac `tm = t MOD dn` >>
 qabbrev_tac `td = t DIV dn` >>
 qabbrev_tac `sm = SUC t MOD dn` >>
 qabbrev_tac `sd = SUC t DIV dn` >>
-`t = td * dn + tm` by PROVE_TAC [DIVISION] >>
+`t = td * dn + tm` by metis_tac [DIVISION,delay_above_0] >>
 `sm = SUC tm` by (
   map_every qunabbrev_tac [`sm`,`tm`] >>
   match_mp_tac MOD_SUC >>
   qabbrev_tac `tm = t MOD dn` >>
   fsrw_tac [][ADD_SUC,MULT_SUC,MULT] >>
-  qpat_assum `0 < dn` assume_tac >>
+  conj_asm1_tac >- srw_tac [][delay_above_0,Abbr`dn`] >>
   fsrw_tac [][MOD_TIMES] >>
   spose_not_then strip_assume_tac >>
   fsrw_tac [][] ) >>
@@ -237,21 +264,22 @@ Cases_on `u = SUC t` >> fsrw_tac [][] >>
 
 val last_update_sub1 = Q.store_thm(
 "last_update_sub1",
-`0 < delay n ∧ 0 < t ∧ update_time n t ⇒ (last_update n (t - 1) = t - delay n)`,
+`0 < t ∧ update_time n t ⇒ (last_update n (t - 1) = t - delay n)`,
 srw_tac [][last_update_thm,update_time_def] >>
 qabbrev_tac `dn = delay n` >>
 qabbrev_tac `tm = t MOD dn` >>
 qabbrev_tac `td = t DIV dn` >>
-`t = td * dn + tm` by PROVE_TAC [DIVISION] >>
+`t = td * dn + tm` by metis_tac [DIVISION,delay_above_0] >>
 srw_tac [][] >> fsrw_tac [][] >>
 `0 < td` by (Cases_on `td` >> fsrw_tac [][]) >>
+`0 < dn` by METIS_TAC [delay_above_0] >>
 `1 ≤ dn` by DECIDE_TAC >>
 srw_tac [][MOD_TIMES_SUB] >>
 DECIDE_TAC)
 
 val SR_prev = Q.store_thm(
 "SR_prev",
-`0 < delay n ⇒ (SR D n (SUC m) t = if t < SUC (SUC m) * delay n then 0 else SR D n m (t - delay n))`,
+`SR D n (SUC m) t = if t < SUC (SUC m) * delay n then 0 else SR D n m (t - delay n)`,
 srw_tac [][SR_0_until] >>
 srw_tac [][Once SR_last_update] >>
 srw_tac [][Once SR_def] >- (
@@ -266,33 +294,32 @@ srw_tac [][Once SR_def] >- (
   AP_TERM_TAC >>
   srw_tac [][last_update_thm] >>
   fsrw_tac [][NOT_LESS,MULT] >>
+  `0 < delay n` by METIS_TAC [delay_above_0] >>
   `delay n ≤ t` by DECIDE_TAC >>
   srw_tac [ARITH_ss][SUB_MOD] ) >>
-imp_res_tac update_time_last_update >>
-fsrw_tac [][])
+fsrw_tac [][update_time_last_update])
 
 val SR_first = Q.store_thm(
 "SR_first",
-`0 < delay n ⇒ (SR D n m t = if t < SUC m then 0 else SR D n 0 (t - (m * delay n)))`,
-strip_tac >>
+`SR D n m t = if t < SUC m then 0 else SR D n 0 (t - (m * delay n))`,
 qid_spec_tac `t` >>
 Induct_on `m` >> fsrw_tac [][SR_prev]
->- (Cases >> srw_tac [ARITH_ss][SR_0_until]) >>
+>- (Cases >> srw_tac [ARITH_ss][SR_0_until,delay_above_0]) >>
 gen_tac >>
 Cases_on `t < SUC (SUC m)` >- (
   srw_tac [][] >>
-  match_mp_tac SR_0_until >>
-  srw_tac [ARITH_ss][] ) >>
+  assume_tac delay_above_0 >>
+  DECIDE_TAC ) >>
 Cases_on `t < SUC (SUC m) * delay n` >- (
   srw_tac [][] >>
   match_mp_tac EQ_SYM >>
   match_mp_tac SR_0_until >>
-  fsrw_tac [][MULT] ) >>
+  fsrw_tac [][MULT,delay_above_0] ) >>
 Cases_on `t < delay n + SUC m` >- (
   srw_tac [][] >>
   match_mp_tac EQ_SYM >>
   match_mp_tac SR_0_until >>
-  fsrw_tac [][MULT,NOT_LESS] >>
+  fsrw_tac [][MULT,NOT_LESS,delay_above_0] >>
   match_mp_tac LESS_TRANS >>
   qexists_tac `delay n + SUC m` >>
   srw_tac [][ADD1] >>
@@ -304,37 +331,9 @@ srw_tac [ARITH_ss][MULT])
 val output_last_update = Q.store_thm(
 "output_last_update",
 `output D n x t = output D n x (last_update n t)`,
-Induct_on `t` >> srw_tac [][Slice_def,last_update_def])
-
-val tap_above_0 = Q.store_thm(
-"tap_above_0",
-`n < 5 ∧ x < 2 ⇒ 0 < tap n x`,
-qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-reverse (Cases_on `m`) >>
-qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-reverse (Cases_on `x`) >>
-fsrw_tac [][tap_def] >- (
-  Cases_on `n` >> srw_tac [ARITH_ss][] >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  fsrw_tac [ARITH_ss][] )
->- (
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-  Cases_on `m` >> srw_tac [][tap_def] >>
-  fsrw_tac [ARITH_ss][] ) >>
-qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
-Cases_on `m` >> srw_tac [][tap_def] >>
-fsrw_tac [ARITH_ss][])
+Induct_on `t` >> srw_tac [][Slice_def,last_update_def] >>
+srw_tac [][Once output_def] >>
+fsrw_tac [][update_time_def,delay_thm])
 
 val output_sum = Q.store_thm(
 "output_sum",
@@ -466,6 +465,36 @@ qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
 Cases_on `m` >> fsrw_tac [][update_time_def,delay_def] >- (
   fsrw_tac [][MOD_EQ_0_DIVISOR] >>
   qexists_tac `d * (32768 DIV 2048)` >> srw_tac [ARITH_ss][] ) >>
+fsrw_tac [ARITH_ss][])
+
+val tap_above_0 = Q.store_thm(
+"tap_above_0",
+`n < 5 ∧ x < 2 ⇒ 0 < tap n x`,
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+reverse (Cases_on `m`) >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+reverse (Cases_on `x`) >>
+fsrw_tac [][tap_def] >- (
+  Cases_on `n` >> srw_tac [ARITH_ss][] >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  fsrw_tac [ARITH_ss][] )
+>- (
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+  Cases_on `m` >> srw_tac [][tap_def] >>
+  fsrw_tac [ARITH_ss][] ) >>
+qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][tap_def] >>
 fsrw_tac [ARITH_ss][])
 
 val sum_of_sums = Q.store_thm(
