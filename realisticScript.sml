@@ -2,15 +2,14 @@ open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory listThe
 
 val _ = new_theory "realistic"
 
-(* Slice 0 is a fake slice copying the global input. It has width 1, a single
-tap, is updated at every time step, and its source is the global input. Slices
-1 through 6 are as in the schematics. Slices 7 onwards are posited by
-extrapolating formulas, except they don't have taps defined, so most things
-won't be provable about them. *)
+(* Slice 0 is a fake slice with width 0 whose output register copies the global
+input. Slices 1 through 6 are as in the schematics. Slices 7 onwards are
+posited by extrapolating formulas, except they don't have taps defined, so most
+things won't be provable about them. *)
 
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
-  (tap 0 0 = 1  -1) ∧
+  (tap 0 0 = 0) ∧
   (tap 1 0 = 1  -1) ∧
   (tap 1 1 = 2  -1) ∧
   (tap 2 0 = 8  -1) ∧
@@ -83,7 +82,7 @@ val Slice_def = tDefine "Slice" `
       (INR (INR (D,n,m,t))) -> (n,m,t,2) ||
       (INR (INL (D,n,x,t))) -> (n,tap n x,t,1))` >>
 srw_tac [ARITH_ss][] >>
-Cases_on `n` >- srw_tac [][input_def,tap_def] >>
+Cases_on `n` >- fsrw_tac [][input_def,tap_def] >>
 disj1_tac >> match_mp_tac input_earlier >>
 srw_tac [][])
 
@@ -337,28 +336,29 @@ fsrw_tac [][update_time_def,delay_thm])
 
 val output_sum = Q.store_thm(
 "output_sum",
-`output D n x t = SIGMA (λm. SR D n m t) (count (SUC (tap n x)))`,
-Induct_on `t` >> srw_tac [][Slice_def] >-
+`0 < n ⇒ (output D n x t = SIGMA (λm. SR D n m t) (count (SUC (tap n x))))`,
+strip_tac >>
+Induct_on `t` >> srw_tac [ARITH_ss][Once output_def,Slice_def] >-
   srw_tac [][SUM_IMAGE_ZERO] >>
 srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
 srw_tac [][GENLIST_CONS,SimpRHS] >>
 srw_tac [][combinTheory.o_DEF] >>
-`∀x. source D n (SUC x) t = SR D n x t` by srw_tac [][source_def] >>
-srw_tac [ARITH_ss][GENLIST,SUM_SNOC])
+srw_tac [ARITH_ss][GENLIST,SUM_SNOC,source_def])
 
 val output_first = Q.store_thm(
 "output_first",
-`0 < delay n ⇒ (output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else SR D n 0 (t - m * (delay n))) (count (SUC (tap n x))))`,
+`0 < n ⇒ (output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else SR D n 0 (t - m * (delay n))) (count (SUC (tap n x))))`,
 srw_tac [][output_sum] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [][Once SR_first] >- (
   match_mp_tac (GSYM SR_0_until) >>
-  fsrw_tac [][NOT_LESS_EQUAL,GSYM MULT] >>
+  fsrw_tac [][NOT_LESS_EQUAL,GSYM MULT,delay_above_0] >>
   match_mp_tac LESS_LESS_EQ_TRANS >>
   qmatch_assum_rename_tac `t < SUC z` [] >>
   qexists_tac `SUC z` >>
-  srw_tac [][] ) >>
+  srw_tac [][delay_above_0] ) >>
 match_mp_tac SR_0_until >>
+assume_tac delay_above_0 >>
 DECIDE_TAC)
 
 val prev1_update_time = Q.store_thm(
