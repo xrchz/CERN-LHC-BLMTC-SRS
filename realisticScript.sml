@@ -363,18 +363,18 @@ DECIDE_TAC)
 
 val prev1_update_time = Q.store_thm(
 "prev1_update_time",
-`0 < delay n ∧ 0 < t ∧ update_time n t ⇒ update_time n (t - delay n)`,
+`0 < t ∧ update_time n t ⇒ update_time n (t - delay n)`,
 srw_tac [][update_time_def] >>
 Cases_on `t < delay n` >- (
   imp_res_tac (GSYM X_MOD_Y_EQ_X) >>
   fsrw_tac [][] ) >>
 qsuff_tac `((t - delay n * 1) MOD delay n = t MOD delay n)` >- srw_tac [][] >>
 match_mp_tac MOD_SUB >>
-fsrw_tac [][NOT_LESS])
+fsrw_tac [][NOT_LESS,delay_above_0])
 
 val prev_update_time = Q.store_thm(
 "prev_update_time",
-`0 < delay n ∧ z * delay n < t ∧ update_time n t ⇒ update_time n (t - z * delay n)`,
+`z * delay n < t ∧ update_time n t ⇒ update_time n (t - z * delay n)`,
 Induct_on `z` >> srw_tac [][] >>
 fsrw_tac [][MULT,SUB_PLUS] >>
 `z * delay n < t` by DECIDE_TAC >>
@@ -383,7 +383,7 @@ srw_tac [][prev1_update_time])
 
 val output_source_at_update_times = Q.store_thm(
 "output_source_at_update_times",
-`0 < delay n ∧ update_time n t ⇒ (output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else source D n 0 (t - m * (delay n) - 1)) (count (SUC (tap n x))))`,
+`0 < n ∧ update_time n t ⇒ (output D n x t = SIGMA (λm. if t ≤ m * (delay n) then 0 else source D n 0 (t - m * (delay n) - 1)) (count (SUC (tap n x))))`,
 srw_tac [][output_first] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [ARITH_ss][Once SR_def] >>
