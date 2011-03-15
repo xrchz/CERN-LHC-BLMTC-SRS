@@ -9,7 +9,7 @@ things won't be provable about them. *)
 
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
-  (tap 0 0 = 0) ∧
+  (tap 0 x = 0) ∧
   (tap 1 0 = 1  -1) ∧
   (tap 1 1 = 2  -1) ∧
   (tap 2 0 = 8  -1) ∧
@@ -64,7 +64,7 @@ val update_time_def = Define`
 val Slice_def = tDefine "Slice" `
   (source D n 0 t = output D (FST (input n)) (SND (input n)) t) ∧
   (source D n (SUC m) t = SR D n m t) ∧
-  (output D 0 0 t = D t) ∧
+  (output D 0 x t = D t) ∧
   (output D n x 0 = 0) ∧
   (output D n x (SUC t) =
    if update_time n (SUC t)
@@ -92,7 +92,7 @@ val RS_def = Define`
 val output_def = Q.store_thm(
 "output_def",
 `output D n x t =
- if (n = 0) ∧ (x = 0) then D t
+ if (n = 0) then D t
  else if t = 0 then 0
  else if update_time n t then output D n x (t - 1) + source D n 0 (t - 1) - SR D n (tap n x) (t - 1)
  else output D n x (t - 1)`,
@@ -390,6 +390,254 @@ srw_tac [ARITH_ss][Once SR_def] >>
 fsrw_tac [][NOT_LESS_EQUAL] >>
 imp_res_tac prev_update_time)
 
+val slice_count_def = tDefine "slice_count"`
+  (slice_count 0 = 0) ∧
+  (slice_count n = SUC (slice_count (FST (input n))))`
+(WF_REL_TAC `$<` >> srw_tac [][input_earlier])
+
+val slice_count_thm = Q.store_thm(
+"slice_count_thm",
+`(slice_count 0 = 0) ∧
+ (slice_count 1 = 1) ∧
+ (slice_count 2 = 1) ∧
+ (slice_count 3 = 2) ∧
+ (slice_count 4 = 3) ∧
+ (slice_count 5 = 4) ∧
+ (slice_count 6 = 4)`,
+srw_tac [][
+  slice_count_def,
+  SIMP_RULE (srw_ss()) [] (SPEC ``0`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``1`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``2`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``3`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``4`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``5`` (GEN_ALL slice_count_def)),
+  input_def])
+
+(*
+val sanity = Q.prove(
+`(RS D 3 t = output D 2 1 t) /\ (update_time 2 29)`,
+srw_tac [][RS_def,update_time_def,delay_thm])
+
+val sanity = Q.prove(
+`(!t. D t = t) /\ (n = 2) /\ (x = 1) /\ (t = 29) ==>
+ (RS D 3 t =
+   SIGMA (\m. if t < m + (slice_count n) then 0 else D (t - m - (slice_count n)))
+   (count (SUC (tap n x) * delay n)))`,
+srw_tac [][RS_def,delay_def,tap_def,slice_count_thm] >>
+srw_tac [][Once output_def,update_time_def,delay_thm] >>
+srw_tac [][source_def,Once SR_def,tap_def,input_def] >>
+srw_tac [][Once SR_def,tap_def,update_time_def,delay_thm] >>
+ntac 400 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
+
+val sanity = Q.prove(
+`(RS D 4 t = output D 3 0 t) /\ (update_time 3 30)`,
+srw_tac [][RS_def,update_time_def,delay_thm])
+
+val sanity = Q.prove(
+`(!t. D t = t) /\ (n = 3) /\ (x = 0) /\ (t = 30) ==>
+ let nn = if n < 3 then 1 else if n < 6 then n - 1 else n - 2 in
+ (RS D 4 t = SIGMA (\m. if t < m + nn then 0 else D (t - m - nn)) (count (SUC (tap n x) * delay n)))`,
+srw_tac [][RS_def,delay_def,tap_def,LET_THM] >>
+srw_tac [][Once output_def,update_time_def,delay_thm] >>
+srw_tac [][source_def,Once SR_def,tap_def,input_def] >>
+srw_tac [][Once SR_def,tap_def,update_time_def,delay_thm] >>
+ntac 1200 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
+
+val sanity = Q.prove(
+`(RS D 11 t = output D 6 1 t) ∧ (update_time 6 16384)`,
+srw_tac [][RS_def,update_time_def,delay_thm])
+
+val sanity = Q.prove(
+`(!t. D t = t) /\ (n = 6) /\ (x = 1) /\ (t = 16384) ==>
+ let nn = if n < 3 then 1 else if n < 6 then n - 1 else n - 2 in
+ (RS D 11 t = SIGMA (\m. if t < m + nn then 0 else D (t - m - nn)) (count (SUC (tap n x) * delay n)))`,
+srw_tac [][RS_def,delay_def,tap_def,LET_THM] >>
+srw_tac [][Once output_def,update_time_def,delay_thm] >>
+srw_tac [][source_def,Once SR_def,tap_def,input_def] >>
+srw_tac [][Once SR_def,tap_def,update_time_def,delay_thm] >>
+ntac 1200 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+ntac 12000 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+ntac 3200 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+ntac 5000 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+ntac 10000 (
+srw_tac [][source_def,Once output_def,input_def,tap_def,update_time_def,delay_thm,Once SR_def] ) >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
+
+*)
+
+val input_SUC = Q.store_thm(
+"input_SUC",
+`FST (input n) ≤ FST (input (SUC n))`,
+srw_tac [][input_def] >>
+ntac 7 (
+qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [ARITH_ss][] ))
+
+val update_time_SUC = Q.store_thm(
+"update_time_SUC",
+`n < 6 ⇒ (update_time (SUC n) t ⇒ update_time n t)`,
+ntac 4 (
+qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
+Cases_on `m` >> srw_tac [][update_time_def,delay_thm] ) >- (
+  fsrw_tac [][MOD_EQ_0_DIVISOR,delay_thm] >>
+  qexists_tac `d * 32` >> srw_tac [ARITH_ss][] ) >>
+qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
+Cases_on `m` >> fsrw_tac [][update_time_def,delay_thm] >- (
+  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
+  qexists_tac `d * (2048 DIV 64)` >> srw_tac [ARITH_ss][] ) >>
+qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
+Cases_on `m` >> fsrw_tac [][update_time_def,delay_thm] >- (
+  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
+  qexists_tac `d * (16384 DIV 2048)` >> srw_tac [ARITH_ss][] ) >>
+fsrw_tac [ARITH_ss][])
+
+val output_input_at_update_times = Q.store_thm(
+"output_input_at_update_times",
+`(∀k t. k < n ⇒ update_time (SUC k) t ⇒ update_time k t) ∧ update_time n t
+⇒ (output D n x t = SIGMA (λm. if t < m + (slice_count n) then 0 else D (t - m - (slice_count n))) (count (SUC (tap n x) * delay n)))`,
+map_every qid_spec_tac [`t`,`x`,`n`] >>
+Induct >- (
+  srw_tac [][Once output_def,slice_count_thm,SUM_IMAGE_ZERO,delay_thm,
+             update_time_def,tap_def,SUM_IMAGE_count_SUM_GENLIST] ) >>
+srw_tac [][output_source_at_update_times] >>
+srw_tac [][source_def] >>
+
+(
+  output_source_at_update_times
+  fsrw_tac [][output_source_at_update_times,delay_def,source_0_thm,
+              GSYM ADD1,LESS_OR_EQ,prim_recTheory.LESS_THM,DISJ_SYM] ) >>
+srw_tac [][output_source_at_update_times] >>
+srw_tac [][source_def] >>
+Cases_on `n=0` >- (
+  srw_tac [][delay_def] >>
+  srw_tac [][MULT_SYM] >>
+  match_mp_tac EQ_SYM >>
+  match_mp_tac SUM_IMAGE_count_MULT >>
+  srw_tac [ARITH_ss][] >- (
+    srw_tac [][SUM_IMAGE_ZERO] ) >>
+  srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >- (
+    fsrw_tac [ARITH_ss][update_time_def,delay_def,NOT_LESS_EQUAL,GSYM EVEN_MOD2] >>
+    `t = SUC (2 * m)` by DECIDE_TAC >>
+    srw_tac [][] >>
+    fsrw_tac [][EVEN,EVEN_DOUBLE] )
+  >- (
+    DECIDE_TAC )
+  >- (
+    fsrw_tac [ARITH_ss][NOT_LESS] >>
+    `t = 2 * m + 2` by DECIDE_TAC >>
+    srw_tac [ARITH_ss][RS1_thm] ) >>
+  fsrw_tac [ARITH_ss][NOT_LESS,RS1_thm] ) >>
+srw_tac [][] >>
+`delay (SUC n) = SUC (tap n 0) * delay n` by (
+  srw_tac [][MULT_SYM] >>
+  first_assum match_mp_tac >>
+  srw_tac [ARITH_ss][] ) >>
+srw_tac [][] >>
+qmatch_abbrev_tac `SIGMA g (count a) = SIGMA f (count (a * (b * c)))` >>
+(*
+qsuff_tac `SIGMA f (count (b * (c * a))) = SIGMA g (count a)` >-
+  PROVE_TAC [MULT_SYM,MULT_ASSOC] >>
+qsuff_tac `∃h. (∀m. m < a ⇒ (g m = SIGMA (λx. h (x + c * m)) (count c))) ∧
+               (∀m. m < c * a ⇒ (h m = SIGMA (λx. f (x + b * m)) (count b)))` >- (
+  strip_tac >>
+  `SIGMA g (count a) = SIGMA h (count (c * a))` by (
+    match_mp_tac EQ_SYM >>
+    match_mp_tac SUM_IMAGE_count_MULT >>
+    first_assum ACCEPT_TAC ) >>
+  srw_tac [][] >>
+  match_mp_tac SUM_IMAGE_count_MULT >>
+  first_assum ACCEPT_TAC ) >>
+qexists_tac `λm. SIGMA (λx. f (x + b * m)) (count b)` >>
+srw_tac [][] >>
+srw_tac [][Abbr`g`,Abbr`f`] >- (
+  srw_tac [ARITH_ss][SUM_IMAGE_ZERO] ) >>
+srw_tac [][Once output_last_update] >>
+`0 < delay n` by (first_assum match_mp_tac >> srw_tac [][]) >>
+`0 < t - m * (b * c)` by DECIDE_TAC >>
+`update_time n (t - m * (b * c))` by (
+  qunabbrev_tac `c` >>
+  srw_tac [][MULT_ASSOC] >>
+  match_mp_tac prev_update_time >>
+  srw_tac [ARITH_ss][] ) >>
+srw_tac [][last_update_sub1] >>
+qmatch_abbrev_tac `output D n 0 tt = Z` >>
+match_mp_tac EQ_TRANS >>
+qexists_tac `SIGMA (λm. if tt < m + SUC n then 0 else D (tt - m - SUC n)) (count (b * c))` >>
+CONJ_TAC >- (
+  qunabbrev_tac `b` >>
+  first_x_assum match_mp_tac >>
+  srw_tac [ARITH_ss][Abbr`tt`] >>
+  Cases_on `t = (c + c * m * SUC (tap n 0))` >- srw_tac [][update_time_def] >>
+  qsuff_tac `update_time n (t - ((SUC (m * (SUC (tap n 0)))) * c))`
+    >- PROVE_TAC [MULT_SUC,MULT_ASSOC,MULT_SYM,ADD_SYM] >>
+  qunabbrev_tac `c` >>
+  match_mp_tac prev_update_time >>
+  fsrw_tac [ARITH_ss][MULT] >>
+  fsrw_tac [][update_time_def] >>
+  qpat_assum `0 < delay n` assume_tac >>
+  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
+  qsuff_tac `delay n < d * delay n` >- DECIDE_TAC >>
+  Cases_on `d=0` >> fsrw_tac [ARITH_ss][] >>
+  Cases_on `d=1` >> fsrw_tac [ARITH_ss][]) >>
+qunabbrev_tac `Z` >>
+match_mp_tac SUM_IMAGE_count_MULT >>
+srw_tac [][Abbr`tt`] >>
+srw_tac [ARITH_ss][LEFT_ADD_DISTRIB]
+*)
+qsuff_tac `SIGMA f (count (c * (b * a))) = SIGMA g (count a)` >-
+  PROVE_TAC [MULT_SYM,MULT_ASSOC] >>
+qsuff_tac `∃h. (∀m. m < a ⇒ (g m = SIGMA (λx. h (x + b * m)) (count b))) ∧
+               (∀m. m < b * a ⇒ (h m = SIGMA (λx. f (x + c * m)) (count c)))` >- (
+  strip_tac >>
+  `SIGMA g (count a) = SIGMA h (count (b * a))` by (
+    match_mp_tac EQ_SYM >>
+    match_mp_tac SUM_IMAGE_count_MULT >>
+    first_assum ACCEPT_TAC ) >>
+  srw_tac [][] >>
+  match_mp_tac SUM_IMAGE_count_MULT >>
+  first_assum ACCEPT_TAC ) >>
+qexists_tac `λm. SIGMA (λx. f (x + c * m)) (count c)` >>
+srw_tac [][] >>
+srw_tac [][Abbr`g`,Abbr`f`] >- (
+  srw_tac [ARITH_ss][SUM_IMAGE_ZERO] ) >>
+srw_tac [][Once output_last_update] >>
+`0 < delay n` by (first_assum match_mp_tac >> srw_tac [][]) >>
+`0 < t - m * (b * c)` by DECIDE_TAC >>
+`update_time n (t - m * (b * c))` by (
+  qunabbrev_tac `c` >>
+  srw_tac [][MULT_ASSOC] >>
+  match_mp_tac prev_update_time >>
+  srw_tac [ARITH_ss][] ) >>
+srw_tac [][last_update_sub1] >>
+qmatch_abbrev_tac `output D n 0 tt = Z` >>
+match_mp_tac EQ_TRANS >>
+qexists_tac `SIGMA (λm. if tt < m + SUC n then 0 else D (tt - m - SUC n)) (count (b * c))` >>
+CONJ_TAC >- (
+  qunabbrev_tac `b` >>
+  first_x_assum match_mp_tac >>
+  srw_tac [ARITH_ss][Abbr`tt`] >>
+  Cases_on `t = (c + c * m * SUC (tap n 0))` >- srw_tac [][update_time_def] >>
+  qsuff_tac `update_time n (t - ((SUC (m * (SUC (tap n 0)))) * c))`
+    >- PROVE_TAC [MULT_SUC,MULT_ASSOC,MULT_SYM,ADD_SYM] >>
+  qunabbrev_tac `c` >>
+  match_mp_tac prev_update_time >>
+  fsrw_tac [ARITH_ss][MULT] >>
+  fsrw_tac [][update_time_def] >>
+  qpat_assum `0 < delay n` assume_tac >>
+  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
+  qsuff_tac `delay n < d * delay n` >- DECIDE_TAC >>
+  Cases_on `d=0` >> fsrw_tac [ARITH_ss][] >>
+  Cases_on `d=1` >> fsrw_tac [ARITH_ss][]) >>
+qunabbrev_tac `Z` >>
 val delay_SUC = Q.store_thm(
 "delay_SUC",
 `0 < n ∧ n < 4 ⇒ (delay (SUC n) = delay n * SUC (tap n 0))`,
@@ -401,70 +649,6 @@ qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
 Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
 qabbrev_tac `m = n` >> POP_ASSUM (K ALL_TAC) >>
 Cases_on `m` >> srw_tac [][delay_def,tap_def] >>
-fsrw_tac [ARITH_ss][])
-
-(*
-val sanity = Q.prove(
-`(RS D 3 t = output D 0 1 t) /\ (update_time 0 29)`,
-srw_tac [][RS_def,update_time_def,delay_def])
-
-val sanity = Q.prove(
-`(!t. D t = t) /\ (n = 0) /\ (x = 1) /\ (t = 29) ==>
- (RS D 3 t = SIGMA (\m. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x) * delay n)))`,
-srw_tac [][RS_def,delay_def,tap_def] >>
-srw_tac [][Once output_def,update_time_def,delay_def] >>
-srw_tac [][source_def,Once SR_def,tap_def] >>
-srw_tac [][Once SR_def,tap_def,update_time_def,delay_def] >>
-ntac 10 (
-  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def]) >>
-  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] ) >>
-ntac 40 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def]) >>
-srw_tac [ARITH_ss][] >>
-ntac 20 (
-  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] >>
-  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def])) >>
-srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
-
-val sanity = Q.prove(
-`(RS D 4 t = output D 1 0 t) /\ (update_time 1 30)`,
-srw_tac [][RS_def,update_time_def,delay_def])
-
-val sanity = Q.prove(
-`(!t. D t = t) /\ (n = 1) /\ (x = 0) /\ (t = 30) ==>
- (RS D 4 t = SIGMA (\m. if t < m + SUC n then 0 else D (t - m - SUC n)) (count (SUC (tap n x) * delay n)))`,
-srw_tac [][RS_def,delay_def,tap_def] >>
-srw_tac [][Once output_def,update_time_def,delay_def] >>
-srw_tac [][source_def,Once SR_def,tap_def] >>
-srw_tac [][Once SR_def,tap_def,update_time_def,delay_def] >>
-ntac 10 (
-  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def]) >>
-  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] ) >>
-ntac 40 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def,RS1_thm]) >>
-srw_tac [ARITH_ss][] >>
-ntac 20 (
-  srw_tac [][Once output_def,update_time_def,delay_def,tap_def] >>
-  ntac 15 (srw_tac [][source_def,Once SR_def,update_time_def,delay_def])) >>
-srw_tac [][RS1_thm] >>
-srw_tac [][SUM_IMAGE_count_SUM_GENLIST])
-*)
-
-val update_time_SUC = Q.store_thm(
-"update_time_SUC",
-`n < 4 ⇒ (update_time (SUC n) t ⇒ update_time n t)`,
-qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
-Cases_on `m` >> srw_tac [][update_time_def,delay_def] >>
-qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
-Cases_on `m` >> fsrw_tac [][update_time_def,delay_def] >- (
-  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
-  qexists_tac `d * 32` >> srw_tac [ARITH_ss][] ) >>
-qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
-Cases_on `m` >> fsrw_tac [][update_time_def,delay_def] >- (
-  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
-  qexists_tac `d * (2048 DIV 64)` >> srw_tac [ARITH_ss][] ) >>
-qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
-Cases_on `m` >> fsrw_tac [][update_time_def,delay_def] >- (
-  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
-  qexists_tac `d * (32768 DIV 2048)` >> srw_tac [ARITH_ss][] ) >>
 fsrw_tac [ARITH_ss][])
 
 val tap_above_0 = Q.store_thm(
@@ -875,7 +1059,7 @@ srw_tac [ARITH_ss][])
 
 (* some sanity checks *)
 
-Q.prove(`(!t. D t = t) ==> (RS D 1 26 = 49)`,
+val sanity = Q.prove(`(!t. D t = t) ==> (RS D 1 26 = 49)`,
 srw_tac [][RS_def] >>
 ntac 80 (
 srw_tac [][Once output_def,update_time_def,delay_thm,tap_def] >>
@@ -883,7 +1067,7 @@ srw_tac [][source_def,input_def,Once SR_def] >>
 srw_tac [][Once SR_def,update_time_def,delay_thm] >>
 srw_tac [][source_def,Once SR_def,update_time_def,delay_thm,input_def] ))
 
-Q.prove(
+val sanity = Q.prove(
 `(!t. D t = t) ==> (SR D 1 4 10 = 5)`,
 strip_tac >>
 ntac 5 (
@@ -891,13 +1075,13 @@ srw_tac [][Once SR_def,update_time_def,delay_thm] >>
 srw_tac [][source_def] ) >>
 srw_tac [][input_def,Once output_def])
 
-Q.prove(
+val sanity = Q.prove(
 `(!t. D t = t) ==> (RS D 2 10 = 44)`,
 srw_tac [][RS_def] >>
 ntac 80 (
 srw_tac [][Once output_def,update_time_def,delay_thm,source_def,input_def,Once SR_def,tap_def] ))
 
-Q.prove(
+val sanity = Q.prove(
 `(!t. D t = t) ==> (RS D 2 26 = 172)`,
 srw_tac [][RS_def] >>
 ntac 240 (
