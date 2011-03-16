@@ -505,7 +505,7 @@ Cases_on `m` >> srw_tac [ARITH_ss][] ))
 
 val update_time_SUC = Q.store_thm(
 "update_time_SUC",
-`n < 6 ⇒ (update_time (SUC n) t ⇒ update_time n t)`,
+`update_time (SUC n) t ⇒ update_time n t`,
 ntac 4 (
 qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
 Cases_on `m` >> srw_tac [][update_time_def,delay_thm] ) >- (
@@ -519,7 +519,18 @@ qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
 Cases_on `m` >> fsrw_tac [][update_time_def,delay_thm] >- (
   fsrw_tac [][MOD_EQ_0_DIVISOR] >>
   qexists_tac `d * (16384 DIV 2048)` >> srw_tac [ARITH_ss][] ) >>
-fsrw_tac [ARITH_ss][])
+qabbrev_tac `m = n` >> pop_assum (K ALL_TAC) >>
+Cases_on `m` >> fsrw_tac [][update_time_def,delay_thm] >- (
+  `delay 7 = delay (SUC 6)` by srw_tac [][] >>
+  fsrw_tac [][delay_def,input_def,tap_thm,delay_thm] >>
+  fsrw_tac [][MOD_EQ_0_DIVISOR] >>
+  qexists_tac `d * (524288 DIV 16384)` >>
+  srw_tac [ARITH_ss][] ) >>
+qmatch_abbrev_tac `t MOD delay m = 0` >>
+`0 < delay m ∧ 0 < delay (SUC m)` by srw_tac [][delay_above_0] >>
+fsrw_tac [][MOD_EQ_0_DIVISOR] >>
+srw_tac [ARITH_ss][Once delay_def,input_def,Abbr`m`] >>
+metis_tac [])
 
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
