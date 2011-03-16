@@ -11,17 +11,17 @@ things won't be provable about them. *)
 val tap_def = Define`
   (tap 0 x = 0) ∧
   (tap 1 0 = 1  -1) ∧
-  (tap 1 1 = 2  -1) ∧
+  (tap 1 x = 2  -1) ∧
   (tap 2 0 = 8  -1) ∧
-  (tap 2 1 = 16 -1) ∧
+  (tap 2 x = 16 -1) ∧
   (tap 3 0 = 32 -1) ∧
-  (tap 3 1 = 128-1) ∧
+  (tap 3 x = 128-1) ∧
   (tap 4 0 = 32 -1) ∧
-  (tap 4 1 = 256-1) ∧
+  (tap 4 x = 256-1) ∧
   (tap 5 0 = 16 -1) ∧
-  (tap 5 1 = 64 -1) ∧
+  (tap 5 x = 64 -1) ∧
   (tap 6 0 = 32 -1) ∧
-  (tap 6 1 = 128 -1)`
+  (tap 6 x = 128 -1)`
 
 (* input n = the slice and tap connected to the input of slice n *)
 val input_def = Define`
@@ -113,6 +113,27 @@ val SR_def = Q.store_thm(
 `SR D n m t = if t = 0 then 0 else if update_time n t then source D n m (t-1) else SR D n m (t-1)`,
 Cases_on `t` >> srw_tac [][Slice_def]);
 
+val tap_thm = Q.store_thm("tap_thm",
+`(tap 0 0 = 0) ∧
+  (tap 1 0 = 1  -1) ∧
+  (tap 1 1 = 2  -1) ∧
+  (tap 2 0 = 8  -1) ∧
+  (tap 2 1 = 16 -1) ∧
+  (tap 3 0 = 32 -1) ∧
+  (tap 3 1 = 128-1) ∧
+  (tap 4 0 = 32 -1) ∧
+  (tap 4 1 = 256-1) ∧
+  (tap 5 0 = 16 -1) ∧
+  (tap 5 1 = 64 -1) ∧
+  (tap 6 0 = 32 -1) ∧
+  (tap 6 1 = 128 -1)`,
+srw_tac [][tap_def] >>
+qmatch_abbrev_tac `tap x 1 = z` >> (
+qsuff_tac `tap x (SUC 0) = z` >- srw_tac [][] >>
+unabbrev_all_tac >>
+simp_tac bool_ss [tap_def] >>
+srw_tac [][] ))
+
 val delay_thm = Q.store_thm(
 "delay_thm",
 `(delay 0 = 1) ∧
@@ -125,10 +146,10 @@ val delay_thm = Q.store_thm(
 conj_asm1_tac >- srw_tac [][delay_def] >>
 conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`0`] delay_def),input_def,tap_def] >>
 conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`1`] delay_def),input_def,tap_def] >>
-conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`2`] delay_def),input_def,tap_def] >>
-conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`3`] delay_def),input_def,tap_def] >>
-conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`4`] delay_def),input_def,tap_def] >>
-srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`5`] delay_def),input_def,tap_def])
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`2`] delay_def),input_def,tap_thm] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`3`] delay_def),input_def,tap_thm] >>
+conj_asm1_tac >- srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`4`] delay_def),input_def,tap_thm] >>
+srw_tac [ARITH_ss][SIMP_RULE (srw_ss()) [] (Q.INST[`v`|->`5`] delay_def),input_def,tap_thm])
 
 val source_1_thm = Q.store_thm(
 "source_1_thm",
