@@ -2,10 +2,10 @@ open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory listThe
 
 val _ = new_theory "realistic"
 
-(* Slice 0 is a fake slice with width 0 whose output register copies the global
-input. Slices 1 through 6 are as in the schematics. Slices 7 onwards are
-posited by extrapolating formulas, except they don't have taps defined, so most
-things won't be provable about them. *)
+(* Slice 0 is a fake slice whose output register copies the global input.
+Slices 1 through 6 are as in the schematics. Slices 7 onwards are posited by
+extrapolating formulas, except they don't have taps defined, so most things
+won't be provable about them. *)
 
 (* tap n x is the location of tap x of slice n *)
 val tap_def = Define`
@@ -107,11 +107,6 @@ val source_def = Q.store_thm(
 "source_def",
 `source D n m t = if m = 0 then output D (FST (input n)) (SND (input n)) t else SR D n (m - 1) t`,
 Cases_on `m` >> srw_tac [][Slice_def])
-
-val SR_def = Q.store_thm(
-"SR_def",
-`SR D n m t = if t = 0 then 0 else if update_time n t then source D n m (t-1) else SR D n m (t-1)`,
-Cases_on `t` >> srw_tac [][Slice_def]);
 
 val tap_thm = Q.store_thm("tap_thm",
 `(tap 0 0 = 0) ∧
@@ -217,11 +212,16 @@ Induct_on `y` >> srw_tac [][] >>
 fsrw_tac [][] >> srw_tac [][last_update_def] >>
 PROVE_TAC [last_update_upper_bound,LESS_EQ_TRANS]);
 
+val update_time_0 = Q.store_thm(
+"update_time_0",
+`update_time 0 t`,
+srw_tac [][update_time_def,delay_thm])
+
 val SR_last_update = Q.store_thm(
 "SR_last_update",
 `SR D n m t = SR D n m (last_update n t)`,
 Induct_on `t` >> srw_tac [][last_update_def] >>
-srw_tac [][Once SR_def]);
+srw_tac [][Once SR_def])
 
 val update_time_last_update = Q.store_thm(
 "update_time_last_update",
@@ -411,30 +411,6 @@ srw_tac [ARITH_ss][Once SR_def] >>
 fsrw_tac [][NOT_LESS_EQUAL] >>
 imp_res_tac prev_update_time)
 
-val slice_count_def = tDefine "slice_count"`
-  (slice_count 0 = 0) ∧
-  (slice_count n = SUC (slice_count (FST (input n))))`
-(WF_REL_TAC `$<` >> srw_tac [][input_earlier])
-
-val slice_count_thm = Q.store_thm(
-"slice_count_thm",
-`(slice_count 0 = 0) ∧
- (slice_count 1 = 1) ∧
- (slice_count 2 = 1) ∧
- (slice_count 3 = 2) ∧
- (slice_count 4 = 3) ∧
- (slice_count 5 = 4) ∧
- (slice_count 6 = 4)`,
-srw_tac [][
-  slice_count_def,
-  SIMP_RULE (srw_ss()) [] (SPEC ``0`` (GEN_ALL slice_count_def)),
-  SIMP_RULE (srw_ss()) [] (SPEC ``1`` (GEN_ALL slice_count_def)),
-  SIMP_RULE (srw_ss()) [] (SPEC ``2`` (GEN_ALL slice_count_def)),
-  SIMP_RULE (srw_ss()) [] (SPEC ``3`` (GEN_ALL slice_count_def)),
-  SIMP_RULE (srw_ss()) [] (SPEC ``4`` (GEN_ALL slice_count_def)),
-  SIMP_RULE (srw_ss()) [] (SPEC ``5`` (GEN_ALL slice_count_def)),
-  input_def])
-
 val input_SUC = Q.store_thm(
 "input_SUC",
 `FST (input n) ≤ FST (input (SUC n))`,
@@ -484,7 +460,7 @@ fsrw_tac [][])
 
 val output_prev = Q.store_thm(
 "output_prev",
-`0 < n ==> (output D n x t = SIGMA (\m. if last_update n t <= m * delay n then 0 else output D (FST (input n)) (SND (input n)) (last_update n t - m * delay n - delay (FST (input n)))) (count (SUC (tap n x))))`,
+`0 < n ⇒ (output D n x t = SIGMA (\m. if last_update n t <= m * delay n then 0 else output D (FST (input n)) (SND (input n)) (last_update n t - m * delay n - delay (FST (input n)))) (count (SUC (tap n x))))`,
 srw_tac [][Once output_last_update] >>
 srw_tac [][output_source_at_update_times,update_time_last_update] >>
 match_mp_tac SUM_IMAGE_CONG >>
@@ -503,12 +479,18 @@ srw_tac [][last_update_sub1])
 
 val output_prev_at_update_times = Q.store_thm(
 "output_prev_at_update_times",
-`0 < n ∧ update_time n t ⇒ (output D n x t = SIGMA (λm. if t ≤ m * delay n then 0 else output D (FST (input n)) (SND (input n)) (t - m * delay n - delay (FST (input n)))) (count (SUC (tap n x))))`,
+`0 < n ∧ update_time n t ⇒
+ (output D n x t =
+  SIGMA (λm. if t ≤ m * delay n then 0
+             else output D (FST (input n)) (SND (input n))
+                    (t - m * delay n - delay (FST (input n))))
+  (count (SUC (tap n x))))`,
 metis_tac [output_prev,last_update_eq_iff_update_time])
 
 val output_prev_update_time = Q.store_thm(
 "output_prev_update_time",
-`t ≥ m * delay n + delay (FST (input n)) ∧ update_time n t ⇒ update_time (FST (input n)) (t - m * delay n - delay (FST (input n)))`,
+`t ≥ m * delay n + delay (FST (input n)) ∧ update_time n t ⇒
+ update_time (FST (input n)) (t - m * delay n - delay (FST (input n)))`,
 reverse (Cases_on `0 < n`) >- (
   Cases_on `n` >>
   fsrw_tac [][delay_thm,input_def,update_time_def] ) >>
@@ -522,16 +504,156 @@ srw_tac [][input_earlier] >>
 match_mp_tac prev_update_time >>
 srw_tac [][] >> DECIDE_TAC)
 
+val output_0 = Q.prove(`output D 0 x t = D t`,srw_tac [][Once output_def])
+
+(*
+val output_rwt = Q.INST[`t`|->`NUMERAL t`] output_prev
+
+val sanity0 = Q.prove(
+`(!t. D t = t) /\ (n = 4) /\ (t = 256) /\ (x = 0) ==>
+0 < n ∧ update_time n t ∧
+(output D n x t = SIGMA (λm. if t < m + delay n then 0 else D (t - m - delay n)) (count (SUC (tap n x) * delay n)))`,
+srw_tac [][update_time_def,delay_thm,tap_thm] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_rwt] >>
+srw_tac [][input_def,last_update_thm,delay_thm,tap_thm] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_rwt] >>
+srw_tac [][input_def,last_update_thm,delay_thm,tap_thm] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_rwt] >>
+srw_tac [][input_def,last_update_thm,delay_thm,tap_thm] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_0])
+
+`(output D 4 1 256 = Z)`
+srw_tac [][output_rwt] >>
+srw_tac [][last_update_thm,delay_thm,tap_thm,input_def] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_rwt] >>
+srw_tac [][last_update_thm,delay_thm,tap_thm,input_def] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_rwt] >>
+srw_tac [][last_update_thm,delay_thm,tap_thm,input_def] >>
+srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+srw_tac [][output_0]
+*)
+
+val delay_sum_def = tDefine "delay_sum"`
+  (delay_sum 0 = 0) ∧
+  (delay_sum n = delay (FST (input n)) + delay_sum (FST (input n)))`
+(WF_REL_TAC `$<` >> srw_tac [][input_earlier])
+
+val delay_sum_thm = Q.store_thm(
+"delay_sum_thm",
+`(delay_sum 0 = 0) ∧
+ (delay_sum 1 = 1) ∧
+ (delay_sum 2 = 1) ∧
+ (delay_sum 3 = 2) ∧
+ (delay_sum 4 = 4) ∧
+ (delay_sum 5 = 68) ∧
+ (delay_sum 6 = 68)`,
+srw_tac [][
+  delay_sum_def,
+  SIMP_RULE (srw_ss()) [] (SPEC ``0`` (GEN_ALL delay_sum_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``1`` (GEN_ALL delay_sum_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``2`` (GEN_ALL delay_sum_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``3`` (GEN_ALL delay_sum_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``4`` (GEN_ALL delay_sum_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``5`` (GEN_ALL delay_sum_def)),
+  input_def,delay_thm])
+
+val delay_sum_above_0 = Q.store_thm(
+"delay_sum_above_0",
+`0 < n ⇒ 0 < delay_sum n`,
+Cases_on `n` >> srw_tac [][delay_sum_def] >>
+qmatch_rename_tac `0 < delay x + y` [] >>
+qsuff_tac `0 < delay x` >- srw_tac [ARITH_ss][] >>
+srw_tac [][delay_above_0])
+
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
-`update_time n t ⇒
- (output D n x t = SIGMA (λm. if t < m + (slice_count n) then 0 else D (t - m - (slice_count n))) (count (SUC (tap n x) * delay n)))`,
+`0 < n ∧ update_time n t ⇒
+ (output D n x t = SIGMA
+   (λm. if t < m + delay_sum n then 0 else D (t - m - delay_sum n))
+   (count (SUC (tap n x) * delay n)))`,
+map_every qid_spec_tac [`t`,`x`,`n`] >>
+ho_match_mp_tac COMPLETE_INDUCTION >>
+Cases >> srw_tac [][] >>
+srw_tac [][output_prev_at_update_times] >>
+qmatch_assum_rename_tac `update_time (SUC n) t` [] >>
+Cases_on `n=0` >- (
+  srw_tac [][delay_thm,input_def,Once output_def,tap_def,delay_sum_thm] >>
+  fsrw_tac [][GSYM ADD1,LESS_OR_EQ,prim_recTheory.LESS_THM,DISJ_SYM] ) >>
+srw_tac [][MULT_SYM] >>
+match_mp_tac EQ_SYM >>
+match_mp_tac SUM_IMAGE_count_MULT >>
+srw_tac [][SUM_IMAGE_ZERO] >- (
+  srw_tac [][MULT_SYM] >>
+  `0 < delay_sum (SUC n)` by srw_tac [][delay_sum_above_0] >>
+  DECIDE_TAC ) >>
+reverse (Cases_on `0 < FST (input (SUC n))`) >- (
+  `FST (input (SUC n)) = 0` by srw_tac [ARITH_ss][] >>
+  srw_tac [][output_0,delay_sum_def] >>
+  srw_tac [][delay_def,tap_def] >>
+  srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
+  fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,delay_def,tap_def]) >>
+`update_time (FST (input (SUC n))) (t - m * delay (SUC n) - delay (FST (input (SUC n))))` by (
+  match_mp_tac prev1_update_time >>
+  conj_tac >- DECIDE_TAC >>
+  match_mp_tac (GEN_ALL update_time_prev) >>
+  qexists_tac `SUC n` >>
+  srw_tac [][input_earlier] >>
+  match_mp_tac prev_update_time >>
+  fsrw_tac [][NOT_LESS_EQUAL] ) >>
+first_x_assum (qspec_then `FST (input (SUC n))` mp_tac) >>
+simp_tac (srw_ss()) [input_earlier] >> strip_tac >>
+pop_assum (qspecl_then [`SND (input (SUC n))`,`t - m * delay (SUC n) - delay (FST (input (SUC n)))`] mp_tac) >>
+srw_tac [][] >>
+srw_tac [][Once delay_def,Cong(prove(``(a = b) ==> (SIGMA f a = SIGMA f b)``,srw_tac [][]))] >>
+srw_tac [][MULT_SYM] >>
+match_mp_tac SUM_IMAGE_CONG >>
+fsrw_tac [][] >>
+pop_assum (K ALL_TAC) >>
+qabbrev_tac `u = FST (input (SUC n))` >>
+qabbrev_tac `v = SND (input (SUC n))` >>
+asm_simp_tac (srw_ss()) [delay_def,delay_sum_def] >>
+asm_simp_tac (srw_ss()) [MULT,MULT_SUC] >>
+qx_gen_tac `z` >> DISCH_TAC >>
+srw_tac [ARITH_ss][] >>
+fsrw_tac [ARITH_ss][NOT_LESS] >>
+metis_tac [delay_above_0,delay_sum_above_0,prim_recTheory.NOT_LESS_0])
 
+(*
 val output_rwt = Q.INST[`t`|->`NUMERAL t`] output_prev
-val output_0 = Q.prove(`output D 0 x t = D t`,srw_tac [][Once output_def])
 val SR_rwts = Q.prove(
 `SR D n m (NUMERAL t) = if NUMERAL t < SUC m then 0 else SR D n 0 (last_update n ((NUMERAL t) - m * delay n))`,
 srw_tac [][Once SR_first,Once SR_last_update])
+
+val slice_count_def = tDefine "slice_count"`
+  (slice_count 0 = 0) ∧
+  (slice_count n = SUC (slice_count (FST (input n))))`
+(WF_REL_TAC `$<` >> srw_tac [][input_earlier])
+
+val slice_count_thm = Q.store_thm(
+"slice_count_thm",
+`(slice_count 0 = 0) ∧
+ (slice_count 1 = 1) ∧
+ (slice_count 2 = 1) ∧
+ (slice_count 3 = 2) ∧
+ (slice_count 4 = 3) ∧
+ (slice_count 5 = 4) ∧
+ (slice_count 6 = 4)`,
+srw_tac [][
+  slice_count_def,
+  SIMP_RULE (srw_ss()) [] (SPEC ``0`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``1`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``2`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``3`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``4`` (GEN_ALL slice_count_def)),
+  SIMP_RULE (srw_ss()) [] (SPEC ``5`` (GEN_ALL slice_count_def)),
+  input_def])
+*)
 
 (*
 val sanity = Q.prove(
@@ -614,6 +736,7 @@ srw_tac [][SUM_IMAGE_count_SUM_GENLIST] >>
 FALSE!!!)
 *)
 
+(*
 val sanity0 = Q.prove(
 `((u,v) = input (SUC n)) /\ (n = 3) /\ (t = 256) /\ (x = 0) /\ (!t. D t = t) ==>
  update_time (SUC n) t /\ (n <> 0) /\
@@ -661,6 +784,7 @@ srw_tac [][Once SR_def,source_def,update_time_def,delay_thm,input_def] >>
 ntac 4000 (
 srw_tac [][Once output_def,update_time_def,delay_thm,tap_thm,Once SR_def,source_def,input_def] )
 )
+*)
 
 (*
 val sanity1 = Q.prove(
@@ -760,18 +884,7 @@ fsrw_tac [][update_time_def,delay_thm,input_def,tap_thm] >>
 srw_tac [][SUM_IMAGE_count_SUM_GENLIST,slice_count_thm] )
 *)
 
-val sum_of_sums = Q.store_thm(
-"sum_of_sums",
-`SIGMA (\m. SIGMA (f m) (count a)) (count b) = SIGMA (\m. f (m DIV a) (m MOD a)) (count (a * b))`,
-Cases_on `a=0` THEN SRW_TAC [][SUM_IMAGE_THM,SUM_IMAGE_ZERO] THEN
-Cases_on `b=0` THEN SRW_TAC [][SUM_IMAGE_THM,SUM_IMAGE_ZERO] THEN
-MATCH_MP_TAC EQ_SYM THEN
-MATCH_MP_TAC SUM_IMAGE_count_MULT THEN
-SRW_TAC [][] THEN
-MATCH_MP_TAC SUM_IMAGE_CONG THEN
-SRW_TAC [][] THEN
-METIS_TAC [ADD_SYM,MULT_SYM,DIV_MULT,MOD_MULT])
-
+(*
 val output_input_at_update_times = Q.store_thm(
 "output_input_at_update_times",
 `update_time n t ⇒
@@ -918,6 +1031,7 @@ srw_tac [][] >>
   first_assum match_mp_tac >>
   srw_tac [ARITH_ss][] ) >>
 srw_tac [][] >>
+*)
 (*
 qsuff_tac `SIGMA f (count (b * (c * a))) = SIGMA g (count a)` >-
   PROVE_TAC [MULT_SYM,MULT_ASSOC] >>
@@ -1212,6 +1326,7 @@ simp_tac (srw_ss()) [ADD1,PRE_SUB1] >>
 simp_tac (srw_ss()) [SUB_PLUS] >>
 srw_tac [ARITH_ss][]
 *)
+(*
 qexists_tac `REVERSE l1` >>
 conj_tac >- srw_tac [][PERM_REVERSE] >>
 match_mp_tac PERM_INTRO >>
@@ -1357,6 +1472,7 @@ srw_tac [][] >>
 match_mp_tac SUM_IMAGE_CONG >>
 fsrw_tac [ARITH_ss][GSYM SUC_ADD_SYM,ADD_SYM] >>
 fsrw_tac [ARITH_ss][SUC_ADD_SYM,Once ADD_SYM])
+*)
 
 val last_updates_eq = Q.store_thm(
 "last_updates_eq",
