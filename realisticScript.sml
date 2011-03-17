@@ -591,71 +591,32 @@ srw_tac [ARITH_ss][] >>
 fsrw_tac [ARITH_ss][NOT_LESS] >>
 metis_tac [delay_above_0,delay_sum_above_0,prim_recTheory.NOT_LESS_0])
 
-val last_updates_eq = Q.store_thm(
-"last_updates_eq",
-`(if t ≤ n then k + t < n + SUC p.w ** n else k < SUC p.w ** n - (t - n) MOD SUC p.w ** n) ⇔
- (last_update n (t + k) = last_update n t)`,
-Cases_on `t ≤ n` >- (
-  srw_tac [][] >>
-  `0 < SUC p.w ** n` by srw_tac [][] >>
-  `t < n + SUC p.w ** n` by DECIDE_TAC >>
-  fsrw_tac [][SYM last_update_zero] >>
-  srw_tac [ARITH_ss][last_update_zero] ) >>
-fsrw_tac [][] >>
-Cases_on `t < n + SUC p.w ** n` >- (
-  fsrw_tac [][SYM last_update_zero] >>
-  fsrw_tac [ARITH_ss][last_update_zero] ) >>
-`¬(t + k < n + SUC p.w ** n)` by fsrw_tac [ARITH_ss][] >>
-srw_tac [][last_update_thm] >>
-qabbrev_tac `w = SUC p.w ** n` >>
-`0 < w` by srw_tac [][Abbr`w`] >>
-match_mp_tac EQ_SYM >>
-`(t - n) MOD w < w` by PROVE_TAC [MOD_LESS] >>
-match_mp_tac EQ_TRANS >>
-qexists_tac `(t - n) MOD w + k = (t - n + k) MOD w` >>
-conj_tac >- fsrw_tac [ARITH_ss][] >>
-CONV_TAC (LAND_CONV SYM_CONV) >>
-match_mp_tac MOD_LIFT_PLUS_IFF >>
-first_assum ACCEPT_TAC)
-
 val output_input = Q.store_thm(
 "output_input",
-`update_time p n t ∧ u < (SUC p.w ** n) ⇒
-(output p n (t + u) = SIGMA (λm. if t < m + SUC n then 0 else p.input (t - m - SUC n)) (count (SUC p.w ** SUC n)))`,
+`0 < n ∧ update_time n t ∧ u < delay n ⇒
+(output D n x (t + u) = SIGMA (λm. if t < m + delay_sum n then 0 else D (t - m - delay_sum n)) (count (SUC (tap n x) * delay n)))`,
 srw_tac [][Once output_last_update] >>
-`update_time p n (last_update p n (t + u))` by (
-  fsrw_tac [ARITH_ss][update_time_def,MULT,SYM update_time_last_update_iff] ) >>
-`last_update p n (t + u) = t` by (
-  `t = last_update p n t` by (
-    match_mp_tac EQ_SYM >>
-    srw_tac [][last_update_eq_iff_update_time] ) >>
-  qsuff_tac `last_update p n (t + u) = last_update p n t` >- srw_tac [][] >>
-  srw_tac [][SYM last_updates_eq] >- DECIDE_TAC >>
-  fsrw_tac [][last_update_eq_iff_update_time,update_time_def] >>
-  qmatch_abbrev_tac `u < w - (q * w) MOD w` >>
-  qsuff_tac ` u < w - (q * w + 0) MOD w` >- srw_tac [][] >>
-  `0 < w` by srw_tac [][Abbr`w`] >>
-  srw_tac [][MOD_MULT] ) >>
-srw_tac [][output_input_at_update_times])
-
-val output_0_until = Q.store_thm(
-"output_0_until",
-`t < n + width ** n ⇒ (output p n t = 0)`,
-srw_tac [ARITH_ss][output_first,SUM_IMAGE_ZERO,SR_0_until])
+`0 < delay n` by DECIDE_TAC >>
+fsrw_tac [][last_update_thm,update_time_def,MOD_EQ_0_DIVISOR] >>
+srw_tac [][MOD_MULT] >>
+match_mp_tac output_input_at_update_times >>
+srw_tac [][update_time_def,MOD_EQ_0])
 
 val all_times_covered = Q.store_thm(
 "all_times_covered",
-`t < n + width ** n ∨ ∃v u. update_time p n v ∧ u < (SUC p.w ** n) ∧ (t = v + u)`,
-Cases_on `t < n + width ** n` >>
-fsrw_tac [DNF_ss,ARITH_ss][update_time_def,MULT,NOT_LESS,LESS_EQ_EXISTS] >>
-qmatch_assum_rename_tac `t = n + (z + width ** n)` [] >>
-qexists_tac `z MOD width ** n` >>
-qexists_tac `z DIV width ** n` >>
-srw_tac [ARITH_ss][MOD_LESS] >>
-`0 < width ** n` by srw_tac [][] >>
-qspec_then `width ** n` imp_res_tac DIVISION >>
-REPEAT (first_x_assum (qspec_then `z` mp_tac)) >>
-srw_tac [ARITH_ss][])
+`∃v u. update_time n v ∧ u < delay n ∧ (t = v + u)`,
+qexists_tac `t DIV delay n * delay n` >>
+qexists_tac `t MOD delay n` >>
+qspec_then `delay n` assume_tac DIVISION >>
+assume_tac delay_above_0 >>
+fsrw_tac [][update_time_def,MOD_EQ_0])
+
+val output_0_until = Q.store_thm(
+"output_0_until",
+`0 < n ∧ t < delay n ⇒ (output D n x t = 0)`,
+srw_tac [][output_first,SUM_IMAGE_ZERO] >> srw_tac [][] >>
+match_mp_tac SR_0_until >>
+srw_tac [ARITH_ss][delay_above_0])
 
 (*
 some sanity checks
