@@ -1,6 +1,6 @@
 open HolKernel boolLib boolSimps bossLib arithmeticTheory pred_setTheory listTheory sortingTheory lcsymtacs
 
-val _ = new_theory "realistic"
+val _ = new_theory "srs"
 
 (* Slice 0 is a fake slice whose output register copies the global input.
 Slices 1 through 6 are as in the schematics. Slices 7 onwards are posited by
