@@ -618,6 +618,124 @@ srw_tac [][output_first,SUM_IMAGE_ZERO] >> srw_tac [][] >>
 match_mp_tac SR_0_until >>
 srw_tac [ARITH_ss][delay_above_0])
 
+val exact_def = Define`
+  exact D n x t = SIGMA (λm. if t < SUC m then 0 else D (t - SUC m)) (count (SUC (tap n x) * delay n))`
+
+val ABS_DIFF_def = Define`
+  ABS_DIFF n m = if n < m then m - n else n - m`
+
+val ABS_DIFF_SYM = Q.store_thm(
+"ABS_DIFF_SYM",
+`!n m. ABS_DIFF n m = ABS_DIFF m n`,
+SRW_TAC [][ABS_DIFF_def] THEN
+METIS_TAC [LESS_ANTISYM,NOT_LESS,LESS_OR_EQ])
+
+val ABS_DIFF_EQS = Q.store_thm(
+"ABS_DIFF_EQS",
+`ABS_DIFF n n = 0`,
+SRW_TAC [][ABS_DIFF_def])
+val _ = export_rewrites ["ABS_DIFF_EQS"]
+
+val ABS_DIFF_EQ_0 = Q.store_thm(
+"ABS_DIFF_EQ_0",
+`(ABS_DIFF n m = 0) <=> (n = m)`,
+SRW_TAC [][ABS_DIFF_def,LESS_OR_EQ] THEN
+METIS_TAC [LESS_ANTISYM])
+
+val ABS_DIFF_ZERO = Q.store_thm(
+"ABS_DIFF_ZERO",
+`(ABS_DIFF n 0 = n) /\ (ABS_DIFF 0 n = n)`,
+SRW_TAC [][ABS_DIFF_def] THEN METIS_TAC [NOT_ZERO_LT_ZERO])
+val _ = export_rewrites ["ABS_DIFF_ZERO"]
+
+val ABS_DIFF_TRIANGLE = Q.store_thm(
+"ABS_DIFF_TRIANGLE",
+`!x y z. ABS_DIFF x z <= ABS_DIFF x y + ABS_DIFF y z`,
+SRW_TAC [][ABS_DIFF_def] THEN DECIDE_TAC)
+
+val error_def = Define`
+  error D n x t = ABS_DIFF (output D n x t) (exact D n x t)`
+
+val ABS_DIFF_SUMS = Q.store_thm(
+"ABS_DIFF_SUMS",
+`ABS_DIFF (n1 + n2) (m1 + m2) <= ABS_DIFF n1 m1 + ABS_DIFF n2 m2`,
+SRW_TAC [][ABS_DIFF_def] THEN DECIDE_TAC)
+
+val ABS_DIFF_SUM_IMAGE = Q.store_thm(
+"ABS_DIFF_SUM_IMAGE",
+`!s. FINITE s ==> (ABS_DIFF (SIGMA f s) (SIGMA g s) <= SIGMA (\x. ABS_DIFF (f x) (g x)) s)`,
+HO_MATCH_MP_TAC FINITE_INDUCT >>
+SRW_TAC [][] THEN1 (
+  SRW_TAC [][SUM_IMAGE_THM,ABS_DIFF_EQS] ) THEN
+SRW_TAC [][SUM_IMAGE_THM] THEN
+FULL_SIMP_TAC (srw_ss()) [DELETE_NON_ELEMENT] THEN
+MATCH_MP_TAC LESS_EQ_TRANS THEN
+Q.EXISTS_TAC `ABS_DIFF (f e) (g e) + ABS_DIFF (SIGMA f s) (SIGMA g s)` THEN
+SRW_TAC [][ABS_DIFF_SUMS])
+
+val ABS_DIFF_SUC = Q.store_thm(
+"ABS_DIFF_SUC",
+`ABS_DIFF (SUC n) m <= SUC (ABS_DIFF n m) /\
+ PRE (ABS_DIFF n m) <= ABS_DIFF (SUC n) m`,
+SRW_TAC [][ABS_DIFF_def] THEN DECIDE_TAC)
+
+val max_diff = Q.store_thm(
+"max_diff",
+`(∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ⇒ ABS_DIFF (D t1) (D t2) ≤ k * ABS_DIFF t1 t2`,
+qho_match_abbrev_tac `X t1 t2` >>
+qsuff_tac `!t1 t2. t1 ≤ t2 ⇒ X t1 t2` >- (
+  metis_tac [LESS_LESS_CASES,LESS_OR_EQ,ABS_DIFF_SYM] ) >>
+unabbrev_all_tac >>
+Induct_on `t2-t1` >>
+srw_tac [][] >- (
+  `t1=t2` by DECIDE_TAC >>
+  srw_tac [][] ) >>
+`v = t2 - (SUC t1)` by DECIDE_TAC >>
+`SUC t1 ≤ t2` by DECIDE_TAC >>
+first_x_assum (qspecl_then [`t2`,`SUC t1`] mp_tac) >>
+srw_tac [][] >>
+Cases_on `ABS_DIFF t1 t2 = 0` >- fsrw_tac [][ABS_DIFF_EQ_0] >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `ABS_DIFF (D t1) (D (SUC t1)) + ABS_DIFF (D (SUC t1)) (D t2)` >>
+conj_tac >- srw_tac [][ABS_DIFF_TRIANGLE] >>
+`ABS_DIFF (SUC t1) t2 = PRE (ABS_DIFF t1 t2)` by (
+  srw_tac [ARITH_ss][ABS_DIFF_def] ) >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `k + k * PRE (ABS_DIFF t1 t2)` >>
+conj_tac >- (
+  qmatch_abbrev_tac `a + b <= c + d` >>
+  qsuff_tac `a <= c /\ b <= d` >- (
+    srw_tac [][] >>
+    match_mp_tac LESS_EQ_TRANS >>
+    qexists_tac `c + b` >> srw_tac [ARITH_ss][Abbr`c`] ) >>
+  unabbrev_all_tac >> srw_tac [][] >> PROVE_TAC []) >>
+METIS_TAC [NOT_ZERO_LT_ZERO,SUC_PRE,MULT_SUC,LESS_EQ_REFL])
+
+val max_diff_eq = Q.store_thm(
+"max_diff_eq",
+`∃D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧ (ABS_DIFF (D t1) (D t2) = k * ABS_DIFF t1 t2)`,
+qexists_tac `λt. t * k` >>
+srw_tac [][ABS_DIFF_def,MULT] >>
+srw_tac [ARITH_ss][LEFT_SUB_DISTRIB] >>
+fsrw_tac [ARITH_ss][NOT_LESS])
+
+val ABS_DIFF_SUM_IMAGE_eq = Q.store_thm(
+"ABS_DIFF_SUM_IMAGE_eq",
+`?f g. FINITE s ==> (ABS_DIFF (SIGMA f s) (SIGMA g s) = SIGMA (\x. ABS_DIFF (f x) (g x)) s)`,
+ntac 2 (qexists_tac `\x. 0`) >>
+srw_tac [][SUM_IMAGE_ZERO])
+
+val output_eq_exact = Q.store_thm(
+"output_eq_exact",
+`0 < n ⇒ (output D n x t = if last_update n t < delay n then 0 else exact D n x (SUC (last_update n t) - delay_sum n))`,
+srw_tac [][exact_def,Once output_last_update] >- (
+  match_mp_tac output_0_until >>
+  srw_tac [][] ) >>
+srw_tac [][output_input_at_update_times,update_time_last_update] >>
+srw_tac [ARITH_ss][ADD1] >>
+match_mp_tac SUM_IMAGE_CONG >>
+srw_tac [][] >> DECIDE_TAC)
+
 (*
 some sanity checks
 
