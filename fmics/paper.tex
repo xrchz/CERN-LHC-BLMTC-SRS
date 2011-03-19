@@ -18,19 +18,14 @@
 
 \begin{abstract}
 
-This paper describes a collaborative effort in which the HOL4 theorem prover is being used to formally verify properties of a complex structure used in the FGPA implementation of an integral element of the Large Hadron Collider (LHC) machine protection system at the European Organization for Nuclear Research (CERN). This structure, known as the \emph{Successive Running Sums} (SRS), generates the primary input to the decision logic that must initiate a critical action by the LHC machine protection system in response to the detection of a dangerous level of beam particle loss. The use of mechanized logical deduction complements an intensive study of the SRS structure using simulation. We are especially interested in using logical deduction to obtain a generic result that will be applicable to variants of the SRS structure. This collaborative effort has individuals with very diverse backgrounds ranging from theoretical physics to system safety. One interesting result is the extent to which the use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.  
-
-
-%The strategy for machine protection of the Large Hadron Collider (LHC) at the European Organization for Nuclear Research (CERN) is mainly based on the Beam Loss Monitoring (BLM) system. At each turn of the beam, several thousands of data is recorded and processed in order to decide whether the beam should be permitted to continue circulating or it should be extracted due to a dangerous beam loss that may result in significant equipment damage.Such a decision is based on the analysis of loss patterns in time and the beam energy.  The real-time analysis of the recorded data is mainly performed by the \emph{Successive Running Sums} (SRS) technique which allows many and long integration periods to be maintained for each detector's data.  
-
-%In this case study, our eventual goal is to use HOL4 theorem prover to show the correctness of the SRS technique in with respect to BLM specification.   
-
-%we use HOL4 theorem prover to show the correctness of the SRS technique in BLM. We present the formulation of a parameterized model of SRS in HOL4 and explain the verification strategy and results. {\bf what did we learn through this exercise from verification perspective?}
+We describe a collaborative effort in which the HOL4 theorem prover is being used to formally verify properties of a structure within the Large Hadron Collider (LHC) machine protection system at the European Organization for Nuclear Research (CERN).
+The structure, known as \emph{Successive Running Sums} (SRS), provides input to the decision logic for activating the LHC machine protection system in response to the detection of a dangerous level of beam particle loss.
+The use of mechanized logical deduction complements an intensive study of the SRS structure using simulation.
+We are especially interested in using logical deduction to obtain a generic result that will be applicable to variants of the SRS structure.
+This collaborative effort has individuals with diverse backgrounds ranging from theoretical physics to system safety.
+One interesting result is the extent to which the use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.  
 
 \end{abstract}
-
-%\sloppy
-
 
 \section{Introduction}
 
