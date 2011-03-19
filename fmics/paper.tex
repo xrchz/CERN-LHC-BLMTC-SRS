@@ -36,12 +36,22 @@ Because the energy of the beams is so high (700 MJ), if even a small fraction of
 Such a transition is called a quench.
 The consequences of a quench range from several hours of down time (to cool the magnets back down to their superconducting state), to months of repairs (in the case of equipment damage).
 
-The main strategy for protecting the LHC from quenches is the Beam Loss Monitoring (BLM) system, which stops the beams safely if the particle loss exceeds thresholds that are likely to result in a quench. 
-At each cycle of the beams around the LHC, the BLM system records and processes thousands of data points in order to decide whether to stop the beams.
+The main strategy for protecting the LHC from quenches is the Beam Loss Monitoring System (BLMS), which stops the beams safely if the particle loss exceeds thresholds that are likely to result in a quench. 
+At each cycle of the beams around the LHC, the BLMS records and processes thousands of data points in order to decide whether to stop the beams.
 The processing includes analysis of the loss pattern over time and of the energy of the beam.
 
-{\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
+The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of the data recorded over a long period. 
+Furthermore, the BLMS must continue recording large amounts of data in real time while processing.
+To achieve these goals, the BLMS maintains approximate cumulative sums of particle losses over a variety of sizes of moving windows.
+The component responsible for maintaining these sums is called the Successive Running Sums (SRS) structure.
+The SRS is implemented in hardware, in order to be fast enough to work in real time, and on FPGAs in particular so that they can be easily reprogrammed with future designs if necessary.
+Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
+<this paragraph probably needs some references>
 
+<SPECIFICATION/REQUIREMENTS OF SRS: it is approximate sums of loss counts, but they need to be relatively close to the exact sums>
+<SIMULATION APPROACH TO ANALYSIS OF SRS>
+<FORMAL APPROACH>
+{\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
 
  Rushby's emphasis on the role of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" thus rings true.
  %Rushby's description of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" rings true for this effort.
