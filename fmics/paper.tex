@@ -43,7 +43,7 @@ The processing includes analysis of the loss pattern over time and of the energy
 The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of the data recorded over a long period. 
 Furthermore, the BLMS must continue recording large amounts of data in real time while processing.
 To achieve these goals, the BLMS maintains approximate cumulative sums of particle losses over a variety of sizes of moving windows.
-The component responsible for maintaining these sums is called the Successive Running Sums (SRS) structure.
+The component responsible for maintaining these sums is called Successive Running Sums (SRS).
 The SRS is implemented in hardware, in order to be fast enough to work in real time, and on FPGAs in particular so that they can be easily reprogrammed with future designs if necessary.
 Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
 <this paragraph probably needs some references>
@@ -55,8 +55,16 @@ It is preferable for the SRS sum to be above the exact sum over a particular tim
 But stopping the beam when the loss level is not dangerous is time consuming and costly.
 Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
 
-<SIMULATION APPROACH TO ANALYSIS OF SRS>
-<FORMAL APPROACH>
+The SRS component is a complex structure, but the correctness of its behaviour is important for safe and productive use of the LHC.
+Simulation of the SRS on sample streams of input counts is one approach, currently in use [ref?], to building an understanding of the SRS's behaviour and confidence that the behaviour is correct. 
+<details about simulation>
+
+Formal methods are another approach to building understanding and confidence.
+Compared to test-based methods, like simulation, formal methods offer a much higher confidence of correctness, but require precise specifications and proof effort.
+The work on constructing proofs may be compared to the work on analysing the results of simulations.
+The work on formulating precise specifications is extra, but is arguably beneficial for both methods.
+<need to be more descriptive here i.e. to do number 2) below rather than 3)>
+
 {\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
 
  Rushby's emphasis on the role of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" thus rings true.
