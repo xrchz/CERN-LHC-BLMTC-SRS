@@ -736,6 +736,54 @@ srw_tac [ARITH_ss][ADD1] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [][] >> DECIDE_TAC)
 
+val max_error = Q.store_thm(
+"max_error",
+`(∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
+ 0 < n ∧
+ t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
+ error D n x t ≤ SUC (tap n x) * delay n * k * (delay n + delay_sum n)`,
+srw_tac [][error_def] >>
+assume_tac delay_above_0 >>
+`t MOD delay n < delay n` by METIS_TAC [MOD_LESS] >>
+`0 < delay_sum n` by imp_res_tac delay_sum_above_0 >>
+srw_tac [][output_eq_exact] >- (
+  full_simp_tac bool_ss [last_update_thm,MULT] >>
+  `t < 2 * delay n` by DECIDE_TAC >>
+  `t > 2 * delay n` by fsrw_tac [ARITH_ss][] >>
+  METIS_TAC [LESS_ANTISYM,GREATER_DEF]) >>
+srw_tac [][exact_def] >>
+qmatch_abbrev_tac `ABS_DIFF (SIGMA f s) (SIGMA g s) ≤ X` >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `SIGMA (λx. ABS_DIFF (f x) (g x)) s` >>
+srw_tac [][Abbr`s`,ABS_DIFF_SUM_IMAGE,Abbr`X`] >>
+srw_tac [][Abbr`f`,Abbr`g`,last_update_thm] >>
+srw_tac [][Once (GSYM MULT_ASSOC),SimpR``$<=``] >>
+qmatch_abbrev_tac `SIGMA f (count a) ≤ a * b` >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `CARD (count a) * b` >>
+reverse conj_tac >- srw_tac [][] >>
+match_mp_tac (MP_CANON SUM_IMAGE_upper_bound) >>
+conj_tac >- srw_tac [][] >>
+qx_gen_tac `z` >>
+reverse (srw_tac [][Abbr`f`,Abbr`a`,Abbr`b`]) >- (
+  qmatch_abbrev_tac `ABS_DIFF (D t1) (D t2) ≤ X` >>
+  match_mp_tac LESS_EQ_TRANS >>
+  qexists_tac `k * ABS_DIFF t1 t2` >>
+  srw_tac [][Abbr`X`] >- (
+    match_mp_tac max_diff >>
+    srw_tac [][] ) >>
+  srw_tac [][Abbr`t1`,Abbr`t2`] >>
+  Cases_on `k=0` >> srw_tac [][] >>
+  srw_tac [][ADD1,SUB_LEFT_SUC] >- (
+    imp_res_tac MOD_LESS_EQ >>
+    `t MOD delay n ≤ t` by PROVE_TAC [] >>
+    `t MOD delay n = t` by DECIDE_TAC >>
+    `t < delay n` by PROVE_TAC [X_MOD_Y_EQ_X] >>
+    DECIDE_TAC ) >>
+  srw_tac [][ABS_DIFF_def] >>
+  fsrw_tac [ARITH_ss][last_update_thm]) >>
+fsrw_tac [ARITH_ss][MULT,last_update_thm])
+
 (*
 some sanity checks
 
