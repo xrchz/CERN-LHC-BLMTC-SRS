@@ -48,7 +48,13 @@ The SRS is implemented in hardware, in order to be fast enough to work in real t
 Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
 <this paragraph probably needs some references>
 
-<SPECIFICATION/REQUIREMENTS OF SRS: it is approximate sums of loss counts, but they need to be relatively close to the exact sums>
+The BLMS detects beam loss in the form of counts proportional to the number of stray particles.
+Dangerous loss levels can be expressed as thresholds on the rate of counts over time.
+The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated.
+It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected.
+But stopping the beam when the loss level is not dangerous is time consuming and costly.
+Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
+
 <SIMULATION APPROACH TO ANALYSIS OF SRS>
 <FORMAL APPROACH>
 {\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
