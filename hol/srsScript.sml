@@ -621,38 +621,6 @@ srw_tac [ARITH_ss][delay_above_0])
 val exact_def = Define`
   exact D n x t = SIGMA (λm. if t < SUC m then 0 else D (t - SUC m)) (count (SUC (tap n x) * delay n))`
 
-val ABS_DIFF_def = Define`
-  ABS_DIFF n m = if n < m then m - n else n - m`
-
-val ABS_DIFF_SYM = Q.store_thm(
-"ABS_DIFF_SYM",
-`!n m. ABS_DIFF n m = ABS_DIFF m n`,
-SRW_TAC [][ABS_DIFF_def] THEN
-METIS_TAC [LESS_ANTISYM,NOT_LESS,LESS_OR_EQ])
-
-val ABS_DIFF_EQS = Q.store_thm(
-"ABS_DIFF_EQS",
-`ABS_DIFF n n = 0`,
-SRW_TAC [][ABS_DIFF_def])
-val _ = export_rewrites ["ABS_DIFF_EQS"]
-
-val ABS_DIFF_EQ_0 = Q.store_thm(
-"ABS_DIFF_EQ_0",
-`(ABS_DIFF n m = 0) <=> (n = m)`,
-SRW_TAC [][ABS_DIFF_def,LESS_OR_EQ] THEN
-METIS_TAC [LESS_ANTISYM])
-
-val ABS_DIFF_ZERO = Q.store_thm(
-"ABS_DIFF_ZERO",
-`(ABS_DIFF n 0 = n) /\ (ABS_DIFF 0 n = n)`,
-SRW_TAC [][ABS_DIFF_def] THEN METIS_TAC [NOT_ZERO_LT_ZERO])
-val _ = export_rewrites ["ABS_DIFF_ZERO"]
-
-val ABS_DIFF_TRIANGLE = Q.store_thm(
-"ABS_DIFF_TRIANGLE",
-`!x y z. ABS_DIFF x z <= ABS_DIFF x y + ABS_DIFF y z`,
-SRW_TAC [][ABS_DIFF_def] THEN DECIDE_TAC)
-
 val error_def = Define`
   error D n x t = ABS_DIFF (output D n x t) (exact D n x t)`
 
@@ -783,6 +751,24 @@ reverse (srw_tac [][Abbr`f`,Abbr`a`,Abbr`b`]) >- (
   srw_tac [][ABS_DIFF_def] >>
   fsrw_tac [ARITH_ss][last_update_thm]) >>
 fsrw_tac [ARITH_ss][MULT,last_update_thm])
+
+val max_error_eq = Q.store_thm(
+"max_error_eq",
+`?D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
+(!n x t. 0 < n /\ t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
+     (error D n x t = SUC (tap n x) * delay n * k * (delay n + delay_sum n)))`,
+srw_tac [][error_def,output_eq_exact,last_update_thm,delay_above_0] >>
+`!n x t. 0 < n /\ t > SUC (tap n x) * delay n + delay n + delay_sum n ==> ~(t < t MOD delay n + delay n)` by (
+  gen_tac >>
+  assume_tac delay_above_0 >>
+  srw_tac [ARITH_ss][MULT,delay_thm,tap_thm,delay_sum_thm,tap_def,NOT_LESS] >>
+  `0 < delay_sum n` by imp_res_tac delay_sum_above_0 >>
+  `t MOD delay n < delay n` by PROVE_TAC [MOD_LESS] >>
+  DECIDE_TAC ) >>
+srw_tac [boolSimps.DNF_ss][]
+
+max_diff_eq
+
 
 (*
 some sanity checks
