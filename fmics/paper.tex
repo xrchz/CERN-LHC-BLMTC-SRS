@@ -178,47 +178,36 @@ As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 s
 
 
 
-\section{Verification of SRS Implementation using HOL}
+\section{Verification of the SRS Implementation using HOL4}
 \label{sec-verification}
 
-Calculation of the running sums is a critical component of BLM. In case of no dangerous loss, BLM should not inhabit the beam. If it fails, it generates a false alarm and three hours will be lost to recover the previous situation. Such false alarms compromise the availability of the system. Moreover, in case of a dangerous loss, BLM it has to inhibit the beam permit. If it fails there will be at least 30 days of downtime. 
-Any error in this computation would either compromise the availability of the system (unnecessary request for beam dump) or safety of the system (nor requesting a necessary beam dump). The current practice to check the correctness of the SRS is by simulation and testing in which (explanation of how such a test gets performed). 
+%The calculation of running sums is a critical component of the BLMS.
+%If there is no dangerous loss, the BLMS should not inhibit the beam.
+%A false alarm costs at least three hours to resume operation, and compromises the availability of the system.
+%However, if there is a dangerous loss, the BLMS must inhibit the beam.
+%A quench due to dangerous loss costs at least 30 days of downtime.
+%Thus, any error in the calculation compromises either the availability or the safety of the system.
+%The current practice to check the correctness of the SRS is by simulation and testing.
+%(isn't all this in the introduction now? is this the right place to repeat it/give more details?)
+%In this paper we present a formal verification approach for the analysis of SRS implementation in BLM.
 
-In this paper we present a formal verification approach for the analysis of SRS implementation in BLM.  
+Our formal verification effort uses mechanised logical deduction, or \emph{theorem proving}.
+In general, theorem proving is used to show that desired properties of a system are logically implied by a formal model of the system.
+We use the HOL4 open source software tool~\cite{HOL4,DBLP:conf/tphol/SlindN08}, which was developed initially at the University of Cambridge, but now by an international team.
+HOL4 enables the construction of theories in higher-order logic~\cite{DBLP:journals/jsyml/Church40}, a formal logic with a similar expressive power to set theory that is widely used for formalising hardware and software models and statements about them.
+The implementation of HOL4 uses Milner's LCF approach~\cite{Milner:1972:LCF:891954}: a small ``kernel'' implementing the primitive rules of the logic, and convenient derived rules and tactics implemented in terms of the kernel.
+Every theorem ultimately comes from the kernel, and this fact provides high assurance of the logical soundness of the verification results obtained using the system.
 
+HOL4 is an \emph{interactive} theorem prover: the user provides the high level proof strategy by composing functions that automate common chains of logical deduction.
+The work described here could have been done using other systems such as HOL Light [ref], Isabelle/HOL~\cite{Isabelle}, ProofPower [ref], PVS [ref] or Coq [ref].
+The first three of these support essentially the same version of higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
+<What about ACL2?>
+While offering less ``push-button'' automation than many other kinds of formal verification such as model-checking, machine-assisted theorem proving is the most appropriate approach to verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically. 
 
-The formal verification effort described in this paper is based on
- the use of mechanised logical deduction, or theorem proving, to
- demonstrate that desired properties of a system are logically implied
- by a formal model of the system.  Our approach to theorem-proving
- uses the HOL4 open source software tool, which was developed
- initially at the University of Cambridge, but now by an international
- team~\cite{HOL4}.  HOL4 partially automates the task of proving theorems of
- higher-order logic [ref], a formal logic with a similar expressive
- power to set theory that is widely used for formalising hardware and
- software models and statements about them.  Typically, a very large
- portion of the logical deduction is performed automatically by the
- HOL4 system leaving the user to provide the high level proof
- strategy.  The implementation of the HOL4 system is based on Milner's
- LCF approach [ref] and consists of a small “kernel” that provides a
- very high level of confidence in the logical soundness of the
- verification results obtained using the system. The work described
- here could have been done using other systems such as HOL Light
- [ref], Isabelle/HOL~\cite{Isabelle}, ProofPower [ref], PVS [ref] or Coq
- [ref]. The first three of these support essentially the same version
- of higher-order logic as HOL4, whilst PVS and Coq support more
- powerful logics. <What about ACL2?>
-
- While offering less “push button” automation than many other kinds of
- formal verification such as model-checking, machine-assisted theorem
- proving is the most appropriate approach to verifying the BLM SRS,
- since it is unlikely that the correctness theorems, which need lemmas
- proved by manually guided mathematical induction, could be generated
- automatically. 
-
-The main objective of formalizing the functionality of SRS was to keep the topology parameterized. It is very probable that in the future the configuration of the slices and shift registers changes to accommodate higher precision. If the model is parameterized then, the same model can be used in the future uses of the system. For this, we formalized the definitions of the model by six parameters: 
-
-
+The main objective of formalizing the functionality of SRS was to keep the topology parameterized.
+It is very probable that in the future the configuration of the slices and shift registers changes to accommodate higher precision.
+If the model is parameterized then, the same model can be used in the future uses of the system.
+For this, we formalized the definitions of the model by six parameters:
 
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
