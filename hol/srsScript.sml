@@ -624,23 +624,6 @@ val exact_def = Define`
 val error_def = Define`
   error D n x t = ABS_DIFF (output D n x t) (exact D n x t)`
 
-val ABS_DIFF_SUMS = Q.store_thm(
-"ABS_DIFF_SUMS",
-`ABS_DIFF (n1 + n2) (m1 + m2) <= ABS_DIFF n1 m1 + ABS_DIFF n2 m2`,
-SRW_TAC [][ABS_DIFF_def] THEN DECIDE_TAC)
-
-val ABS_DIFF_SUM_IMAGE = Q.store_thm(
-"ABS_DIFF_SUM_IMAGE",
-`!s. FINITE s ==> (ABS_DIFF (SIGMA f s) (SIGMA g s) <= SIGMA (\x. ABS_DIFF (f x) (g x)) s)`,
-HO_MATCH_MP_TAC FINITE_INDUCT >>
-SRW_TAC [][] THEN1 (
-  SRW_TAC [][SUM_IMAGE_THM,ABS_DIFF_EQS] ) THEN
-SRW_TAC [][SUM_IMAGE_THM] THEN
-FULL_SIMP_TAC (srw_ss()) [DELETE_NON_ELEMENT] THEN
-MATCH_MP_TAC LESS_EQ_TRANS THEN
-Q.EXISTS_TAC `ABS_DIFF (f e) (g e) + ABS_DIFF (SIGMA f s) (SIGMA g s)` THEN
-SRW_TAC [][ABS_DIFF_SUMS])
-
 val ABS_DIFF_SUC = Q.store_thm(
 "ABS_DIFF_SUC",
 `ABS_DIFF (SUC n) m <= SUC (ABS_DIFF n m) /\
@@ -752,6 +735,7 @@ reverse (srw_tac [][Abbr`f`,Abbr`a`,Abbr`b`]) >- (
   fsrw_tac [ARITH_ss][last_update_thm]) >>
 fsrw_tac [ARITH_ss][MULT,last_update_thm])
 
+(*
 val max_error_eq = Q.store_thm(
 "max_error_eq",
 `?D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
@@ -766,8 +750,7 @@ srw_tac [][error_def,output_eq_exact,last_update_thm,delay_above_0] >>
   `t MOD delay n < delay n` by PROVE_TAC [MOD_LESS] >>
   DECIDE_TAC ) >>
 srw_tac [boolSimps.DNF_ss][]
-
-max_diff_eq
+*)
 
 
 (*
