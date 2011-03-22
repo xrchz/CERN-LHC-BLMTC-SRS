@@ -19,7 +19,7 @@
 \begin{abstract}
 
 We describe a collaborative effort in which the HOL4 theorem prover is being used to formally verify properties of a structure within the Large Hadron Collider (LHC) machine protection system at the European Organization for Nuclear Research (CERN).
-The structure, known as \emph{Successive Running Sums} (SRS), provides input to the decision logic for activating the LHC machine protection system in response to the detection of a dangerous level of beam particle loss.
+This structure, known as the \emph{Successive Running Sums} (SRS), generates the primary input to the decision logic that must initiate a critical action by the LHC machine protection system in response to the detection of a dangerous level of beam particle loss.
 The use of mechanized logical deduction complements an intensive study of the SRS structure using simulation.
 We are especially interested in using logical deduction to obtain a generic result that will be applicable to variants of the SRS structure.
 This collaborative effort has individuals with diverse backgrounds ranging from theoretical physics to system safety.
@@ -30,60 +30,61 @@ One interesting result is the extent to which the use of a formal method has com
 \section{Introduction}
 
 The Large Hadron Collider (LHC) at the European Organization for Nuclear Research (CERN) is a high-energy particle accelerator.
-It collides beams of protons, where each particle has an energy of 14 TeV, and the results of these collisions are used for high-energy physics research.
+It provides a head-on collisions of protons at a center of a mass energy of 14 TeV for high-energy particle physics research.
 In order to reach the required magnetic field strengths, the LHC has superconducting magnets cooled with superfluid helium.
-Because the energy of the beams is so high (700 MJ), if even a small fraction of the beam particles leak into the equipment they can cause the superconductors to transition to their normal conducting state.
-Such a transition is called a quench.
-The consequences of a quench range from several hours of down time (to cool the magnets back down to their superconducting state), to months of repairs (in the case of equipment damage).
+Due to a very high energy stored in the circulating beams (700 MJ), if even a small fraction of the beam particles deposit their energy in the equipment, they can cause the superconductors to transition to normal conducting state.
+Such a transition is called a \emph{quench}.
+The consequences of a quench range from several hours of down time (to cool down the magnets to reach the superconducting state), to months of repairs (in the case of equipment damage).
 
-The main strategy for protecting the LHC from quenches is the Beam Loss Monitoring System (BLMS), which stops the beams safely if the particle loss exceeds thresholds that are likely to result in a quench. 
-At each cycle of the beams around the LHC, the BLMS records and processes thousands of data points in order to decide whether to stop the beams.
+The strategy for machine protection of the LHC is mainly based on the Beam Loss Monitoring System (BLMS), which triggers the safe extraction of the beam if the particle loss exceeds thresholds that are likely to result in a quench.
+At each cycle of the beams around the LHC, the BLMS records and processes several thousands of data points in order to decide if the beams should be permitted to continue circulating or their safe extraction is necessary to be triggered.
 The processing includes analysis of the loss pattern over time and of the energy of the beam.
 
-The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of the data recorded over a long period. 
-Furthermore, the BLMS must continue recording large amounts of data in real time while processing.
+The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of the loss data recorded over long periods of time.
+Furthermore, the BLMS must continue recording large amounts of data in real-time while processing.
 To achieve these goals, the BLMS maintains approximate cumulative sums of particle losses over a variety of sizes of moving windows.
-The component responsible for maintaining these sums is called Successive Running Sums (SRS).
-The SRS is implemented in hardware, in order to be fast enough to work in real time, and on FPGAs in particular so that they can be easily reprogrammed with future designs if necessary.
-Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
-<this paragraph probably needs some references>
+The component responsible for maintaining these sums is called \emph{Successive Running Sums} (SRS).
+The SRS is implemented in hardware, in order to be fast enough to work in real-time, and on Field Programmable Gate Arrays (FPGAs) in particular so that they can be easily reprogrammed with future upgrades~\cite{Chris-FPGA}.
+%Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
 
-The BLMS detects beam loss in the form of counts proportional to the number of stray particles.
-Dangerous loss levels can be expressed as thresholds on the rate of counts over time.
-The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated.
-It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected.
-But stopping the beam when the loss level is not dangerous is time consuming and costly.
-Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
+The SRS component has a complex structure and the correctness of its behaviour is critical for safe and productive use of the LHC.
+Any error in SRS implementation would either compromise the availability of the LHC (unnecessary request for beam dump) or safety (not triggering a necessary beam dump).
+The current approach for analysis of SRS is mainly  based on simulation of its behavior on sample streams of input~\cite{}.
+(one more sentence needs to be added on the current verification process)
 
-The SRS component is a complex structure, but the correctness of its behaviour is important for safe and productive use of the LHC.
-Simulation of the SRS on sample streams of input counts is one approach, currently in use [ref?], to building an understanding of the SRS's behaviour and confidence that the behaviour is correct. 
-<details about simulation>
+In this paper, we describe a formal verification approach based on logical deduction for the analysis of SRS.
+(need to add few sentences explaining in a very high level the verification approach/strategy)
 
-Formal methods are another approach to building understanding and confidence.
-Compared to test-based methods, like simulation, formal methods offer a much higher confidence of correctness, but require precise specifications and proof effort.
-The work on constructing proofs may be compared to the work on analysing the results of simulations.
-The work on formulating precise specifications is extra, but is arguably beneficial for both methods.
-<need to be more descriptive here i.e. to do number 2) below rather than 3)>
+Compared to test-based methods, like simulation, formal methods not only offer a much higher confidence in correctness of the systems' behavior, but also help in better understanding their specification.
+One of the main challenges in implementing a formal verification approach for SRS was to capture the intricate details of the system's specification via experiment and refinement with a team with different backgrounds and expertise.
+Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool at the end of a long and intense effort.
+In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
+The most important use of HOL4  was its role as an ``implacable skeptic" that compelled us to really understand the details~\cite{rushby}.
 
-{\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
-
- Rushby's emphasis on the role of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" thus rings true.
- %Rushby's description of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" rings true for this effort.
-
-The your process of trying to
-capture the specification via experiment and refinement by a team with
-different backgrounds and expertise is very interesting. the eventual goal is to use HOL4 theorem prover to show
-the correctness of the SRS technique in BLM
+The rest of the paper is organized as follows.
+An overview of BLMS and its main components is given in Section~\ref{sec-BLM} and is followed by a description of SRS implementation in Section~\ref{sec-SRS}.
+The verification approach of SRS is presented in Section~\ref{sec-verification}.
+We conclude in Section~\ref{sec-conclusions} with a summary of lessons learned and future directions.
 
 
 
-%The loss of a very small fraction of the circulating beam may induce a quench of the super conducting magnets or even physical damage to machine components. The detection of the lost beam protons allows protection of the equipment against quenches and damage by generating a beam dump trigger when the losses exceed thresholds. At each turn of the beam, there will be several thousands of data to record and process in order to decide if the beams should be permitted to continue circulating or their safe extraction is necessary to be triggered. 
+%The BLMS detects beam loss in the form of counts proportional to the number of stray particles. Dangerous loss levels can be expressed as thresholds on the rate of counts over time. The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated. It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected. But stopping the beam when the loss level is not dangerous is time consuming and costly. Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
 
-%In general, the BLM system converts the signal given by the recording of shower particles into electrical signals and decides if threshold limits are being exceeded. The beam-permit signal is de-asserted if one detector exceeds the limit and consecutively is transferred to the beam dump system  by the Beam Interlock system.
+%Simulation of the SRS on sample streams of input is one approach, currently in use~\cite{}, to building an understanding of the SRS's behaviour and confidence that the behaviour is correct. 
+
+%Formal methods are another approach to building understanding and confidence.
+%The work on constructing proofs may be compared to the work on analysing the results of simulations. The work on formulating precise specifications is extra, but is arguably beneficial for both methods. <need to be more descriptive here i.e. to do number 2) below rather than 3)>
+
+%{\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
+
+%************** Rushby's quote to be added later on *****
+%Rushby's emphasis on the role of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" thus rings true.
 
 
 
-\section{BLM System Overview}
+
+\section{BLMS Overview}
+\label{sec-BLM}
 
 
 \begin{figure}[t]
@@ -92,13 +93,12 @@ the correctness of the SRS technique in BLM
   \label{fig:BLETC}
 \end{figure}
 
-The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the energy deposition detection of secondary shower particles using a specially-designed detector called \emph{ionization chamber}. There are around 4000 ionization chambers located under the magnets all around the tunnel. These detectors convert the signal given by the recording of shower particles into electrical signals and send them to tunnel cards. Tunnel cards, which are located in the tunnel and implemented by radiation-tolerant electronics, acquire and digitize the data from the detectors and transmit those to the surface using optical links. There, the data processing cards, named BLETCs, receive those data and decide whether or not the beam should be permitted to be injected or continue circulating. Each tunnel card receives data from eight detectors and each surface card receives data from two tunnel cards. The surface card provides data to the Logging, the Post Mortem and the Collimation systems that will be used to drive on-line displays in the control room to allow offline analysis of the losses and to setup automatically the collimators. Due to demanding performance requirements, the BLM system is making use of modern field programmable gate arrays (FPGAs), which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes. Figure~\ref{fig:BLETC} shows a block diagram of the processes assigned in BLETC FPGA. In the following, we give a brief overview of each of the four main processing blocks in BLETC card. 
-
+The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the energy deposition detection of secondary shower particles using a specially-designed detector called \emph{ionization chamber}. There are around 4000 ionization chambers located under the magnets all around the tunnel. These detectors convert the signal given by the recording of shower particles into electrical signals and send them to tunnel cards. Tunnel cards, which are located in the tunnel and implemented by radiation-tolerant electronics, acquire and digitize the data from the detectors and transmit those to the surface using optical links. There, the data processing cards, named BLETCs, receive those data and decide whether or not the beam should be permitted to be injected or continue circulating. Each tunnel card receives data from eight detectors and each surface card receives data from two tunnel cards. The surface card provides data to the Logging, the Post Mortem and the Collimation systems that will be used to drive on-line displays in the control room to allow offline analysis of the losses and to setup automatically the collimators. Due to demanding performance requirements, the BLMS is implemented on modern FPGAs, which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes. Figure~\ref{fig:BLETC} shows a block diagram of the processes assigned in BLETC FPGA. In the following, we give a brief overview of each of the four main processing blocks in BLETC card. 
 
 
 \emph{(a) Receive, Check, and Compare (RCC)}: RCC is responsible for facilitating the reception process at the entry stage of the surface FPGA. It ensures the correct reception and detection of erroneous transmissions by redundancy in transmissions and using Cyclic Redundancy Check (CRC) and the 8B/10B algorithms. 
 
-\emph{(b) Data Processing}: Quench of magnets that result from proton loss depends on the loss duration and the beam energy. Given the tolerance acceptable for quench prevention, the quench threshold versus loss time is approximated with a minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance. In order to achieve the \emph{dynamic range} (i.e. the domain of variation of the beam losses) requested by the specification, the detectors use both Current-to-Frequency Converters (CFCs) and ADC circuitries. The data processing block merges these two types of data coming from the same detector into one value and send it to Successive Running Sums (SRS) block. The verification of SRS block is the focus of this paper and its implementation is discussed in more detail in the next section. 
+\emph{(b) Data Processing}: Quench of magnets that result from proton loss depends on the loss duration and the beam energy. Given the tolerance acceptable for quench prevention, the quench threshold versus loss time is approximated with a minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance. In order to achieve the \emph{dynamic range} (i.e. the domain of variation of the beam losses) requested by the specification, the detectors use both Current-to-Frequency Converters (CFCs) and ADC circuitries. The data processing block merges these two types of data coming from the same detector into one value and send it to the SRS block. The implementation of the SRS is discussed in more detail in the next section. 
 
 \emph{(c) Threshold Comparator}: Every new calculated running sum need to be compared with the corresponding threshold that was chosen by the beam energy reading given that moment. The comparator will initiate a beam dump request if any of the running sums is higher than its corresponding threshold. The beam dump requests are forwarded to the Beam Interlock System which will initiate the beam dump. There are 12 running sums calculated for each 16 detector channels allocated to a BLETC card. The beam energy information is scaled into 32 levels (0.45 to 7 TeV) and each processing module will hold data only for those 16 detectors connected. That would give a total of 6,144 threshold values needed to be held on each card. 
 
@@ -106,8 +106,8 @@ The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the en
 
 
 
-
 \section{Successive Running Sums (SRS)}
+\label{sec-SRS}
 
 \begin{figure}[t]
   \centering \includegraphics{rs.eps}
@@ -115,11 +115,10 @@ The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the en
   \label{fig:RS-basic}
 \end{figure}
 
+Beam losses can happen either in a single cycle of the beam in the tunnel, with a sudden beam loss, or in progressive losses during numerous cycles. One-cycle failures are called \emph{ultra-fast} losses. Multi-cycle losses can be divided between \emph{very fast} losses those which happen in less than 10 ms, \emph{fast} losses which happen in more than 10 ms and \emph{steady} losses, where the beam is lost over one second or more~\cite{Schmidt-ICFA}.
 
-Beam losses can happen either in a single turn of the beam in the tunnel, with a sudden beam loss, or in progressive losses during numerous turns. One-turn failures are called \emph{ultra-fast} losses. Multi-turn losses can be divided between \emph{very fast} losses those which happen in less than 10 ms, \emph{fast} losses which happen in more than 10 ms and \emph{steady} losses, where the beam is lost over one second or more~\cite{Schmidt-ICFA}.
 
-
-The processing of the data collected by the detectors involves a proper analysis of the loss patterns in time and a proper account of the energy of the beam. The procedure for the data processing is based on the idea that a constantly updated moving window can be kept by adding to a register the incoming newest value and subtracting its oldest value (see Figure~\ref{fig:RS-basic}). The number of values that are kept under the window defines the integration time it represents.  The ideal strategy is to have an infinite number of constantly updated moving windows with various lengths to cover the whole time region from 40 micro-seconds (the data arrival rate to BLETC card)  to 100 seconds for detecting ultra-fast losses to steady losses, respectively. Such an implementation is not feasible due to the limited amount of resources. Therefore, given the tolerance acceptable for quench prevention, the quench threshold versus loss time curve is approximated by a minimum number of steps that fulfill this tolerance.
+The processing of the data collected by the detectors involves a proper analysis of the loss patterns over time and a proper account of the energy of the beam. The procedure for the data processing is based on the idea that a constantly updated moving window can be kept by adding to a register the incoming newest value and subtracting its oldest value (see Figure~\ref{fig:RS-basic}). The number of values that are kept under the window defines the integration time it represents.  The ideal strategy is to have an infinite number of constantly updated moving windows with various lengths to cover the whole time region from 40 micro-seconds (the data arrival rate to BLETC card)  to 100 seconds for detecting ultra-fast losses to steady losses, respectively. Such an implementation is not feasible due to the limited amount of resources. Therefore, given the tolerance acceptable for quench prevention, the quench threshold versus loss time curve is approximated by a minimum number of steps that fulfill this tolerance.
 
 \begin{figure}[t]
   \centering \includegraphics{SRS-basic.eps}
@@ -128,11 +127,9 @@ The processing of the data collected by the detectors involves a proper analysis
 \end{figure}
 
 
-
-In order to construct long moving windows, it is required to keep long histories of received data. The technique employed to reach long integration periods with relatively small in length shift registers uses consecutive storage of sums of the received values. Instead of storing all values needed for the sum, this technique stores successively parts of the total sum using only a fraction of the otherwise needed memory space. This technique works by feeding the sum of one shift register's contents, every time its contents become completely updated, to the input of another shift register (see Figure~\ref{fig:SRS-basic}). By cascading more of these elements, very long moving windows could be constructed with significantly small memory space. The above scheme is the basis for \emph{Successive Running Sums} (SRS) implementation in BLETC. 
+In order to construct long moving windows, it is required to keep long histories of received data. The technique employed to reach long integration periods with relatively small in length shift registers uses consecutive storage of sums of the received values. Instead of storing all values needed for the sum, this technique stores successively parts of the total sum using only a fraction of the otherwise needed memory space. This technique works by feeding the sum of one shift register's contents, every time its contents become completely updated, to the input of another shift register (see Figure~\ref{fig:SRS-basic}). By cascading more of these elements, very long moving windows could be constructed with significantly small memory space. The above scheme is the basis for the SRS implementation in BLETC. 
 
 SRS implementation minimizes the resource usage by using the already calculated running sums in order to calculate bigger in length running sums without the need of extra summation points. In addition, it makes use of multipoint shift registers that are configured to give intermediate outputs, referred to as \emph{taps}. The taps provide data outputs at certain points in the shift register chain thus contribute towards the efficient use of resources. 
-
 
 As in the SRS implementation the sum of one shift register's content is fed to the input of another shift register, the optimal achievable latency in the response of each stage is equal to the refreshing time of the preceding shift registers, i.e. the time needed to completely update its contents.  The \emph{read delay} signal (see Figure~\ref{fig:SRS-basic}) of each shift register holds a delay equal to this latency to guarantee the correct operation. Thus, the delay is every time equal to the preceding shift register's delay multiplied by the elements planned to be used in the sum. 
 
@@ -181,11 +178,8 @@ As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 s
 
 
 
-
-%A similar configuration for the production of the running sums is used in the BLMTC where in order to increase the efficiency in resources, a set of parameterized multipoint shift registers are used. In this configuration, called \emph{Successive Running Sums}, each incoming new value is delayed with a fixed number of cycles by passing it through a shift register and adding the difference of the new and the outputted from the shift register to an accumulator (see Figure ). 
-
-
 \section{Verification of SRS Implementation using HOL}
+\label{sec-verification}
 
 Calculation of the running sums is a critical component of BLM. In case of no dangerous loss, BLM should not inhabit the beam. If it fails, it generates a false alarm and three hours will be lost to recover the previous situation. Such false alarms compromise the availability of the system. Moreover, in case of a dangerous loss, BLM it has to inhibit the beam permit. If it fails there will be at least 30 days of downtime. 
 Any error in this computation would either compromise the availability of the system (unnecessary request for beam dump) or safety of the system (nor requesting a necessary beam dump). The current practice to check the correctness of the SRS is by simulation and testing in which (explanation of how such a test gets performed). 
@@ -227,7 +221,7 @@ The main objective of formalizing the functionality of SRS was to keep the topol
 
 
 \section{Conclusions and Lessons Learned}
-
+\label{sec-conclusions}
 
 
 \bibliographystyle{plain} 
