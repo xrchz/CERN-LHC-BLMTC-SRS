@@ -199,10 +199,10 @@ The implementation of HOL4 uses Milner's LCF approach~\cite{Milner:1972:LCF:8919
 Every theorem ultimately comes from the kernel, and this fact provides high assurance of the logical soundness of the verification results obtained using the system.
 
 HOL4 is an \emph{interactive} theorem prover: the user provides the high level proof strategy by composing functions that automate common chains of logical deduction.
-The work described here could have been done using other systems such as HOL Light [ref], Isabelle/HOL~\cite{Isabelle}, ProofPower [ref], PVS [ref] or Coq [ref].
-The first three of these support essentially the same version of higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
+The work described here could have been done using other systems such as HOL Light~\cite{HOLLight,DBLP:conf/tphol/Harrison09a}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS,DBLP:conf/tphol/OwreS08} or Coq~\cite{Coq}.
+The first three use essentially the same higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
 <What about ACL2?>
-While offering less ``push-button'' automation than many other kinds of formal verification such as model-checking, machine-assisted theorem proving is the most appropriate approach to verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically. 
+While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically. 
 
 The main objective of formalizing the functionality of SRS was to keep the topology parameterized.
 It is very probable that in the future the configuration of the slices and shift registers changes to accommodate higher precision.
