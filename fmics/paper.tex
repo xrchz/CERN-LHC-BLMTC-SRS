@@ -19,7 +19,7 @@
 \begin{abstract}
 
 We describe a collaborative effort in which the HOL4 theorem prover is being used to formally verify properties of a structure within the Large Hadron Collider (LHC) machine protection system at the European Organization for Nuclear Research (CERN).
-This structure, known as the \emph{Successive Running Sums} (SRS), generates the primary input to the decision logic that must initiate a critical action by the LHC machine protection system in response to the detection of a dangerous level of beam particle loss.
+This structure, known as \emph{Successive Running Sums} (SRS), generates the primary input to the decision logic that must initiate a critical action by the LHC machine protection system in response to the detection of a dangerous level of beam particle loss.
 The use of mechanized logical deduction complements an intensive study of the SRS structure using simulation.
 We are especially interested in using logical deduction to obtain a generic result that will be applicable to variants of the SRS structure.
 This collaborative effort has individuals with diverse backgrounds ranging from theoretical physics to system safety.
@@ -30,36 +30,36 @@ One interesting result is the extent to which the use of a formal method has com
 \section{Introduction}
 
 The Large Hadron Collider (LHC) at the European Organization for Nuclear Research (CERN) is a high-energy particle accelerator.
-It provides a head-on collisions of protons at a center of a mass energy of 14 TeV for high-energy particle physics research.
+It provides head-on collisions of protons at a center of a mass energy of 14 TeV for high-energy particle physics research.
 In order to reach the required magnetic field strengths, the LHC has superconducting magnets cooled with superfluid helium.
-Due to a very high energy stored in the circulating beams (700 MJ), if even a small fraction of the beam particles deposit their energy in the equipment, they can cause the superconductors to transition to normal conducting state.
+Due to the high energy stored in the circulating beams (700 MJ), if even a small fraction of the beam particles deposit their energy in the equipment, they can cause the superconductors to transition to their normal conducting state.
 Such a transition is called a \emph{quench}.
 The consequences of a quench range from several hours of down time (to cool down the magnets to reach the superconducting state), to months of repairs (in the case of equipment damage).
 
-The strategy for machine protection of the LHC is mainly based on the Beam Loss Monitoring System (BLMS), which triggers the safe extraction of the beam if the particle loss exceeds thresholds that are likely to result in a quench.
-At each cycle of the beams around the LHC, the BLMS records and processes several thousands of data points in order to decide if the beams should be permitted to continue circulating or their safe extraction is necessary to be triggered.
+The main strategy for protecting the LHC is based on the Beam Loss Monitoring System (BLMS), which triggers the safe extraction of the beams if particle loss exceeds thresholds that are likely to result in a quench.
+At each cycle of the beams around the LHC, the BLMS records and processes several thousands of data points to decide whether the beams should be permitted to continue circulating or whether their safe extraction should be triggered.
 The processing includes analysis of the loss pattern over time and of the energy of the beam.
 
-The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of the loss data recorded over long periods of time.
+The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of loss data recorded over a long period of time.
 Furthermore, the BLMS must continue recording large amounts of data in real-time while processing.
 To achieve these goals, the BLMS maintains approximate cumulative sums of particle losses over a variety of sizes of moving windows.
 The component responsible for maintaining these sums is called \emph{Successive Running Sums} (SRS).
-The SRS is implemented in hardware, in order to be fast enough to work in real-time, and on Field Programmable Gate Arrays (FPGAs) in particular so that they can be easily reprogrammed with future upgrades~\cite{Chris-FPGA}.
+The SRS component is implemented in hardware, in order to be fast enough to work in real-time, and on Field Programmable Gate Arrays (FPGAs) in particular so that they can be easily reprogrammed with future upgrades~\cite{Chris-FPGA}.
 %Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
 
 The SRS component has a complex structure and the correctness of its behaviour is critical for safe and productive use of the LHC.
-Any error in SRS implementation would either compromise the availability of the LHC (unnecessary request for beam dump) or safety (not triggering a necessary beam dump).
-The current approach for analysis of SRS is mainly  based on simulation of its behavior on sample streams of input~\cite{}.
+Any error in the SRS implementation would either compromise the availability of the LHC (unnecessary request for beam dump) or safety (not triggering a necessary beam dump).
+The current approach for analysing the SRS implementation is simulation of its behavior on sample streams of input~\cite{}.
 (one more sentence needs to be added on the current verification process)
 
-In this paper, we describe a formal verification approach based on logical deduction for the analysis of SRS.
+In this paper, we describe a formal verification approach based on logical deduction for analysing the SRS implementation.
 (need to add few sentences explaining in a very high level the verification approach/strategy)
 
-Compared to test-based methods, like simulation, formal methods not only offer a much higher confidence in correctness of the systems' behavior, but also help in better understanding their specification.
-One of the main challenges in implementing a formal verification approach for SRS was to capture the intricate details of the system's specification via experiment and refinement with a team with different backgrounds and expertise.
-Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool at the end of a long and intense effort.
-In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
-The most important use of HOL4  was its role as an ``implacable skeptic" that compelled us to really understand the details~\cite{rushby}.
+Compared to test-based methods, like simulation, formal methods not only offer a much higher confidence in correctness of a system's behavior, but also help improve our understanding of its specification.
+One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team with different backgrounds and expertise.
+Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved'' as the final output of a software tool at the end of a long and intense effort.
+In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level'' argument or explanation for why the implementation achieves its intended behaviors.
+The most important use of HOL4 was its role as an ``implacable skeptic'' that compelled us to really understand the details~\cite{rushby}.
 
 The rest of the paper is organized as follows.
 An overview of BLMS and its main components is given in Section~\ref{sec-BLM} and is followed by a description of SRS implementation in Section~\ref{sec-SRS}.
