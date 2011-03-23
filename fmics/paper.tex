@@ -1,6 +1,6 @@
 \documentclass{llncs}
 
-\usepackage{times,graphicx,epsfig,boxedminipage,url,xspace,array}
+\usepackage{times,graphicx,epsfig,boxedminipage,url,xspace,array,amsmath}
 
 \begin{document}
 
@@ -201,13 +201,24 @@ Every theorem ultimately comes from the kernel, and this fact provides high assu
 HOL4 is an \emph{interactive} theorem prover: the user provides the high level proof strategy by composing functions that automate common chains of logical deduction.
 The work described here could have been done using other systems such as HOL Light~\cite{HOLLight,DBLP:conf/tphol/Harrison09a}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS,DBLP:conf/tphol/OwreS08} or Coq~\cite{Coq}.
 The first three use essentially the same higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
-<What about ACL2?>
+%<What about ACL2?>
 While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically. 
 
-The main objective of formalizing the functionality of SRS was to keep the topology parameterized.
-It is very probable that in the future the configuration of the slices and shift registers changes to accommodate higher precision.
-If the model is parameterized then, the same model can be used in the future uses of the system.
-For this, we formalized the definitions of the model by six parameters:
+Our goal is to build a generic model of the SRS structure, and to prove that it calculates approximate running sums of counts within suitable error margins.
+Any statement in formal logic is necessarily precise, and one of our challenges has been characterizing our goal precisely.
+A sketch of the desired statement is \[\forall{n}.\,\text{\textsf{RS} }n=\text{true sum}\pm\text{acceptable error}\]
+<need a formal model of all components of this equation>
+<we only care about 0 <= n <= 11 for the current SRS, but by making the statement forall n, we obtain a generic (parameterized) model>
+<start with "RS" - need to model the SRS structure>
+<we decide to work with discrete time steps and encode the state of the whole SRS structure as a collection of values, one for each component, at each time step>
+
+<two phases: simplified model, more realistic model, plan to do even more realistic model later>
+<the overall sketch of the theory for the more realistic model followed that of the simplified model, but it's not completely clear that if we actually saved time/effort by doing it that way>
+
+%One of our objectives in formally modelling SRS was to keep the topology parameterized.
+%It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
+%A parameterized model can be used both for current and future versions of the system.
+%For this, we formalized the definitions of the model by six parameters:
 
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
