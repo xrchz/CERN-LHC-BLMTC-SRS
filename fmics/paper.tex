@@ -206,14 +206,28 @@ While offering less ``push-button'' automation than other kinds of formal verifi
 
 Our goal is to build a generic model of the SRS structure, and to prove that it calculates approximate running sums of counts within suitable error margins.
 Any statement in formal logic is necessarily precise, and one of our challenges has been characterizing our goal precisely.
-A sketch of the desired statement is \[\forall{n}.\,\text{\textsf{RS} }n=\text{true sum}\pm\text{acceptable error}\]
-<need a formal model of all components of this equation>
-<we only care about 0 <= n <= 11 for the current SRS, but by making the statement forall n, we obtain a generic (parameterized) model>
-<start with "RS" - need to model the SRS structure>
-<we decide to work with discrete time steps and encode the state of the whole SRS structure as a collection of values, one for each component, at each time step>
+A sketch of the desired statement is \[\forall{n}.\,\text{\textsf{RS} }n=\text{sum for output $n$}\pm\text{acceptable error}\]
+Although Figure~\ref{fig:srs} would suggest we only care about $0\leq{n}\leq11$, if we can define and prove something for all values of $n$, we obtain a generic model.
 
-<two phases: simplified model, more realistic model, plan to do even more realistic model later>
-<the overall sketch of the theory for the more realistic model followed that of the simplified model, but it's not completely clear that if we actually saved time/effort by doing it that way>
+To prove the equation above, we need to formalize all of its terms.
+First, we make two items explicit: that the equation is to be understood as holding at each time step, and that the terms depend on the stream of input counts over time.
+With these refinements, our statement becomes \[\forall{D\,n\,t}.\,\text{\textsf{RS} }D\,n\,t=\text{sum, given input stream $D$, for output $n$ at time $t$}\pm\text{acceptable error}\]
+
+To formalize the term on the left hand side, we need to build a logical model of the SRS structure.
+Our work proceeded in two phases, starting with a model of a simplified structure and proceeding to a more realistic model.
+In both cases, we represent each piece of the SRS structure that has a value---for example, each cell in each shift register---as a function in HOL that takes the global input stream and current time step as input and returns the value of the piece of the structure at that time.
+Our simplifications in the first phase include
+\begin{enumerate}
+\item Ignore the middle taps in each slice
+\item A more regular arrangement of slices than the actual structure
+\item Ignore subtractor and accumulator, by defining the output of a slice as the sum of its cells directly
+\item Simplify timing <what? how?>
+\item Use natural numbers, rather than finite words, for cell values
+\end{enumerate}
+In the second phase, we drop the first three simplifications by adding middle taps, a more flexible arrangement of slices, and the subtractor and accumulator to our model.
+In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure in the following sense: we model an infinite number of shift registers, each with an infinite number of cells, simply by not specifying their widths or any limits.
+<how does that work>
+<it's not completely clear that if we actually saved time/effort by doing the simplified one first...>
 
 %One of our objectives in formally modelling SRS was to keep the topology parameterized.
 %It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
