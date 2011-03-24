@@ -23,7 +23,7 @@ This structure, known as \emph{Successive Running Sums} (SRS), generates the pri
 The use of mechanized logical deduction complements an intensive study of the SRS structure using simulation.
 We are especially interested in using logical deduction to obtain a generic result that will be applicable to variants of the SRS structure.
 This collaborative effort has individuals with diverse backgrounds ranging from theoretical physics to system safety.
-One interesting result is the extent to which the use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.  
+One interesting result is the extent to which the use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.
 
 \end{abstract}
 
@@ -70,7 +70,7 @@ We conclude in Section~\ref{sec-conclusions} with a summary of lessons learned a
 
 %The BLMS detects beam loss in the form of counts proportional to the number of stray particles. Dangerous loss levels can be expressed as thresholds on the rate of counts over time. The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated. It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected. But stopping the beam when the loss level is not dangerous is time consuming and costly. Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
 
-%Simulation of the SRS on sample streams of input is one approach, currently in use~\cite{}, to building an understanding of the SRS's behaviour and confidence that the behaviour is correct. 
+%Simulation of the SRS on sample streams of input is one approach, currently in use~\cite{}, to building an understanding of the SRS's behaviour and confidence that the behaviour is correct.
 
 %Formal methods are another approach to building understanding and confidence.
 %The work on constructing proofs may be compared to the work on analysing the results of simulations. The work on formulating precise specifications is extra, but is arguably beneficial for both methods. <need to be more descriptive here i.e. to do number 2) below rather than 3)>
@@ -93,16 +93,16 @@ We conclude in Section~\ref{sec-conclusions} with a summary of lessons learned a
   \label{fig:BLETC}
 \end{figure}
 
-The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the energy deposition detection of secondary shower particles using a specially-designed detector called \emph{ionization chamber}. There are around 4000 ionization chambers located under the magnets all around the tunnel. These detectors convert the signal given by the recording of shower particles into electrical signals and send them to tunnel cards. Tunnel cards, which are located in the tunnel and implemented by radiation-tolerant electronics, acquire and digitize the data from the detectors and transmit those to the surface using optical links. There, the data processing cards, named BLETCs, receive those data and decide whether or not the beam should be permitted to be injected or continue circulating. Each tunnel card receives data from eight detectors and each surface card receives data from two tunnel cards. The surface card provides data to the Logging, the Post Mortem and the Collimation systems that will be used to drive on-line displays in the control room to allow offline analysis of the losses and to setup automatically the collimators. Due to demanding performance requirements, the BLMS is implemented on modern FPGAs, which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes. Figure~\ref{fig:BLETC} shows a block diagram of the processes assigned in BLETC FPGA. In the following, we give a brief overview of each of the four main processing blocks in BLETC card. 
+The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the energy deposition detection of secondary shower particles using a specially-designed detector called \emph{ionization chamber}. There are around 4000 ionization chambers located under the magnets all around the tunnel. These detectors convert the signal given by the recording of shower particles into electrical signals and send them to tunnel cards. Tunnel cards, which are located in the tunnel and implemented by radiation-tolerant electronics, acquire and digitize the data from the detectors and transmit those to the surface using optical links. There, the data processing cards, named BLETCs, receive those data and decide whether or not the beam should be permitted to be injected or continue circulating. Each tunnel card receives data from eight detectors and each surface card receives data from two tunnel cards. The surface card provides data to the Logging, the Post Mortem and the Collimation systems that will be used to drive on-line displays in the control room to allow offline analysis of the losses and to setup automatically the collimators. Due to demanding performance requirements, the BLMS is implemented on modern FPGAs, which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes. Figure~\ref{fig:BLETC} shows a block diagram of the processes assigned in BLETC FPGA. In the following, we give a brief overview of each of the four main processing blocks in BLETC card.
 
 
-\emph{(a) Receive, Check, and Compare (RCC)}: RCC is responsible for facilitating the reception process at the entry stage of the surface FPGA. It ensures the correct reception and detection of erroneous transmissions by redundancy in transmissions and using Cyclic Redundancy Check (CRC) and the 8B/10B algorithms. 
+\emph{(a) Receive, Check, and Compare (RCC)}: RCC is responsible for facilitating the reception process at the entry stage of the surface FPGA. It ensures the correct reception and detection of erroneous transmissions by redundancy in transmissions and using Cyclic Redundancy Check (CRC) and the 8B/10B algorithms.
 
-\emph{(b) Data Processing}: Quench of magnets that result from proton loss depends on the loss duration and the beam energy. Given the tolerance acceptable for quench prevention, the quench threshold versus loss time is approximated with a minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance. In order to achieve the \emph{dynamic range} (i.e. the domain of variation of the beam losses) requested by the specification, the detectors use both Current-to-Frequency Converters (CFCs) and ADC circuitries. The data processing block merges these two types of data coming from the same detector into one value and send it to the SRS block. The implementation of the SRS is discussed in more detail in the next section. 
+\emph{(b) Data Processing}: Quench of magnets that result from proton loss depends on the loss duration and the beam energy. Given the tolerance acceptable for quench prevention, the quench threshold versus loss time is approximated with a minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance. In order to achieve the \emph{dynamic range} (i.e. the domain of variation of the beam losses) requested by the specification, the detectors use both Current-to-Frequency Converters (CFCs) and ADC circuitries. The data processing block merges these two types of data coming from the same detector into one value and send it to the SRS block. The implementation of the SRS is discussed in more detail in the next section.
 
-\emph{(c) Threshold Comparator}: Every new calculated running sum need to be compared with the corresponding threshold that was chosen by the beam energy reading given that moment. The comparator will initiate a beam dump request if any of the running sums is higher than its corresponding threshold. The beam dump requests are forwarded to the Beam Interlock System which will initiate the beam dump. There are 12 running sums calculated for each 16 detector channels allocated to a BLETC card. The beam energy information is scaled into 32 levels (0.45 to 7 TeV) and each processing module will hold data only for those 16 detectors connected. That would give a total of 6,144 threshold values needed to be held on each card. 
+\emph{(c) Threshold Comparator}: Every new calculated running sum need to be compared with the corresponding threshold that was chosen by the beam energy reading given that moment. The comparator will initiate a beam dump request if any of the running sums is higher than its corresponding threshold. The beam dump requests are forwarded to the Beam Interlock System which will initiate the beam dump. There are 12 running sums calculated for each 16 detector channels allocated to a BLETC card. The beam energy information is scaled into 32 levels (0.45 to 7 TeV) and each processing module will hold data only for those 16 detectors connected. That would give a total of 6,144 threshold values needed to be held on each card.
 
-\emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, BLM should store the loss measurement data. This data will be sent over the VME-bus for online viewing and storage by the Logging and Post-Mortem systems. For the purpose of supervision, the BLM system will drive an online event display to show error and status information recorded by tunnel electronics and the RCC process as well as the maximum loss rates seen by the running sums. BLETC card also provides data to Collimation system for the correct alignment and setup of the collimators. 
+\emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, BLM should store the loss measurement data. This data will be sent over the VME-bus for online viewing and storage by the Logging and Post-Mortem systems. For the purpose of supervision, the BLM system will drive an online event display to show error and status information recorded by tunnel electronics and the RCC process as well as the maximum loss rates seen by the running sums. BLETC card also provides data to Collimation system for the correct alignment and setup of the collimators.
 
 
 
@@ -127,11 +127,11 @@ The processing of the data collected by the detectors involves a proper analysis
 \end{figure}
 
 
-In order to construct long moving windows, it is required to keep long histories of received data. The technique employed to reach long integration periods with relatively small in length shift registers uses consecutive storage of sums of the received values. Instead of storing all values needed for the sum, this technique stores successively parts of the total sum using only a fraction of the otherwise needed memory space. This technique works by feeding the sum of one shift register's contents, every time its contents become completely updated, to the input of another shift register (see Figure~\ref{fig:SRS-basic}). By cascading more of these elements, very long moving windows could be constructed with significantly small memory space. The above scheme is the basis for the SRS implementation in BLETC. 
+In order to construct long moving windows, it is required to keep long histories of received data. The technique employed to reach long integration periods with relatively small in length shift registers uses consecutive storage of sums of the received values. Instead of storing all values needed for the sum, this technique stores successively parts of the total sum using only a fraction of the otherwise needed memory space. This technique works by feeding the sum of one shift register's contents, every time its contents become completely updated, to the input of another shift register (see Figure~\ref{fig:SRS-basic}). By cascading more of these elements, very long moving windows could be constructed with significantly small memory space. The above scheme is the basis for the SRS implementation in BLETC.
 
-SRS implementation minimizes the resource usage by using the already calculated running sums in order to calculate bigger in length running sums without the need of extra summation points. In addition, it makes use of multipoint shift registers that are configured to give intermediate outputs, referred to as \emph{taps}. The taps provide data outputs at certain points in the shift register chain thus contribute towards the efficient use of resources. 
+SRS implementation minimizes the resource usage by using the already calculated running sums in order to calculate bigger in length running sums without the need of extra summation points. In addition, it makes use of multipoint shift registers that are configured to give intermediate outputs, referred to as \emph{taps}. The taps provide data outputs at certain points in the shift register chain thus contribute towards the efficient use of resources.
 
-As in the SRS implementation the sum of one shift register's content is fed to the input of another shift register, the optimal achievable latency in the response of each stage is equal to the refreshing time of the preceding shift registers, i.e. the time needed to completely update its contents.  The \emph{read delay} signal (see Figure~\ref{fig:SRS-basic}) of each shift register holds a delay equal to this latency to guarantee the correct operation. Thus, the delay is every time equal to the preceding shift register's delay multiplied by the elements planned to be used in the sum. 
+As in the SRS implementation the sum of one shift register's content is fed to the input of another shift register, the optimal achievable latency in the response of each stage is equal to the refreshing time of the preceding shift registers, i.e. the time needed to completely update its contents.  The \emph{read delay} signal (see Figure~\ref{fig:SRS-basic}) of each shift register holds a delay equal to this latency to guarantee the correct operation. Thus, the delay is every time equal to the preceding shift register's delay multiplied by the elements planned to be used in the sum.
 
 \begin{figure}[t]
   \centering \scalebox{0.65}{ \includegraphics{srs-modified.eps}}
@@ -140,9 +140,9 @@ As in the SRS implementation the sum of one shift register's content is fed to t
 \end{figure}
 
 
-Figure~\ref{fig:srs} shows the implementation of SRS in BLETC card. It consists of 6 \emph{slices}, where each slice computes two running sums (noted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}). 
+Figure~\ref{fig:srs} shows the implementation of SRS in BLETC card. It consists of 6 \emph{slices}, where each slice computes two running sums (noted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
 
-As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 seconds upper integration limit requested by the specifications. 
+As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 seconds upper integration limit requested by the specifications.
 
 \begin{figure}[t]
   \centering \scalebox{0.8}{ \includegraphics{multi-rs.eps}}
@@ -202,7 +202,7 @@ HOL4 is an \emph{interactive} theorem prover: the user provides the high level p
 The work described here could have been done using other systems such as HOL Light~\cite{HOLLight,DBLP:conf/tphol/Harrison09a}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS,DBLP:conf/tphol/OwreS08} or Coq~\cite{Coq}.
 The first three use essentially the same higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
 %<What about ACL2?>
-While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically. 
+While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
 
 Our goal is to build a generic model of the SRS structure, and to prove that it calculates approximate running sums of counts within suitable error margins.
 Any statement in formal logic is necessarily precise, and one of our challenges has been characterizing our goal precisely.
@@ -229,7 +229,7 @@ In the second phase, we drop the first three simplifications by adding middle ta
 In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure in the following sense: we model an infinite number of slices, each with an infinite number of shift register cells and taps, simply by letting indices range over the natural numbers without explicitly giving limits.
 
 We describe the more realistic (second phase) model here.
-Table~\ref{tab:descriptions} lists the names of the HOL functions we define and their intended meanings, and Figure~\ref{fig:definitions} gives their definitions. 
+Table~\ref{tab:descriptions} lists the names of the HOL functions we define and their intended meanings, and Figure~\ref{fig:definitions} gives their definitions.
 For our correctness equation above, we only need the last entry in the table, $\mathsf{RS}$; the first two entries, $\mathsf{tap}$ and $\mathsf{input}$, enable us to specify the exact configuration of the structure, and the remaining entries are used as ``glue'' leading up to the definition of $\mathsf{RS}$.
 By using these intermediary functions, every definition in Figure~\ref{fig:definitions} is \emph{local} (only talks about a small part of the overall SRS structure) and therefore is easy to verify against its intended meaning.
 
@@ -310,7 +310,7 @@ A similar comment applies to other definitions when $n$, representing a slice nu
 \label{sec-conclusions}
 
 
-\bibliographystyle{plain} 
+\bibliographystyle{plain}
 \bibliography{refs}
 
 
