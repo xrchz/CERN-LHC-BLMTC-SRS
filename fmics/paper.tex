@@ -211,7 +211,8 @@ Although Figure~\ref{fig:srs} would suggest we only care about $0\leq{n}\leq11$,
 
 To prove the equation above, we need to formalize all of its terms.
 First, we make two items explicit: that the equation is to be understood as holding at each time step, and that the terms depend on the stream of input counts over time.
-With these refinements, our statement becomes \[\forall{D\,n\,t}.\,\text{\textsf{RS} }D\,n\,t=\text{sum, given input stream $D$, for output $n$ at time $t$}\pm\text{acceptable error}\]
+With these refinements, our statement becomes \[\forall{D\,n\,t}.\,\mathsf{RS}\;D\;n\;t=\text{sum, given input stream $D$, for output $n$ at time $t$}\pm\text{acceptable error}\]
+(The input stream is a function of time: $D\;t$ is the input value to the whole SRS structure at time $t$.)
 
 To formalize the term on the left hand side, we need to build a logical model of the SRS structure.
 Our work proceeded in two phases, starting with a model of a simplified structure and proceeding to a more realistic model.
@@ -225,9 +226,80 @@ Our simplifications in the first phase include
 \item Use natural numbers, rather than finite words, for cell values
 \end{enumerate}
 In the second phase, we drop the first three simplifications by adding middle taps, a more flexible arrangement of slices, and the subtractor and accumulator to our model.
-In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure in the following sense: we model an infinite number of shift registers, each with an infinite number of cells, simply by not specifying their widths or any limits.
-<how does that work>
-<it's not completely clear that if we actually saved time/effort by doing the simplified one first...>
+In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure in the following sense: we model an infinite number of slices, each with an infinite number of shift register cells and taps, simply by letting indices range over the natural numbers without explicitly giving limits.
+
+We describe the more realistic (second phase) model here.
+Table~\ref{tab:descriptions} lists the names of the HOL functions we define and their intended meanings, and Figure~\ref{fig:definitions} gives their definitions. 
+For our correctness equation above, we only need the last entry in the table, $\mathsf{RS}$; the first two entries, $\mathsf{tap}$ and $\mathsf{input}$, enable us to specify the exact configuration of the structure, and the remaining entries are used as ``glue'' leading up to the definition of $\mathsf{RS}$.
+By using these intermediary functions, every definition in Figure~\ref{fig:definitions} is \emph{local} (only talks about a small part of the overall SRS structure) and therefore is easy to verify against its intended meaning.
+
+\begin{table}
+\caption{
+Descriptions of the HOL functions comprising our model of the SRS structure.
+\label{tab:descriptions}
+}
+\begin{tabular}{lp{0.8\textwidth}}
+Function&Intended meaning\\
+\hline\\
+\(\mathsf{tap}\;n\;x\)&The position of tap $x$ of slice $n$.\\
+\(\mathsf{input}\;n\)&A pair $(n',x)$ indicating that the input to slice $n$ is output $x$ of slice $n'$.\\
+\(\mathsf{delay}\;n\)&The number of time steps between updates of slice $n$.\\
+\(\mathsf{update\_time}\;n\;t\)&A boolean indicating whether $t$ is an update time for slice $n$.\\
+\(\mathsf{source}\;D\;n\;m\;t\)&The value of the cell that is the direct input to cell $m$ of slice $n$, at time $t$, given input stream $D$.\\
+\(\mathsf{SR}\;D\;n\;m\;t\)&The value of cell $m$ of shift register $n$, at time $t$, given input stream $D$.\\
+\(\mathsf{output}\;D\;n\;x\;t\)&The value of output $x$ of slice $n$, at time $t$, given input stream $D$.\\
+\(\mathsf{RS}\;D\;n\;t\)&The value of Running Sum register $n$ at time $t$, given input stream $D$.
+\end{tabular}
+\end{table}
+
+\begin{figure}
+\caption{
+Definitions of the HOL functions comprising our model of the SRS structure.
+\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}, counting positions within a shift register from $0$.
+Slice $0$ is a fake slice representing the global input; this enables a succinct definition of $\mathsf{source}$.
+The definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure represented, so we use definitions convenient for proving theorems.
+A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is above $1$.
+\label{fig:definitions}}
+\begin{align*}
+\mathsf{tap}\;0\;0&=0&\mathsf{tap}\;0\;x&=0\\
+\mathsf{tap}\;1\;0&=1-1&\mathsf{tap}\;1\;x&=2-1\\
+\mathsf{tap}\;2\;0&=8-1&\mathsf{tap}\;2\;x&=16-1\\
+&\dots&\mathsf{tap}\;6\;x&=128-1\quad\text{(where $x>0$)}\\
+\mathsf{input}\;0&=(0,0)&\mathsf{input}\;1&=(0,0)\\
+\mathsf{input}\;2&=(0,0)&\mathsf{input}\;3&=(1,1)\\
+\mathsf{input}\;4&=(3,0)&\mathsf{input}\;5&=(4,0)\\
+\mathsf{input}\;6&=(4,1)&\mathsf{input}\;n&=(n-1,0)\quad\text{(where $n>6$)}
+\end{align*}
+\begin{align*}
+\mathsf{delay}\;0&=1\\
+\mathsf{delay}\;n&=\mathsf{delay}\;n'\times((\mathsf{tap}\;n'\;x)+1)\\
+&\qquad\text{where $(n',x)=\mathsf{input\;n}$ (and $n>0$)}
+\end{align*}
+\begin{align*}
+\mathsf{update\_time}\;n\;t&\iff(t\operatorname{mod}\mathsf{delay}\;n=0)
+\end{align*}
+\begin{align*}
+\mathsf{source}\;D\;n\;0\;t&=\mathsf{output}\;D\;n'\;x\;t\quad\text{where $(n',x)=\mathsf{input\;n}$}\\
+\mathsf{source}\;D\;n\;m\;t&=\;\mathsf{SR}\;D\;n\;(m-1)\;\quad\text{(where $m>0$)}
+\end{align*}
+\begin{align*}
+\mathsf{output}\;D\;0\;x\;t&=D\;t\\
+\mathsf{output}\;D\;n\;x\;0&=0\\
+\mathsf{output}\;D\;n\;x\;t&=
+\text{if $\mathsf{update\_time}\;n\;t$}\\
+&\qquad\text{then }((\mathsf{output}\;D\;n\;x\;(t-1))+(\mathsf{source}\;D\;n\;0\;(t-1)))-(\mathsf{SR}\;D\;n(\mathsf{tap}\;n\;x)\;(t-1))\\
+&\qquad\text{else }\mathsf{output}\;D\;n\;x\;(t-1)\qquad\text{(where $t>0$)}
+\end{align*}
+\begin{align*}
+\mathsf{SR}\;D\;n\;m\;0&=0\\
+\mathsf{SR}\;D\;n\;m\;t&=\text{if $\mathsf{update\_time}\;n\;t$}\\
+&\qquad\text{then }\mathsf{source}\;D\;n\;m\;(t-1)\\
+&\qquad\text{else }\mathsf{SR}\;D\;n\;m\;t\qquad\text{(where $t>0$)}
+\end{align*}
+\begin{align*}
+\mathsf{RS}\;D\;n\;t&=\mathsf{output}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)
+\end{align*}
+\end{figure}
 
 %One of our objectives in formally modelling SRS was to keep the topology parameterized.
 %It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
