@@ -235,14 +235,14 @@ In the second phase, we eliminated the first four simplifications (listed above)
 In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure of SRS in BLMS in the following way: we model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
 This parameterization makes the model and the analysis more likely to be applicable to future upgraded/modified versions of the system.
 
-
 %We describe the more realistic (second phase) model here.
 Table~\ref{tab:descriptions} lists the HOL functions we defined in the second phase along with their intended meanings.
 The arrangement of the slices is described by functions $\mathsf{input}\;n$ and $\mathsf{tap}\;n\;x$.
 The read delay of a slice is modeled by $\mathsf{delay}\;n$.
 Each slice is modeled by three functions: $\mathsf{SR}\;D\;n\;m\;t$ represents the value of each cell of the slice's shift register, $\mathsf{source}\;D\;n\;m\;t$ represents the direct input of each cell, and $\mathsf{output}\;D\;n\;x\;t$ represents the value of the slice's output at its taps.
-The $\mathsf{RS}\;D\;n\;t$ models the running sums and $\mathsf{update\_time}\;n\;t$ checks if it is the time to refresh the contents of slice $n$.
-{\bf should we explain why we have both output function and RS?}
+The function $\mathsf{RS}\;D\;n\;t$ models the running sums and $\mathsf{update\_time}\;n\;t$ checks if it is time to refresh the contents of a slice.
+We have both $\mathsf{RS}$ and $\mathsf{output}$ functions, though $\mathsf{RS}$ is easily defined in terms of $\mathsf{output}$, because $\mathsf{RS}$ represents a whole SRS output (indexed by a single number), whereas $\mathsf{output}$ represents an individual slice output (indexed by slice and tap).
+By separating $\mathsf{RS}$ and $\mathsf{output}$, we allow for designs where some slice outputs are not SRS outputs, but may still be used internally between slices.
 
 The formal definitions of the functions listed in Table~\ref{tab:descriptions} are given in Figure~\ref{fig:definitions}.
 Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented. %-- so we use definitions convenient for proving theorems.
