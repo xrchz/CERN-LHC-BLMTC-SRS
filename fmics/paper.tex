@@ -285,10 +285,10 @@ Slice $0$ is a fake slice representing the SRS input; this enables a succinct de
 %A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is above $1$.
 \label{fig:definitions}}
 \begin{align*}
-\mathsf{tap}\;0\;0&=0&\mathsf{tap}\;0\;1&=0\\
-\mathsf{tap}\;1\;0&=1-1&\mathsf{tap}\;1\;1&=2-1\\
-\mathsf{tap}\;2\;0&=8-1&\mathsf{tap}\;2\;1&=16-1\\
-&\dots&\mathsf{tap}\;6\;x&=128-1\quad\text{(where $x>0$)}\\\\
+\mathsf{tap}\;0\;0&=0&\mathsf{tap}\;0\;x&=0\\
+\mathsf{tap}\;1\;0&=1-1&\mathsf{tap}\;1\;x&=2-1\\
+\mathsf{tap}\;2\;0&=8-1&\mathsf{tap}\;2\;x&=16-1\\
+&\dots&\mathsf{tap}\;6\;x&=128-1\quad\text{(where each $x>0$)}\\\\
 \mathsf{input}\;0&=(0,0)&\mathsf{input}\;1&=(0,0)\\
 \mathsf{input}\;2&=(0,0)&\mathsf{input}\;3&=(1,1)\\
 \mathsf{input}\;4&=(3,0)&\mathsf{input}\;5&=(4,0)\\
