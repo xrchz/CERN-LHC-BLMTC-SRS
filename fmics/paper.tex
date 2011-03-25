@@ -23,7 +23,8 @@ This structure, known as \emph{Successive Running Sums} (SRS), generates the pri
 The use of mechanized logical deduction complements an intensive study of the SRS structure using simulation.
 We are especially interested in using logical deduction to obtain a generic result that will be applicable to variants of the SRS structure.
 This collaborative effort has individuals with diverse backgrounds ranging from theoretical physics to system safety.
-One interesting result is the extent to which the use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.
+%One interesting result is the extent to which
+The use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.
 
 \end{abstract}
 
@@ -224,7 +225,7 @@ Our simplifications in the first phase include:
 \item Considering a more regular arrangement of slices than the SRS implementation in BLMS,
 \item Masking the subtractors and the accumulators in each slice, instead, defining the output of a slice as the sum of the values in its cells directly,
 \item Simplifying timing by ignoring some of the delays that each building block may introduce, {\bf this is not true - there were delays in the simplified model}
-\item Using natural numbers, rather than finite words, for count values
+\item Using natural numbers, rather than finite words, for count values.
 \end{enumerate}
 
 Building a logical model for simplified structure of the SRS helped us improve our understanding of the behavior of the SRS.
@@ -235,26 +236,18 @@ In the second phase, we eliminated the first four simplifications (listed above)
 In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure of SRS in BLMS in the following way: we model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
 This parameterization makes the model and the analysis more likely to be applicable to future upgraded/modified versions of the system.
 
-%We describe the more realistic (second phase) model here.
 Table~\ref{tab:descriptions} lists the HOL functions we defined in the second phase along with their intended meanings.
 The arrangement of the slices is described by functions $\mathsf{input}\;n$ and $\mathsf{tap}\;n\;x$.
 The read delay of a slice is modeled by $\mathsf{delay}\;n$.
 Each slice is modeled by three functions: $\mathsf{SR}\;D\;n\;m\;t$ represents the value of each cell of the slice's shift register, $\mathsf{source}\;D\;n\;m\;t$ represents the direct input of each cell, and $\mathsf{output}\;D\;n\;x\;t$ represents the value of the slice's output at its taps.
 The function $\mathsf{RS}\;D\;n\;t$ models the running sums and $\mathsf{update\_time}\;n\;t$ checks if it is time to refresh the contents of a slice.
-We have both $\mathsf{RS}$ and $\mathsf{output}$ functions, though $\mathsf{RS}$ is easily defined in terms of $\mathsf{output}$, because $\mathsf{RS}$ represents a whole SRS output (indexed by a single number), whereas $\mathsf{output}$ represents an individual slice output (indexed by slice and tap).
-By separating $\mathsf{RS}$ and $\mathsf{output}$, we allow for designs where some slice outputs are not SRS outputs, but may still be used internally between slices.
+We have both $\mathsf{RS}$ and $\mathsf{output}$ functions, though $\mathsf{RS}$ is easily defined in terms of $\mathsf{output}$, because $\mathsf{RS}$ represents an SRS output (indexed by a single number), whereas $\mathsf{output}$ represents an individual slice output (indexed by slice and tap numbers).
+By separating $\mathsf{RS}$ and $\mathsf{output}$, we allow for designs where some slice outputs are not SRS outputs, but may still be used internally as inputs to other slices.
 
 The formal definitions of the functions listed in Table~\ref{tab:descriptions} are given in Figure~\ref{fig:definitions}.
-Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented. %-- so we use definitions convenient for proving theorems.
+Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented.
 A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is greater than $1$.
 Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore the verification against its intended meaning is relatively straightforward.
-
-
- %Table~\ref{tab:descriptions} lists the names of the HOL functions we define and their intended meanings, and Figure~\ref{fig:definitions} gives their definitions.
-
-%For our correctness equation above, we only need the last entry in the table, $\mathsf{RS}$; the first two entries, $\mathsf{tap}$ and $\mathsf{input}$, enable us to specify the exact configuration of the structure, and the remaining entries are used as ``glue'' leading up to the definition of $\mathsf{RS}$.
-
-%By using these intermediary functions, every definition in Figure~\ref{fig:definitions} is \emph{local} (only talks about a small part of the overall SRS structure) and therefore is easy to verify against its intended meaning.
 
 
 \begin{table}[t]
@@ -279,10 +272,8 @@ Function&Intended meaning\\
 \begin{figure}
 \caption{
 Definitions of the HOL functions comprising our model of the SRS structure.
-\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}.%, counting positions within a shift register from $0$.
+\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}.
 Slice $0$ is a fake slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.
-%The definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure represented, so we use definitions convenient for proving theorems.
-%A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is above $1$.
 \label{fig:definitions}}
 \begin{align*}
 \mathsf{tap}\;0\;0&=0&\mathsf{tap}\;0\;x&=0\\
@@ -325,10 +316,15 @@ Slice $0$ is a fake slice representing the SRS input; this enables a succinct de
 \end{align*}
 \end{figure}
 
+
+
+
+
 %One of our objectives in formally modelling SRS was to keep the topology parameterized.
 %It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
 %A parameterized model can be used both for current and future versions of the system.
 %For this, we formalized the definitions of the model by six parameters:
+
 
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
