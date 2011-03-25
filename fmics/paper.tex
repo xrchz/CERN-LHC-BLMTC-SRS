@@ -247,8 +247,7 @@ By separating $\mathsf{RS}$ and $\mathsf{output}$, we allow for designs where so
 The formal definitions of the functions listed in Table~\ref{tab:descriptions} are given in Figure~\ref{fig:definitions}.
 Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented.
 A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is greater than $1$.
-Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore the verification against its intended meaning is relatively straightforward.
-
+Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore verification against its intended meaning is relatively straightforward.
 
 \begin{table}[t]
 \caption{
@@ -316,15 +315,31 @@ Slice $0$ is a fake slice representing the SRS input; this enables a succinct de
 \end{align*}
 \end{figure}
 
+\begin{figure}
+\caption{
+Definitions of auxiliary HOL functions used while proving theorems about the model of the SRS structure.
+\label{fig:auxdefs}
+}
+\begin{align*}
+\mathsf{delay\_sum}\;0&=0\\
+\mathsf{delay\_sum}\;n&=\mathsf{delay}\;n'+\mathsf{delay\_sum}\;n'\\
+&\qquad\text{where $(n',\_)=\mathsf{input}\;n$}
+\end{align*}
+\begin{align*}
+\mathsf{last\_update}\;n\;0&=0\\
+\mathsf{last\_update}\;n\;t&=\text{if $\mathsf{update\_time}\;n\;t$ then $t$}\\
+&\qquad\text{else }\mathsf{last\_update}\;n\;(t-1)\qquad\text{(where $t>0$)}
+\end{align*}
+\end{figure}
 
-
-
+\begin{multline*}
+\forall{D\,n\,x\,t}.\,{0 < n}\land{\mathsf{update\_time\;n\;t}}\implies\\\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)-1}\begin{cases}0&t<m+\mathsf{delay\_sum}\;n\\D\;(t-m-\mathsf{delay\_sum}\;n)&\text{otherwise}\end{cases}
+\end{multline*}
 
 %One of our objectives in formally modelling SRS was to keep the topology parameterized.
 %It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
 %A parameterized model can be used both for current and future versions of the system.
 %For this, we formalized the definitions of the model by six parameters:
-
 
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
