@@ -204,29 +204,19 @@ The first three use essentially the same higher-order logic as HOL4, whilst PVS 
 While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
 
 Our goal is to build a generic model of the SRS structure, and to prove that it satisfies its specification, that it calculates approximate running sums of received count values within acceptable error margins.
-%Any statement in formal logic is necessarily precise, and one of our challenges has been characterizing our goal precisely.
-%One of our challenges has been characterizing this goal precisely
-Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the output of slice $n$ in the SRS structure, which is supposed to compute a sum of received count values with some delay, and let $\mathsf{exact}\;n$ denote this sum.
-A sketch of the desired correctness statement is \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{exact}\; n \pm\text{acceptable error}\]
+Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the $n$-th output of the SRS structure, which is supposed to compute a sum of received count values with some delay, and let $\mathsf{true\_sum}\;n$ denote this sum.
+A sketch of the desired correctness statement is \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{true\_sum}\; n \pm\text{acceptable error}\]
 Although Figure~\ref{fig:srs} suggests that the SRS structure has only twelve outputs  (i.e. $0\leq{n}\leq11$), we obtain a more generic result (that is useful in future upgrades of the system) by proving the correctness of the above statement for all values of $n$.
 
-%To prove the equation above, we need to formalize all of its terms.
 To make the above correctness statement more precise, we need to include the notion of time.
 The count values arrive at the input of the SRS block every 40 micro-seconds, which we abstract as a single time step in our logical model.
 We formalize the input stream as a function of time: $D\;t$ denotes the input value to the SRS structure at time $t$.
 In addition, the terms in the above statement depend on this stream of input counts.
-With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{exact}\;D\;\;n\;t\pm\text{acceptable error}\]
+With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{true\_sum}\;D\;n\;t\pm\text{acceptable error}\]
 
-%First, we make two items explicit: that the equation is to be understood as holding at each time step, and that the terms depend on the stream of input counts over time.
-%With these refinements, our statement becomes \[\forall{D\,n\,t}.\,\mathsf{RS}\;D\;n\;t=\text{sum, given input stream $D$, for output $n$ at time $t$}\pm\text{acceptable error}\]
-%(The input stream is a function of time: $D\;t$ is the input value to the whole SRS structure at time $t$.)
-
-%To formalize the term on the left hand side, we need to build a logical model of the SRS structure.
 The first natural step to prove the correctness statement is to build a logical model of the SRS structure.
 Our work proceeded in two phases, starting with a model of a simplified structure and proceeding to a model which is closer to the SRS implementation in BLMS.
 In both phases, we model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
-
-%In both cases, we represent each piece of the SRS structure that has a value---for example, each cell in each shift register---as a function in HOL that takes the global input stream and current time step as input and returns the value of the piece of the structure at that time.
 
 Our simplifications in the first phase include:
 \begin{enumerate}
@@ -245,13 +235,29 @@ In the second phase, we eliminated the first four simplifications (listed above)
 In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure of SRS in BLMS in the following way: we model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
 This parameterization makes the model and the analysis more likely to be applicable to future upgraded/modified versions of the system.
 
-%%%%% upto here %%%
-We describe the more realistic (second phase) model here.
-Table~\ref{tab:descriptions} lists the names of the HOL functions we define and their intended meanings, and Figure~\ref{fig:definitions} gives their definitions.
-For our correctness equation above, we only need the last entry in the table, $\mathsf{RS}$; the first two entries, $\mathsf{tap}$ and $\mathsf{input}$, enable us to specify the exact configuration of the structure, and the remaining entries are used as ``glue'' leading up to the definition of $\mathsf{RS}$.
-By using these intermediary functions, every definition in Figure~\ref{fig:definitions} is \emph{local} (only talks about a small part of the overall SRS structure) and therefore is easy to verify against its intended meaning.
 
-\begin{table}
+%We describe the more realistic (second phase) model here.
+Table~\ref{tab:descriptions} lists the HOL functions we defined in the second phase along with their intended meanings.
+The arrangement of the slices is described by functions $\mathsf{input}\;n$ and $\mathsf{tap}\;n\;x$.
+The read delay of a slice is modeled by $\mathsf{delay}\;n$.
+Each slice is modeled by three functions: $\mathsf{SR}\;D\;n\;m\;t$ represents the value of each cell of the slice's shift register, $\mathsf{source}\;D\;n\;m\;t$ represents the direct input of each cell, and $\mathsf{output}\;D\;n\;x\;t$ represents the value of the slice's output at its taps.
+The $\mathsf{RS}\;D\;n\;t$ models the running sums and $\mathsf{update\_time}\;n\;t$ checks if it is the time to refresh the contents of slice $n$.
+{\bf should we explain why we have both output function and RS?}
+
+The formal definitions of the functions listed in Table~\ref{tab:descriptions} are given in Figure~\ref{fig:definitions}.
+Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented. %-- so we use definitions convenient for proving theorems.
+A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is greater than $1$.
+Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore the verification against its intended meaning is relatively straightforward.
+
+
+ %Table~\ref{tab:descriptions} lists the names of the HOL functions we define and their intended meanings, and Figure~\ref{fig:definitions} gives their definitions.
+
+%For our correctness equation above, we only need the last entry in the table, $\mathsf{RS}$; the first two entries, $\mathsf{tap}$ and $\mathsf{input}$, enable us to specify the exact configuration of the structure, and the remaining entries are used as ``glue'' leading up to the definition of $\mathsf{RS}$.
+
+%By using these intermediary functions, every definition in Figure~\ref{fig:definitions} is \emph{local} (only talks about a small part of the overall SRS structure) and therefore is easy to verify against its intended meaning.
+
+
+\begin{table}[t]
 \caption{
 Descriptions of the HOL functions comprising our model of the SRS structure.
 \label{tab:descriptions}
@@ -262,27 +268,27 @@ Function&Intended meaning\\
 \(\mathsf{tap}\;n\;x\)&The position of tap $x$ of slice $n$.\\
 \(\mathsf{input}\;n\)&A pair $(n',x)$ indicating that the input to slice $n$ is output $x$ of slice $n'$.\\
 \(\mathsf{delay}\;n\)&The number of time steps between updates of slice $n$.\\
-\(\mathsf{update\_time}\;n\;t\)&A boolean indicating whether $t$ is an update time for slice $n$.\\
 \(\mathsf{source}\;D\;n\;m\;t\)&The value of the cell that is the direct input to cell $m$ of slice $n$, at time $t$, given input stream $D$.\\
 \(\mathsf{SR}\;D\;n\;m\;t\)&The value of cell $m$ of shift register $n$, at time $t$, given input stream $D$.\\
 \(\mathsf{output}\;D\;n\;x\;t\)&The value of output $x$ of slice $n$, at time $t$, given input stream $D$.\\
-\(\mathsf{RS}\;D\;n\;t\)&The value of Running Sum register $n$ at time $t$, given input stream $D$.
+\(\mathsf{RS}\;D\;n\;t\)&The value of Running Sum slice (?) $n$ at time $t$, given input stream $D$.\\
+\(\mathsf{update\_time}\;n\;t\)&A boolean indicating whether $t$ is an update time for slice $n$.
 \end{tabular}
 \end{table}
 
 \begin{figure}
 \caption{
 Definitions of the HOL functions comprising our model of the SRS structure.
-\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}, counting positions within a shift register from $0$.
-Slice $0$ is a fake slice representing the global input; this enables a succinct definition of $\mathsf{source}$.
-The definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure represented, so we use definitions convenient for proving theorems.
-A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is above $1$.
+\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}, %counting positions within a shift register from $0$.
+Slice $0$ is a fake slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.
+%The definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure represented, so we use definitions convenient for proving theorems.
+%A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is above $1$.
 \label{fig:definitions}}
 \begin{align*}
-\mathsf{tap}\;0\;0&=0&\mathsf{tap}\;0\;x&=0\\
-\mathsf{tap}\;1\;0&=1-1&\mathsf{tap}\;1\;x&=2-1\\
-\mathsf{tap}\;2\;0&=8-1&\mathsf{tap}\;2\;x&=16-1\\
-&\dots&\mathsf{tap}\;6\;x&=128-1\quad\text{(where $x>0$)}\\
+\mathsf{tap}\;0\;0&=0&\mathsf{tap}\;0\;1&=0\\
+\mathsf{tap}\;1\;0&=1-1&\mathsf{tap}\;1\;1&=2-1\\
+\mathsf{tap}\;2\;0&=8-1&\mathsf{tap}\;2\;1&=16-1\\
+&\dots&\mathsf{tap}\;6\;x&=128-1\quad\text{(where $x>0$)}\\\\
 \mathsf{input}\;0&=(0,0)&\mathsf{input}\;1&=(0,0)\\
 \mathsf{input}\;2&=(0,0)&\mathsf{input}\;3&=(1,1)\\
 \mathsf{input}\;4&=(3,0)&\mathsf{input}\;5&=(4,0)\\
