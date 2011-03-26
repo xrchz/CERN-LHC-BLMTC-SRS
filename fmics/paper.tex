@@ -25,7 +25,6 @@ We are especially interested in using logical deduction to obtain a generic resu
 This collaborative effort has individuals with diverse backgrounds ranging from theoretical physics to system safety.
 %One interesting result is the extent to which
 The use of a formal method has compelled the stakeholders to clarify intricate details of the SRS structure and behaviour.
-
 \end{abstract}
 
 \section{Introduction}
@@ -46,15 +45,19 @@ Furthermore, the BLMS must continue recording large amounts of data in real-time
 To achieve these goals, the BLMS maintains approximate cumulative sums of particle losses over a variety of sizes of moving windows.
 The component responsible for maintaining these sums is called \emph{Successive Running Sums} (SRS).
 The SRS component is implemented in hardware, in order to be fast enough to work in real-time, and on Field Programmable Gate Arrays (FPGAs) in particular so that they can be easily reprogrammed with future upgrades~\cite{Chris-FPGA}.
-%Multiple implementations of the SRS structure are installed regularly around the LHC as part of the BLMS.
 
 The SRS component has a complex structure and the correctness of its behaviour is critical for safe and productive use of the LHC.
 Any error in the SRS implementation would either compromise the availability of the LHC (unnecessary request for beam dump) or safety (not triggering a necessary beam dump).
 The current approach for analyzing the SRS implementation is simulation of its behavior on sample streams of input~\cite{}.
-(one more sentence needs to be added on the current verification process)
+{\bf one more sentence needs to be added on the current verification process}
 
 In this paper, we describe a formal verification approach based on logical deduction for analyzing the SRS implementation.
-(need to add few sentences explaining in a very high level the verification approach/strategy)
+Our high level proof strategy takes advantage of the regular structure of the SRS.
+This structure consists of multiple layers of shift registers and some simple arithmetic hardware.
+There is a degree of regularity in how the output of each layer is used as input to the next layer of this structure.
+There is also a degree of regularity in the timing of each layer with respect to its position in the stack of layers.
+This regularity serves as the basis of using inductive reasoning, which allows us to keep the amount of verification effort linear with respect to the number of layers in the SRS structure even though the ``state space" of the possible values of the structure increases exponentially with the number of layers.
+{\bf Ramana, please verify if this is actually true, that is, we use induction}
 
 Compared to test-based methods, like simulation, formal methods not only offer a much higher confidence in correctness of a system's behavior, but also help improve our understanding of its specification.
 One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team with different backgrounds and expertise.
@@ -67,22 +70,10 @@ An overview of BLMS and its main components is given in Section~\ref{sec-BLM} an
 The verification approach of SRS is presented in Section~\ref{sec-verification}.
 We conclude in Section~\ref{sec-conclusions} with a summary of lessons learned and future directions.
 
-
-
 %The BLMS detects beam loss in the form of counts proportional to the number of stray particles. Dangerous loss levels can be expressed as thresholds on the rate of counts over time. The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated. It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected. But stopping the beam when the loss level is not dangerous is time consuming and costly. Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
-
-%Simulation of the SRS on sample streams of input is one approach, currently in use~\cite{}, to building an understanding of the SRS's behaviour and confidence that the behaviour is correct.
-
-%Formal methods are another approach to building understanding and confidence.
-%The work on constructing proofs may be compared to the work on analysing the results of simulations. The work on formulating precise specifications is extra, but is arguably beneficial for both methods. <need to be more descriptive here i.e. to do number 2) below rather than 3)>
-
-%{\bf myNote: Add 1) the approach currently taken for the analysis of SRS, 2) the approach we took in this paper for the analysis, 3) the reasons behind that  the goals for this case study 4) the main contributions}
 
 %************** Rushby's quote to be added later on *****
 %Rushby's emphasis on the role of mechanized logical deduction as an "implacable skeptic that insists on its human user providing justification" thus rings true.
-
-
-
 
 \section{BLMS Overview}
 \label{sec-BLM}
@@ -236,19 +227,6 @@ In the second phase, we eliminated the first four simplifications (listed above)
 In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure of SRS in BLMS in the following way: we model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
 This parameterization makes the model and the analysis more likely to be applicable to future upgraded/modified versions of the system.
 
-Table~\ref{tab:descriptions} lists the HOL functions we defined in the second phase along with their intended meanings.
-The arrangement of the slices is described by functions $\mathsf{input}\;n$ and $\mathsf{tap}\;n\;x$.
-The read delay of a slice is modeled by $\mathsf{delay}\;n$.
-Each slice is modeled by three functions: $\mathsf{SR}\;D\;n\;m\;t$ represents the value of each cell of the slice's shift register, $\mathsf{source}\;D\;n\;m\;t$ represents the direct input of each cell, and $\mathsf{output}\;D\;n\;x\;t$ represents the value of the slice's output at its taps.
-The function $\mathsf{RS}\;D\;n\;t$ models the running sums and $\mathsf{update\_time}\;n\;t$ checks if it is time to refresh the contents of a slice.
-We have both $\mathsf{RS}$ and $\mathsf{output}$ functions, though $\mathsf{RS}$ is easily defined in terms of $\mathsf{output}$, because $\mathsf{RS}$ represents an SRS output (indexed by a single number), whereas $\mathsf{output}$ represents an individual slice output (indexed by slice and tap numbers).
-By separating $\mathsf{RS}$ and $\mathsf{output}$, we allow for designs where some slice outputs are not SRS outputs, but may still be used internally as inputs to other slices.
-
-The formal definitions of the functions listed in Table~\ref{tab:descriptions} are given in Figure~\ref{fig:definitions}.
-Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented.
-A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is greater than $1$.
-Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore verification against its intended meaning is relatively straightforward.
-
 \begin{table}[t]
 \caption{
 Descriptions of the HOL functions comprising our model of the SRS structure.
@@ -267,6 +245,28 @@ Function&Intended meaning\\
 \(\mathsf{update\_time}\;n\;t\)&A boolean indicating whether $t$ is an update time for slice $n$.
 \end{tabular}
 \end{table}
+
+Table~\ref{tab:descriptions} lists the HOL functions we defined in the second phase along with their intended meanings.
+The arrangement of the slices is described by functions $\mathsf{input}\;n$ and $\mathsf{tap}\;n\;x$.
+The read delay of a slice is modeled by $\mathsf{delay}\;n$.
+Each slice is modeled by three functions: $\mathsf{SR}\;D\;n\;m\;t$ represents the value of each cell of the slice's shift register, $\mathsf{source}\;D\;n\;m\;t$ represents the direct input of each cell, and $\mathsf{output}\;D\;n\;x\;t$ represents the value of the slice's output at its taps.
+The function $\mathsf{RS}\;D\;n\;t$ models the running sums and $\mathsf{update\_time}\;n\;t$ checks if it is time to refresh the contents of a slice.
+We have both $\mathsf{RS}$ and $\mathsf{output}$ functions, though $\mathsf{RS}$ is easily defined in terms of $\mathsf{output}$, because $\mathsf{RS}$ represents an SRS output (indexed by a single number), whereas $\mathsf{output}$ represents an individual slice output (indexed by slice and tap numbers).
+By separating $\mathsf{RS}$ and $\mathsf{output}$, we allow for designs where some slice outputs are not SRS outputs, but may still be used internally as inputs to other slices.
+
+The formal definitions of the functions listed in Table~\ref{tab:descriptions} are given in Figure~\ref{fig:definitions}.
+Note that the definition of $\mathsf{input}$ when $n=0$ or when $n>6$ does not change the structure presented.
+A similar comment applies to other definitions when $n$, representing a slice number, is $0$, or when $x$, representing a shift register position, is greater than $1$.
+We define all excess taps (where $x > 1$) to be in the same position as the last tap.
+
+%Some text description for Figure 7, we can remove it later on
+As explained in Section~\ref{sec-SRS}, the delay of each slice is equal to the delay of the slice it receives its input from multiplied by the number of the elements in the input slice used for the sum.
+For example in Figure~\ref{fig:srs}, $\mathsf{delay}\;4 = \mathsf{delay}\;3 \times \mathsf{tap}\;3\;0 = 2 \times 32$.
+The definition of the $\mathsf{source}$ function states that the source of each cell $m$ in a shift register is cell $m-1$, except for the first cell whose source is the output of the input slice.
+For example, $\mathsf{source}\;D\;4\;7\;t = \mathsf{SR}\;D\;4\;6\;t$ and $\mathsf{source}\;D\;4\;0\;t = \mathsf{output}\;D\;3\;0\;t$.
+The output of each slice is computed every time the contents of its shift register are updated by adding the incoming newest value (specified by $\mathsf{source}$) and subtracting its oldest value, that is the value in the cell at the tap position.
+The content of each cell of a shift register, $\mathsf{SR}\;D\;n\;m\;t$  is also computed at every update time based on the value of its source.
+Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore verification against its intended meaning is relatively straightforward.
 
 \begin{figure}
 \caption{
@@ -350,4 +350,3 @@ Definitions of auxiliary HOL functions used while proving theorems about the mod
 
 
 \end{document}
-
