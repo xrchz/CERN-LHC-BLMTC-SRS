@@ -315,16 +315,41 @@ Definitions of auxiliary HOL functions used while proving theorems about the mod
 \mathsf{last\_update}\;n\;t&=\text{if $\mathsf{update\_time}\;n\;t$ then $t$}\\
 &\qquad\text{else }\mathsf{last\_update}\;n\;(t-1)\qquad\text{(where $t>0$)}
 \end{align*}
+\begin{align*}
+\mathsf{exact}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)}\begin{cases}0&t<m+1\\D\;(t-m-1)&\text{otherwise}\end{cases}
+\end{align*}
 \end{figure}
 
-\begin{multline*}
+\begin{figure}
+\caption{
+A selection of theorems about our model proved using HOL4.
+\label{fig:theorems}
+}
+\begin{equation}\label{update_time_last_update}
+\forall{n\,t}.\,\mathsf{update\_time}\;n\;(\mathsf{last\_update}\;n\;t)
+\end{equation}
+\begin{equation}\label{last_update_thm}
+\forall{n\,t}.\,\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n
+\end{equation}
+%SR_prev
+%SR_first
+\begin{equation}\label{output_last_update}
+\forall{D\,n\,x\,t}.\,\mathsf{output}\;D\;n\;x\;t=\mathsf{output}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t)
+\end{equation}
+\begin{equation}\label{output_sum}
+\forall{D\,n\,x\,t}.\,{0<n}\implies\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
+\end{equation}
+%output_first
+%output_source_at_update_times
+%output_prev_at_update_times
+\begin{multline}\label{output_input_at_update_times}
 \forall{D\,n\,x\,t}.\,{0 < n}\land{\mathsf{update\_time\;n\;t}}\implies\\\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)-1}\begin{cases}0&t<m+\mathsf{delay\_sum}\;n\\D\;(t-m-\mathsf{delay\_sum}\;n)&\text{otherwise}\end{cases}
-\end{multline*}
-
-%One of our objectives in formally modelling SRS was to keep the topology parameterized.
-%It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
-%A parameterized model can be used both for current and future versions of the system.
-%For this, we formalized the definitions of the model by six parameters:
+\end{multline}
+\begin{multline}\label{output_eq_exact}
+\forall{D\,n\,x\,t}.\,{0 < n}\implies\\\mathsf{output}\;D\;n\;x\;t=\begin{cases}0&\mathsf{last\_update}\;n\;t<\mathsf{delay}\;n\\\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)\end{cases}
+\end{multline}
+%max_error
+\end{figure}
 
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
