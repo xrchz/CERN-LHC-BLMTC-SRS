@@ -194,7 +194,7 @@ The first three use essentially the same higher-order logic as HOL4, whilst PVS 
 While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
 
 Our goal is to build a generic model of the SRS structure, and to prove that it satisfies its specification, that it calculates approximate running sums of received count values within acceptable error margins.
-Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the $n$-th output of the SRS structure, which is supposed to compute a sum of received count values with some delay, and let $\mathsf{true\_sum}\;n$ denote this sum.
+Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the $n$-th output of the SRS structure, which is supposed {\bf really? supposed to have a delay?} to compute a sum of received count values with some delay, and let $\mathsf{true\_sum}\;n$ denote this sum {\bf ``this'' being the delayed one, or the non-delayed one?}.
 A sketch of the desired correctness statement is \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{true\_sum}\; n \pm\text{acceptable error}\]
 Although Figure~\ref{fig:srs} suggests that the SRS structure has only twelve outputs  (i.e. $0\leq{n}\leq11$), we obtain a more generic result (that is useful in future upgrades of the system) by proving the correctness of the above statement for all values of $n$.
 
