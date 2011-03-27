@@ -320,6 +320,13 @@ Definitions of auxiliary HOL functions used while proving theorems about the mod
 \end{align*}
 \end{figure}
 
+Figure~\ref{fig:theorems} gives a selection of theorems we have proved in HOL, some of which refer to additional constants defined in Figure~\ref{fig:auxdefs}.
+Our central result, Theorem~(\ref{output_input_at_update_times}), equates the output of a slice to a sum of consecutive input counts.
+More precisely, it says that if slice $n$ was just updated, then the output at tap $x$ is equal to the sum of $((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)$ input values, starting from the input $\mathsf{delay\_sum}\;n$ time steps ago.
+In light of Theorem~(\ref{output_last_update}), which says a slice's output stays constant between update times for the slice, Theorem~(\ref{output_input_at_update_times}) characterises all outputs at all times.
+Thus, the SRS structure's outputs are exact running sums of the input counts over windows whose sizes depend on the the width of the slice and position of taps.
+However, the sums are delayed by the total delay across all previous slices (represented by $\mathsf{delay\_sum}$).
+
 \begin{figure}
 \caption{
 A selection of theorems about our model proved using HOL4.
