@@ -205,25 +205,12 @@ In addition, the terms in the above statement depend on this stream of input cou
 With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{true\_sum}\;D\;n\;t\pm\text{acceptable error}\]
 
 The first natural step to prove the correctness statement is to build a logical model of the SRS structure.
-Our work proceeded in two phases, starting with a model of a simplified structure and proceeding to a model which is closer to the SRS implementation in BLMS.
-In both phases, we model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
+We model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
 
-Our simplifications in the first phase include:
-\begin{enumerate}
-\item Masking the middle taps in each slice,
-\item Considering a more regular arrangement of slices than the SRS implementation in BLMS,
-\item Masking the subtractors and the accumulators in each slice, instead, defining the output of a slice as the sum of the values in its cells directly,
-\item Simplifying timing by ignoring some of the delays that each building block may introduce, {\bf this is not true - there were delays in the simplified model}
-\item Using natural numbers, rather than finite words, for count values.
-\end{enumerate}
-
-Building a logical model for simplified structure of the SRS helped us improve our understanding of the behavior of the SRS.
-{\bf what else did we learn through this process? If there was no particular advantage, I don't think we should mention the simplified version.
-(I don't think there was any particular advantage -- Ramana)}.
-
-In the second phase, we eliminated the first four simplifications (listed above) by adding middle taps, a more flexible arrangement of slices, the subtractor and accumulator, and considering the delays that each block may introduce.
-In both cases, however, the model is simultaneously a simplification and a generalization of the actual structure of SRS in BLMS in the following way: we model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
-This parameterization makes the model and the analysis more likely to be applicable to future upgraded/modified versions of the system.
+Our model is both a simplification and a generalization of the actual structure of SRS in BLMS in the following sense.
+We model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
+This parameterization makes the model more likely to be applicable to future versions of the system, but also fits more naturally into HOL than would a finite model.
+We use natural numbers throughout, rather than, for example, finite words that would more accurately model count values.
 
 \begin{table}[t]
 \caption{
@@ -244,7 +231,7 @@ Function&Intended meaning\\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:descriptions} lists the HOL functions we defined in the second phase along with their intended meanings.
+Table~\ref{tab:descriptions} lists the HOL functions comprising our model along with their intended meanings.
 The arrangement of the slices is described by functions $\mathsf{input}\;n$ and $\mathsf{tap}\;n\;x$.
 The read delay of a slice is modeled by $\mathsf{delay}\;n$.
 Each slice is modeled by three functions: $\mathsf{SR}\;D\;n\;m\;t$ represents the value of each cell of the slice's shift register, $\mathsf{source}\;D\;n\;m\;t$ represents the direct input of each cell, and $\mathsf{output}\;D\;n\;x\;t$ represents the value of the slice's output at its taps.
