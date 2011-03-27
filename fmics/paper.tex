@@ -52,12 +52,10 @@ The current approach for analyzing the SRS implementation is simulation of its b
 {\bf one more sentence needs to be added on the current verification process}
 
 In this paper, we describe a formal verification approach based on logical deduction for analyzing the SRS implementation.
-Our high level proof strategy takes advantage of the regular structure of the SRS.
-This structure consists of multiple layers of shift registers and some simple arithmetic hardware.
-There is a degree of regularity in how the output of each layer is used as input to the next layer of this structure.
+Our high level proof strategy takes advantage of the regular structure of the SRS, which consists of multiple layers of shift registers and some simple arithmetic hardware.
+There is a degree of regularity in how the output of each layer is used as input to the next layer.
 There is also a degree of regularity in the timing of each layer with respect to its position in the stack of layers.
-This regularity serves as the basis of using inductive reasoning, which allows us to keep the amount of verification effort linear with respect to the number of layers in the SRS structure even though the ``state space" of the possible values of the structure increases exponentially with the number of layers.
-{\bf Ramana, please verify if this is actually true, that is, we use induction}
+This regularity serves as a basis for inductive reasoning, which makes the amount of verification effort impervious to the number of layers in the structure.
 
 Compared to test-based methods, like simulation, formal methods not only offer a much higher confidence in correctness of a system's behavior, but also help improve our understanding of its specification.
 One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team with different backgrounds and expertise.
