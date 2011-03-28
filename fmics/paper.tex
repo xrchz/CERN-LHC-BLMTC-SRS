@@ -290,7 +290,7 @@ $\mathsf{output}\;D\;n\;x\;t$ &\multicolumn{2}{l}{$\;\mathsf{output}\;D\;0\;x\;t
 &\multicolumn{2}{l}{$\;\mathsf{output}\;D\;n\;x\;t = \text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
 &\multicolumn{2}{l}{$\qquad\quad((\mathsf{output}\;D\;n\;x\;(t-1))+(\mathsf{source}\;D\;n\;0\;(t-1)))-$}\\
 &&$\qquad\qquad\qquad(\mathsf{SR}\;D\;n(\mathsf{tap}\;n\;x)\;(t-1))$\\
-&\multicolumn{2}{l}{$\qquad\qquad\qquad\qquad\text{else }\mathsf{output}\;D\;n\;x\;(t-1)\qquad\text{(where $t>0$)}$}\\
+&\multicolumn{2}{l}{$\qquad\qquad\qquad\qquad\text{else }\mathsf{output}\;D\;n\;x\;(t-1)\qquad\text{(where $n,t>0$)}$}\\
 
 $\mathsf{RS}\;D\;n\;t$ & \multicolumn{2}{l}{$\;\mathsf{RS}\;D\;n\;t=\mathsf{output}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)$}\\
 
