@@ -1,6 +1,6 @@
 \documentclass{llncs}
 
-\usepackage{times,graphicx,epsfig,boxedminipage,url,xspace,array,amsmath}
+\usepackage{times,graphicx,epsfig,boxedminipage,url,xspace,array,amsmath,textcomp}
 
 \begin{document}
 
@@ -132,7 +132,7 @@ As in the SRS implementation the sum of one shift register's content is fed to t
 
 Figure~\ref{fig:srs} shows the implementation of SRS in BLETC card. It consists of 6 \emph{slices}, where each slice computes two running sums (noted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
 
-As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 seconds upper integration limit requested by the specifications.
+As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reach the 100 second upper integration limit requested by the specifications.
 
 \begin{figure}[t]
   \centering \scalebox{0.8}{ \includegraphics{multi-rs.eps}}
@@ -140,13 +140,12 @@ As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 s
   \label{fig:slice}
 \end{figure}
 
-
-\begin{figure}[t]
+\begin{table}[t]
 \centering
-\begin{tabular}{|c|c|c|c|c|c|}
+\begin{tabular}{|r|r|r|r|c|l|}
 \hline
 \multicolumn{2}{|c}{Range} &\multicolumn{2}{|c|}{Refreshing} & & \\\cline{1-4}
-40 us steps & ms & 40 us steps  & ms & slice No & running sum \\\hline\hline
+40 {\textmu}s steps & ms & 40 {\textmu}s steps  & ms & slice & running sum \\\hline\hline
 1 & 0.04 & 1 & 0.04 & & RS0 \\\hline
 2 & 0.08 & 1 & 0.04 & & RS1 \\\hline
 8 & 0.32 & 1 & 0.04 & slice 1 & RS2 \\\hline
@@ -159,12 +158,11 @@ As shown in Table~\ref{}, by cascading 6 slices, it is enough to reach the 100 s
 131072 & 5242.88 & 2048 & 81.92 & slice 4 & RS9 \\\hline
 524288 & 2097.52 & 16384 & 655.36 & slice 5 &RS10 \\\hline
 2097152 & 83886.08 & 16384 & 655.36 & slice 5 & RS11 \\\hline
-
 \end{tabular}
 \vspace{0.04in}
-\label{fig:example-bakery}
-\caption{}
-\end{figure}
+\caption{{\bf<missing caption>}
+\label{fig:example-bakery}}
+\end{table}
 
 
 \section{Verification of the SRS Implementation using HOL4}
