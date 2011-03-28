@@ -694,7 +694,17 @@ srw_tac [][SUM_IMAGE_ZERO])
 
 val output_eq_exact = Q.store_thm(
 "output_eq_exact",
-`0 < n ⇒ (output D n x t = if last_update n t < delay n then 0 else exact D n x (SUC (last_update n t) - delay_sum n))`,
+`0 < n ⇒ (output D n x t = if SUC (last_update n t) < delay_sum n then 0 else exact D n x (SUC (last_update n t) - delay_sum n))`,
+strip_tac >>
+qsuff_tac `output D n x t = if last_update n t < delay n then 0 else exact D n x (SUC (last_update n t) - delay_sum n)` >- (
+  srw_tac [][exact_def,SUM_IMAGE_ZERO] >- (
+    fsrw_tac [][Once output_last_update] >>
+    qpat_assum `0 < n` assume_tac >>
+    assume_tac update_time_last_update >>
+    fsrw_tac [][output_input_at_update_times,SUM_IMAGE_ZERO] >>
+    first_x_assum (qspec_then `m` mp_tac) >>
+    fsrw_tac [ARITH_ss][ADD1] ) >>
+  srw_tac [ARITH_ss][]) >>
 srw_tac [][exact_def,Once output_last_update] >- (
   match_mp_tac output_0_until >>
   srw_tac [][] ) >>
