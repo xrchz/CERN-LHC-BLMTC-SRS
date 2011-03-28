@@ -458,16 +458,40 @@ Cases_on `n=m` >> srw_tac [][] >>
 `n < m` by DECIDE_TAC >>
 fsrw_tac [][])
 
+val output_0_until = Q.store_thm(
+"output_0_until",
+`0 < n ∧ t < delay n ⇒ (output D n x t = 0)`,
+srw_tac [][output_first,SUM_IMAGE_ZERO] >> srw_tac [][] >>
+match_mp_tac SR_0_until >>
+srw_tac [ARITH_ss][delay_above_0])
+
+val output_0 = Q.prove(`output D 0 x t = D t`,srw_tac [][Once output_def])
+
 val output_prev = Q.store_thm(
 "output_prev",
-`0 < n ⇒ (output D n x t = SIGMA (\m. if last_update n t <= m * delay n then 0 else output D (FST (input n)) (SND (input n)) (last_update n t - m * delay n - delay (FST (input n)))) (count (SUC (tap n x))))`,
+`0 < n ⇒ (output D n x t = SIGMA (\m. if last_update n t < m * delay n + delay (FST (input n)) then 0 else output D (FST (input n)) (SND (input n)) (last_update n t - m * delay n - delay (FST (input n)))) (count (SUC (tap n x))))`,
+strip_tac >>
+qsuff_tac `
+(output D n x t = SIGMA (\m. if last_update n t <= m * delay n then 0 else output D (FST (input n)) (SND (input n)) (last_update n t - m * delay n - delay (FST (input n)))) (count (SUC (tap n x))))` >- (
+  srw_tac [][] >>
+  match_mp_tac SUM_IMAGE_CONG >>
+  srw_tac [][] >- (
+    `0 < delay (FST (input n))` by metis_tac [delay_above_0] >>
+    DECIDE_TAC ) >>
+  qmatch_assum_rename_tac `z < SUC (tap n x)` [] >>
+  Cases_on `FST (input n) = 0` >- (
+    fsrw_tac [][output_0,delay_thm,NOT_LESS] >>
+    `last_update n t = z * delay n` by DECIDE_TAC >>
+    fsrw_tac [][] ) >>
+  match_mp_tac output_0_until >>
+  srw_tac [ARITH_ss][] ) >>
 srw_tac [][Once output_last_update] >>
 srw_tac [][output_source_at_update_times,update_time_last_update] >>
 match_mp_tac SUM_IMAGE_CONG >>
 srw_tac [][source_def] >>
 srw_tac [][Once output_last_update,SimpLHS] >>
-fsrw_tac [][NOT_LESS_EQUAL] >>
-qmatch_assum_rename_tac `z * delay n < last_update n t` [] >>
+fsrw_tac [][NOT_LESS,NOT_LESS_EQUAL] >>
+qmatch_assum_rename_tac `z < SUC (tap n x)` [] >>
 `0 < last_update n t - z * delay n` by DECIDE_TAC >>
 `update_time (FST (input n)) (last_update n t - z * delay n)` by (
   match_mp_tac (GEN_ALL update_time_prev) >>
@@ -481,7 +505,7 @@ val output_prev_at_update_times = Q.store_thm(
 "output_prev_at_update_times",
 `0 < n ∧ update_time n t ⇒
  (output D n x t =
-  SIGMA (λm. if t ≤ m * delay n then 0
+  SIGMA (λm. if t < m * delay n + delay (FST (input n)) then 0
              else output D (FST (input n)) (SND (input n))
                     (t - m * delay n - delay (FST (input n))))
   (count (SUC (tap n x))))`,
@@ -503,8 +527,6 @@ qexists_tac `n` >>
 srw_tac [][input_earlier] >>
 match_mp_tac prev_update_time >>
 srw_tac [][] >> DECIDE_TAC)
-
-val output_0 = Q.prove(`output D 0 x t = D t`,srw_tac [][Once output_def])
 
 val delay_sum_def = tDefine "delay_sum"`
   (delay_sum 0 = 0) ∧
@@ -557,7 +579,7 @@ match_mp_tac EQ_SYM >>
 match_mp_tac SUM_IMAGE_count_MULT >>
 srw_tac [][SUM_IMAGE_ZERO] >- (
   srw_tac [][MULT_SYM] >>
-  `0 < delay_sum (SUC n)` by srw_tac [][delay_sum_above_0] >>
+  fsrw_tac [][delay_sum_def] >>
   DECIDE_TAC ) >>
 reverse (Cases_on `0 < FST (input (SUC n))`) >- (
   `FST (input (SUC n)) = 0` by srw_tac [ARITH_ss][] >>
@@ -567,12 +589,13 @@ reverse (Cases_on `0 < FST (input (SUC n))`) >- (
   fsrw_tac [ARITH_ss][NOT_LESS_EQUAL,delay_def,tap_def]) >>
 `update_time (FST (input (SUC n))) (t - m * delay (SUC n) - delay (FST (input (SUC n))))` by (
   match_mp_tac prev1_update_time >>
+  `0 < delay (FST (input (SUC n)))` by metis_tac [delay_above_0] >>
   conj_tac >- DECIDE_TAC >>
   match_mp_tac (GEN_ALL update_time_prev) >>
   qexists_tac `SUC n` >>
   srw_tac [][input_earlier] >>
   match_mp_tac prev_update_time >>
-  fsrw_tac [][NOT_LESS_EQUAL] ) >>
+  fsrw_tac [ARITH_ss][NOT_LESS_EQUAL] ) >>
 first_x_assum (qspec_then `FST (input (SUC n))` mp_tac) >>
 simp_tac (srw_ss()) [input_earlier] >> strip_tac >>
 pop_assum (qspecl_then [`SND (input (SUC n))`,`t - m * delay (SUC n) - delay (FST (input (SUC n)))`] mp_tac) >>
@@ -610,13 +633,6 @@ qexists_tac `t MOD delay n` >>
 qspec_then `delay n` assume_tac DIVISION >>
 assume_tac delay_above_0 >>
 fsrw_tac [][update_time_def,MOD_EQ_0])
-
-val output_0_until = Q.store_thm(
-"output_0_until",
-`0 < n ∧ t < delay n ⇒ (output D n x t = 0)`,
-srw_tac [][output_first,SUM_IMAGE_ZERO] >> srw_tac [][] >>
-match_mp_tac SR_0_until >>
-srw_tac [ARITH_ss][delay_above_0])
 
 val exact_def = Define`
   exact D n x t = SIGMA (λm. if t < SUC m then 0 else D (t - SUC m)) (count (SUC (tap n x) * delay n))`
