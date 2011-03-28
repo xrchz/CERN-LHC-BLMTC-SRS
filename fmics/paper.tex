@@ -259,7 +259,7 @@ Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represent
 Definitions of the HOL functions comprising our model of the SRS structure.
 \(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}.
 Slice $0$ is a fake slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.
-\vspace{0.2in}
+\vspace{2ex}
 \label{fig:definitions}}
 \begin{tabular}{ll}
 $\;\mathsf{tap}\;0\;0=0\quad\quad$ & $\mathsf{tap}\;0\;x=0$\\
@@ -280,15 +280,15 @@ $\;\mathsf{delay}\;0=1$\\
 \multicolumn{2}{l}{$\;\mathsf{source}\;D\;n\;m\;t=\;\mathsf{SR}\;D\;n\;(m-1)\;\quad\text{(where $m>0$)}$}\\[1ex]
 
 \multicolumn{2}{l}{\;$\mathsf{SR}\;D\;n\;m\;0=0$}\\
-\multicolumn{2}{l}{$\;\mathsf{SR}\;D\;n\;m\;t=\text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
+\multicolumn{2}{l}{$\;\mathsf{SR}\;D\;n\;m\;t=\text{if $\mathsf{update\_time}\;n\;t$ then }$}\\
 &$\mathsf{source}\;D\;n\;m\;(t-1)$\\
 \multicolumn{2}{l}{$\qquad\qquad\qquad\quad\text{else }\mathsf{SR}\;D\;n\;m\;t\qquad\text{(where $t>0$)}$}\\[1ex]
 
 \multicolumn{2}{l}{$\;\mathsf{output}\;D\;0\;x\;t=D\;t$}\\
 \multicolumn{2}{l}{$\;\mathsf{output}\;D\;n\;x\;0=0$}\\
-\multicolumn{2}{l}{$\;\mathsf{output}\;D\;n\;x\;t = \text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
-\multicolumn{2}{l}{$\qquad\quad((\mathsf{output}\;D\;n\;x\;(t-1))+(\mathsf{source}\;D\;n\;0\;(t-1)))-$}\\
-&$\qquad\qquad\qquad(\mathsf{SR}\;D\;n(\mathsf{tap}\;n\;x)\;(t-1))$\\
+\multicolumn{2}{l}{$\;\mathsf{output}\;D\;n\;x\;t = \text{if $\mathsf{update\_time}\;n\;t$ then }$}\\
+\multicolumn{2}{l}{$\qquad\quad((\mathsf{output}\;D\;n\;x\;(t-1))+(\mathsf{source}\;D\;n\;0\;(t-1)))-{}$}\\
+&$\qquad\qquad\qquad(\mathsf{SR}\;D\;n\;(\mathsf{tap}\;n\;x)\;(t-1))$\\
 \multicolumn{2}{l}{$\qquad\qquad\qquad\qquad\text{else }\mathsf{output}\;D\;n\;x\;(t-1)\qquad\text{(where $n,t>0$)}$}\\[1ex]
 
 \multicolumn{2}{l}{$\;\mathsf{RS}\;D\;n\;t=\mathsf{output}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)$}\\[1ex]
@@ -302,17 +302,16 @@ $\;\mathsf{delay}\;0=1$\\
 Definitions of auxiliary HOL functions used while proving theorems about the model of the SRS structure.
 \label{fig:auxdefs}
 }
-\vspace{0.2in}
+\vspace{2ex}
 \begin{tabular}{l}
 $\mathsf{delay\_sum}\;0=0$\\
-$\mathsf{delay\_sum}\;n=\mathsf{delay}\;n'+\mathsf{delay\_sum}\;n'$\\
-$\qquad\text{where $(n',\_)=\mathsf{input}\;n$}$\\[1ex]
+$\mathsf{delay\_sum}\;n=\mathsf{delay}\;n'+\mathsf{delay\_sum}\;n'\quad\text{where $(n',\_)=\mathsf{input}\;n$}$\\[1ex]
 
 $\mathsf{last\_update}\;n\;0=0$\\
 $\mathsf{last\_update}\;n\;t=\text{if $\mathsf{update\_time}\;n\;t$ then $t$}$\\
-$\qquad\text{else }\mathsf{last\_update}\;n\;(t-1)\qquad\text{(where $t>0$)}$\\[1ex]
+$\quad\;\;\qquad\qquad\qquad\text{else }\mathsf{last\_update}\;n\;(t-1)\quad\text{(where $t>0$)}$\\[1ex]
 
-$\mathsf{exact}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)}\begin{cases}0&t<m+1\\D\;(t-m-1)&\text{otherwise}\end{cases}$
+$\mathsf{exact}\;D\;n\;x\;t=\displaystyle\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)}\begin{cases}0&t<m+1\\D\;(t-m-1)&\text{otherwise}\end{cases}$
 \end{tabular}
 \end{figure}
 
