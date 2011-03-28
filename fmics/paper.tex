@@ -322,20 +322,20 @@ In light of Theorem~(\ref{output_last_update}), which says a slice's output stay
 Thus, the SRS structure's outputs are exact running sums of the input counts over windows whose sizes depend on the the width of the slice and position of taps.
 However, the sums are delayed by the total delay across all previous slices (represented by $\mathsf{delay\_sum}$).
 
-To prove Theorem~(\ref{output_input_at_update_times}), we first make the following observations, for sufficiently large $t$:
+To prove Theorem~(\ref{output_input_at_update_times}), we first make the following observations\footnote{The precise statements of these observations are complicated by details of what happens when $t$ is low, or equivalently, when we are looking at shift register cells that have not yet received any input.}
 \begin{enumerate}
 \item
 $\mathsf{SR}\;D\;n\;(m+1)\;t=\mathsf{SR}\;D\;n\;m\;(t-\mathsf{delay}\;n)$, since shift register cells get their values from the previous cell, but only update every $\mathsf{delay}\;n$ time steps;
 \item
 $\mathsf{SR}\;D\;n\;m\;t=\mathsf{SR}\;D\;n\;0\;(t-(m\times\mathsf{delay}\;n))$, by induction on $m$ using the result above;
 \item
-$\mathsf{output}\;D\;n\;x\;t$ is the sum of values of consecutive shift register cells (Theorem~(\ref{output_sum})), by induction on $t$;
+$\mathsf{output}\;D\;n\;x\;t$ is a sum of values of consecutive shift register cells (Theorem~(\ref{output_sum})), which can be proved by induction on $t$;
 \item
-Combining the last two results, $\mathsf{output\;D\;n\;x\;t}$ is the sum of consecutive values of the first shift register cell, $\mathsf{SR\;D\;n\;0}$;
+Combining the last two results, $\mathsf{output}\;D\;n\;x\;t$ is a sum of consecutive values of the first shift register cell, $\mathsf{SR}\;D\;n\;0$;
 \item
-<Thus Theorem~(\ref{output_prev_at_update_times}), because the first shift register cell gets its value from the output of a previous slice>
+Thus, we can express $\mathsf{output}\;D\;n\;x\;t$ in terms of $\mathsf{output}\;D\;n'\;x'\;t$, where $(n',x')=\mathsf{input}\;n$, since the source of $\mathsf{SR}\;D\;n\;0$ is the previous (input) slice's output;
 \item
-<Now that we have expressed one output in terms of a previous output, Theorem~(\ref{output_input_at_update_times}) can be proved by induction on $n$ (but this is not trivial - need to check what else apart from $\ref{output_prev_at_update_times}$ is really needed for the inductive step)>
+Finally, by induction on $n$, we can express $\mathsf{output}\;D\;n\;x\;t$ as a function of $D$ alone, as in Theorem~(\ref{output_input_at_update_times}), using the result above for the inductive case.
 \end{enumerate}
 
 \begin{figure}
