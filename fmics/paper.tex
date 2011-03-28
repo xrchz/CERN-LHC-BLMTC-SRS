@@ -195,7 +195,7 @@ While offering less ``push-button'' automation than other kinds of formal verifi
 
 Our goal is to build a generic model of the SRS structure, and to prove that it satisfies its specification, that it calculates approximate running sums of received count values within acceptable error margins.
 Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the $n$-th output of the SRS structure, which is supposed to compute a sum of received count values, and let $\mathsf{true\_sum}\;n$ denote this sum.
-The multi-layerd structure of the SRS and the read delay of each shift register result in the outputs of the SRS to be delayed from the $\mathsf{true\_sum}$ values.
+The multi-layered structure of the SRS and the read delay of each shift register result in the outputs of SRS being delayed from the $\mathsf{true\_sum}$ values.
 A sketch of the desired correctness statement is \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{true\_sum}\; n \pm\text{acceptable error}\]
 Although Figure~\ref{fig:srs} suggests that the SRS structure has only twelve outputs  (i.e. $0\leq{n}\leq11$), we obtain a more generic result (that is useful in future upgrades of the system) by proving the correctness of the above statement for all values of $n$.
 
@@ -317,20 +317,19 @@ $\mathsf{exact}\;D\;n\;x\;t=\displaystyle\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\ti
 
 %Figure~\ref{fig:theorems} gives a selection of theorems we have proved in HOL, some of which refer to additional constants defined in Figure~\ref{fig:auxdefs}.
 Figure~\ref{fig:auxdefs} defines a set of additional functions required to prove our main results.
-The function $\mathsf{delay\_sum}\;n$ represents the accumulative delay of the preceding shift registers of a slice.
+The function $\mathsf{delay\_sum}\;n$ represents the cumulative delay of the preceding shift registers of a slice.
 For example, $\mathsf{delay\_sum}\;4 = \mathsf{delay}\;3 + \mathsf{delay}\;1 + \mathsf{delay}\;0 = 2 +1 +1 = 4$.
-The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th slice last updated and the $\mathsf{exact}\;D\;n\;x\;t$ {\bf Ramana, can say in simple words what exact represents?}
-
+The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th slice last updated, and $\mathsf{exact}\;D\;n\;x\;t$ computes the exact sum of consecutive input counts, without delay, that $\mathsf{output}\;D\;n\;x\;t$ is supposed to approximate (so $\mathsf{exact}$ is to $\mathsf{true\_sum}$ as $\mathsf{output}$ is to $\mathsf{RS}$).
 
 %Our central result, Theorem~(\ref{output_input_at_update_times}), equates the output of a slice to a sum of consecutive input counts.
 Our central result equates the output of a slice to a sum of consecutive input counts.
 More precisely, it says that if slice $n$ was just updated, then the output at tap $x$ is equal to the sum of $((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)$ input values, starting from the input $\mathsf{delay\_sum}\;n$ time steps ago.
-Note that the precise statement of such a theorem is complicated by details of the value of the $\mathsf{output}$ at times when the shift registers have not yet received any values. 
+%Note that the precise statement of such a theorem is complicated by details of the value of the $\mathsf{output}$ at times when the shift registers have not yet received any values.
 
 %To prove Theorem~(\ref{output_input_at_update_times}), we first make the following observations\footnote{The precise statements of these observations are complicated by details of what happens when $t$ is low, or equivalently, when we are looking at shift register cells that have not yet received any input.}
 
 \begin{theorem}
-For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n$ at update time $t$ is equal to
+For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n$ at an update time $t$ satisfies
 \begin{equation*}%\label{output_input_at_update_times}
 %\forall{D\,n\,x\,t}.\,{0 < n}\land{\mathsf{update\_time\;n\;t}}\implies\\
 \mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)-1}\begin{cases}0 \qquad\qquad\qquad  t<m+\mathsf{delay\_sum}\;n\\D\;(t-m-\mathsf{delay\_sum}\;n)\quad\text{otherwise}\end{cases}
@@ -338,21 +337,21 @@ For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n$ at updat
 \end{theorem}
 
 \begin{proof}
-The shift register cells get their values from the previous cell but they only update every $\mathsf{delay}\;n$ time steps. Therefore,
+The shift register cells get their values from the previous cell but they only update every $\mathsf{delay}\;n$ time steps. Therefore\footnote{We do not go through the details here of what happens when $t$ is small, for example $t<m\times\mathsf{delay}\;n$.},
 \begin{equation*}
 \mathsf{SR}\;D\;n\;(m+1)\;t=\mathsf{SR}\;D\;n\;m\;(t-\mathsf{delay}\;n)
 \end{equation*}
-By induction on $m$ on the above,
+By induction on $m$, using the above,
 \begin{equation*}
 \mathsf{SR}\;D\;n\;m\;t=\mathsf{SR}\;D\;n\;0\;(t-(m\times\mathsf{delay}\;n))
 \end{equation*}
-By induction on $t$, we can show that the $\mathsf{output}\;D\;n\;x\;t$ is a sum of values of consecutive shift register cells
+By induction on $t$, we can show that $\mathsf{output}\;D\;n\;x\;t$ is a sum of values of consecutive shift register cells
 \begin{equation*}
-\forall{D\,n\,x\,t}.\,{0<n}\implies\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
+\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
 \end{equation*}
 Combining the last two results, $\mathsf{output}\;D\;n\;x\;t$ is a sum of consecutive values of the first shift register cell, $\mathsf{SR}\;D\;n\;0$.
 Thus, we can express $\mathsf{output}\;D\;n\;x\;t$ in terms of $\mathsf{output}\;D\;n'\;x'\;t$, where $(n',x')=\mathsf{input}\;n$, since the source of $\mathsf{SR}\;D\;n\;0$ is the previous (input) slice's output.
-Finally, by induction on $n$, we can express $\mathsf{output}\;D\;n\;x\;t$ as a function of $D$ alone, as in Theorem~(\ref{output_input_at_update_times}), using the result above for the inductive case.
+Finally, by induction on $n$, we can express $\mathsf{output}\;D\;n\;x\;t$ as a function of $D$ alone, as required, using the result above for the inductive case.
 \qed
 \end{proof}
 
