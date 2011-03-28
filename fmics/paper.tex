@@ -322,28 +322,50 @@ In light of Theorem~(\ref{output_last_update}), which says a slice's output stay
 Thus, the SRS structure's outputs are exact running sums of the input counts over windows whose sizes depend on the the width of the slice and position of taps.
 However, the sums are delayed by the total delay across all previous slices (represented by $\mathsf{delay\_sum}$).
 
+To prove Theorem~(\ref{output_input_at_update_times}), we first make the following observations, for sufficiently large $t$:
+\begin{enumerate}
+\item
+$\mathsf{SR}\;D\;n\;(m+1)\;t=\mathsf{SR}\;D\;n\;m\;(t-\mathsf{delay}\;n)$, since shift register cells get their values from the previous cell, but only update every $\mathsf{delay}\;n$ time steps;
+\item
+$\mathsf{SR}\;D\;n\;m\;t=\mathsf{SR}\;D\;n\;0\;(t-(m\times\mathsf{delay}\;n))$, by induction on $m$ using the result above;
+\item
+$\mathsf{output}\;D\;n\;x\;t$ is the sum of values of consecutive shift register cells (Theorem~(\ref{output_sum})), by induction on $t$;
+\item
+Combining the last two results, $\mathsf{output\;D\;n\;x\;t}$ is the sum of consecutive values of the first shift register cell, $\mathsf{SR\;D\;n\;0}$;
+\item
+<Thus Theorem~(\ref{output_prev_at_update_times}), because the first shift register cell gets its value from the output of a previous slice>
+\item
+<Now that we have expressed one output in terms of a previous output, Theorem~(\ref{output_input_at_update_times}) can be proved by induction on $n$ (but this is not trivial - need to check what else apart from $\ref{output_prev_at_update_times}$ is really needed for the inductive step)>
+\end{enumerate}
+
 \begin{figure}
 \caption{
 A selection of theorems about our model proved using HOL4.
 \label{fig:theorems}
 }
-\begin{equation}\label{update_time_last_update}
-\forall{n\,t}.\,\mathsf{update\_time}\;n\;(\mathsf{last\_update}\;n\;t)
-\end{equation}
-\begin{equation}\label{last_update_thm}
-\forall{n\,t}.\,\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n
-\end{equation}
+\begin{align}
+\label{update_time_last_update}
+&\forall{n\,t}.\,\mathsf{update\_time}\;n\;(\mathsf{last\_update}\;n\;t)\\
+%\label{last_update_thm}
+%&\forall{n\,t}.\,\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n\\
 %SR_prev
 %SR_first
-\begin{equation}\label{output_last_update}
-\forall{D\,n\,x\,t}.\,\mathsf{output}\;D\;n\;x\;t=\mathsf{output}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t)
-\end{equation}
-\begin{equation}\label{output_sum}
-\forall{D\,n\,x\,t}.\,{0<n}\implies\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
-\end{equation}
-%output_first
-%output_source_at_update_times
-%output_prev_at_update_times
+\label{output_last_update}
+&\forall{D\,n\,x\,t}.\,\mathsf{output}\;D\;n\;x\;t=\mathsf{output}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t)\\
+\label{output_sum}
+&\forall{D\,n\,x\,t}.\,{0<n}\implies\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
+\end{align}
+%\begin{multline}
+%\label{output_source_at_update_times}
+%\forall{D\,n\,x\,t}.\,{0<n}\land{\mathsf{update\_time\;n\;t}}\implies\\
+%\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\begin{cases}0&t\leq m\times(\mathsf{delay}\;n)\\\mathsf{source}\;D\;n\;0\;(t-m\times(\mathsf{delay\;n})-1)&\text{otherwise}\end{cases}
+%\end{multline}
+\begin{multline}
+\label{output_prev_at_update_times}
+\forall{D\,n\,x\,t}.\,{0<n}\land{\mathsf{update\_time}\;n\;t}\implies\\
+\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\begin{cases}0&t < m\times\mathsf{delay}\;n+\mathsf{delay}\;n'\\\mathsf{output}\;D\;n'\;x'\;(t-m\times\mathsf{delay}\;n-\mathsf{delay}\;n')&\text{otherwise}\end{cases}\\
+\qquad\text{where $(n',x')=\mathsf{input}\;n$}
+\end{multline}
 \begin{multline}\label{output_input_at_update_times}
 \forall{D\,n\,x\,t}.\,{0 < n}\land{\mathsf{update\_time\;n\;t}}\implies\\\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)-1}\begin{cases}0&t<m+\mathsf{delay\_sum}\;n\\D\;(t-m-\mathsf{delay\_sum}\;n)&\text{otherwise}\end{cases}
 \end{multline}
