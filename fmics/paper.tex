@@ -328,8 +328,8 @@ More precisely, it says that if slice $n$ was just updated, then the output at t
 
 %To prove Theorem~(\ref{output_input_at_update_times}), we first make the following observations\footnote{The precise statements of these observations are complicated by details of what happens when $t$ is low, or equivalently, when we are looking at shift register cells that have not yet received any input.}
 
-\begin{theorem}
-For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n$ at an update time $t$ satisfies
+\begin{theorem}\label{output_input_at_update_times}
+For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n>0$ at an update time $t$ satisfies
 \begin{equation*}%\label{output_input_at_update_times}
 %\forall{D\,n\,x\,t}.\,{0 < n}\land{\mathsf{update\_time\;n\;t}}\implies\\
 \mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)-1}\begin{cases}0 \qquad\qquad\qquad  t<m+\mathsf{delay\_sum}\;n\\D\;(t-m-\mathsf{delay\_sum}\;n)\quad\text{otherwise}\end{cases}
@@ -355,46 +355,66 @@ Finally, by induction on $n$, we can express $\mathsf{output}\;D\;n\;x\;t$ as a 
 \qed
 \end{proof}
 
-In light of Theorem~(\ref{output_last_update}), which says a slice's output stays constant between update times for the slice, Theorem~(\ref{output_input_at_update_times}) characterises all outputs at all times.
+Since a slice's output stays constant between update times for the slice, Theorem~\ref{output_input_at_update_times} characterises all outputs at all times.
 Thus, the SRS structure's outputs are exact running sums of the input counts over windows whose sizes depend on the the width of the slice and position of taps.
 However, the sums are delayed by the total delay across all previous slices (represented by $\mathsf{delay\_sum}$).
 
-\begin{figure}
-\caption{
-A selection of theorems about our model proved using HOL4.
-\label{fig:theorems}
-}
-\begin{align}
-\label{update_time_last_update}
-&\forall{n\,t}.\,\mathsf{update\_time}\;n\;(\mathsf{last\_update}\;n\;t)\\
-%\label{last_update_thm}
-%&\forall{n\,t}.\,\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n\\
-%SR_prev
-%SR_first
-\label{output_last_update}
-&\forall{D\,n\,x\,t}.\,\mathsf{output}\;D\;n\;x\;t=\mathsf{output}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t)\\
-\label{output_sum}
-&\forall{D\,n\,x\,t}.\,{0<n}\implies\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
-\end{align}
+The fact that the SRS calculates exact, but delayed, sums, is captured in the next theorem, which relates $\mathsf{output}\;D\;n\;x\;t$ to $\mathsf{exact}\;D\;n\;x$ at an earlier time.
+
+\begin{theorem}\label{output_eq_exact}
+For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n>0$ at all times $t$ satisfies
+\begin{equation*}
+\mathsf{output}\;D\;n\;x\;t=\begin{cases}0\qquad\qquad\qquad\qquad\qquad\quad\mathsf{last\_update}\;n\;t+1<\mathsf{delay\_sum}\;n\\\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)\quad\text{otherwise}\end{cases}
+\end{equation*}
+\end{theorem}
+\begin{proof}
+Follows from Theorem~\ref{output_input_at_update_times}, using the definition of $\mathsf{exact}$, and the fact that $\mathsf{output}\;D\;n\;x\;t$ has the same value as at the last update time.\qed
+\end{proof}
+
+We have also proved a preliminary result bounding the error of $\mathsf{output}\;D\;n\;x\;t$ compared to $\mathsf{exact}\;D\;n\;x\;t$.
+\begin{theorem}\label{max_error}
+For all $k$ and $D$ satisfying $|D\;(t'+1)-D\;t'|\leq k$ at all times, the following holds for all slices $n>0$, tap positions $x$, and times $t$:
+\begin{multline*}
+t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{delay\_sum}\;n\implies\\
+|\mathsf{output}\;D\;n\;x\;t-\mathsf{exact}\;D\;n\;x\;t|\leq(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times(\mathsf{delay}\;n+\mathsf{delay\_sum}\;n)
+\end{multline*}
+\end{theorem}
+\begin{proof}
+\end{proof}
+
+%\begin{figure}
+%\caption{
+%A selection of theorems about our model proved using HOL4.
+%\label{fig:theorems}
+%}
+%\begin{align}
+%\label{update_time_last_update}
+%&\forall{n\,t}.\,\mathsf{update\_time}\;n\;(\mathsf{last\_update}\;n\;t)\\
+%%\label{last_update_thm}
+%%&\forall{n\,t}.\,\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n\\
+%%SR_prev
+%%SR_first
+%\label{output_last_update}
+%&\forall{D\,n\,x\,t}.\,\mathsf{output}\;D\;n\;x\;t=\mathsf{output}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t)\\
+%\label{output_sum}
+%&\forall{D\,n\,x\,t}.\,{0<n}\implies\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
+%\end{align}
+%%\begin{multline}
+%%\label{output_source_at_update_times}
+%%\forall{D\,n\,x\,t}.\,{0<n}\land{\mathsf{update\_time\;n\;t}}\implies\\
+%%\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\begin{cases}0&t\leq m\times(\mathsf{delay}\;n)\\\mathsf{source}\;D\;n\;0\;(t-m\times(\mathsf{delay\;n})-1)&\text{otherwise}\end{cases}
+%%\end{multline}
 %\begin{multline}
-%\label{output_source_at_update_times}
-%\forall{D\,n\,x\,t}.\,{0<n}\land{\mathsf{update\_time\;n\;t}}\implies\\
-%\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\begin{cases}0&t\leq m\times(\mathsf{delay}\;n)\\\mathsf{source}\;D\;n\;0\;(t-m\times(\mathsf{delay\;n})-1)&\text{otherwise}\end{cases}
+%\label{output_prev_at_update_times}
+%\forall{D\,n\,x\,t}.\,{0<n}\land{\mathsf{update\_time}\;n\;t}\implies\\
+%\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\begin{cases}0&t < m\times\mathsf{delay}\;n+\mathsf{delay}\;n'\\\mathsf{output}\;D\;n'\;x'\;(t-m\times\mathsf{delay}\;n-\mathsf{delay}\;n')&\text{otherwise}\end{cases}\\
+%\qquad\text{where $(n',x')=\mathsf{input}\;n$}
 %\end{multline}
-\begin{multline}
-\label{output_prev_at_update_times}
-\forall{D\,n\,x\,t}.\,{0<n}\land{\mathsf{update\_time}\;n\;t}\implies\\
-\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\begin{cases}0&t < m\times\mathsf{delay}\;n+\mathsf{delay}\;n'\\\mathsf{output}\;D\;n'\;x'\;(t-m\times\mathsf{delay}\;n-\mathsf{delay}\;n')&\text{otherwise}\end{cases}\\
-\qquad\text{where $(n',x')=\mathsf{input}\;n$}
-\end{multline}
-\begin{multline}\label{output_input_at_update_times}
-\forall{D\,n\,x\,t}.\,{0 < n}\land{\mathsf{update\_time\;n\;t}}\implies\\\mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)-1}\begin{cases}0&t<m+\mathsf{delay\_sum}\;n\\D\;(t-m-\mathsf{delay\_sum}\;n)&\text{otherwise}\end{cases}
-\end{multline}
-\begin{multline}\label{output_eq_exact}
-\forall{D\,n\,x\,t}.\,{0 < n}\implies\\\mathsf{output}\;D\;n\;x\;t=\begin{cases}0&\mathsf{last\_update}\;n\;t<\mathsf{delay}\;n\\\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)\end{cases}
-\end{multline}
-%max_error
-\end{figure}
+%\begin{multline}\label{output_eq_exact}
+%\forall{D\,n\,x\,t}.\,{0 < n}\implies\\\mathsf{output}\;D\;n\;x\;t=\begin{cases}0&\mathsf{last\_update}\;n\;t<\mathsf{delay}\;n\\\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)\end{cases}
+%\end{multline}
+%%max_error
+%\end{figure}
 
 %One of our objectives in formally modelling SRS was to keep the topology parameterized.
 %It is likely that the configuration of the slices and shift registers will in the future change to accommodate higher precision.
