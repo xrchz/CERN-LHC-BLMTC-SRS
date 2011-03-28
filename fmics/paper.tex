@@ -1,8 +1,6 @@
 \documentclass{llncs}
 
 \usepackage{times,graphicx,epsfig,boxedminipage,url,xspace,array,amsmath}
-\newcommand\T{\rule{0pt}{2.6ex}}
-\newcommand\B{\rule[-1.2ex]{0pt}{0pt}}
 
 \begin{document}
 
@@ -222,7 +220,7 @@ Descriptions of the HOL functions comprising our model of the SRS structure.
 }
 \begin{tabular}{lp{0.8\textwidth}}
 Function&Intended meaning\\
-\hline\\
+\hline
 \(\mathsf{tap}\;n\;x\)&The position of tap $x$ of slice $n$.\\
 \(\mathsf{input}\;n\)&A pair $(n',x)$ indicating that the input to slice $n$ is output $x$ of slice $n'$.\\
 \(\mathsf{delay}\;n\)&The number of time steps between updates of slice $n$.\\
@@ -263,40 +261,40 @@ Definitions of the HOL functions comprising our model of the SRS structure.
 Slice $0$ is a fake slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.
 \vspace{0.2in}
 \label{fig:definitions}}
-\begin{tabular}{l|ll}
-Function \T \B & Definition \\\hline
-$\mathsf{tap}\;n\;x$ \T & $\;\mathsf{tap}\;0\;0=0\quad\quad$ & $\mathsf{tap}\;0\;x=0$\\
+\begin{tabular}{lll}
+Function & Definition\\\hline
+$\mathsf{tap}\;n\;x$ & $\;\mathsf{tap}\;0\;0=0\quad\quad$ & $\mathsf{tap}\;0\;x=0$\\
 &$\;\mathsf{tap}\;1\;0=1-1\quad$ &  $\mathsf{tap}\;1\;x=2-1$\\
 &$\;\mathsf{tap}\;2\;0=8-1\quad$ &  $\mathsf{tap}\;2\;x=16-1$\\
-&$\;\dots\quad$ \B & $\mathsf{tap}\;6\;x=128-1\quad\text{(where each $x>0$)}$\\\hline
+&$\;\dots\quad$ & $\mathsf{tap}\;6\;x=128-1\quad\text{(where each $x>0$)}$\\
 
-$\mathsf{input}\;n$ \T & $\;\mathsf{input}\;0=(0,0)\quad$ & $\mathsf{input}\;1=(0,0)$\\
+$\mathsf{input}\;n$ & $\;\mathsf{input}\;0=(0,0)\quad$ & $\mathsf{input}\;1=(0,0)$\\
 &$\;\mathsf{input}\;2=(0,0)\quad$ & $\mathsf{input}\;3=(1,1)$\\
 &$\;\mathsf{input}\;4=(3,0)\quad$ & $\mathsf{input}\;5=(4,0)$\\
-&$\;\mathsf{input}\;6=(4,1)\quad$ \B & $\mathsf{input}\;n=(n-1,0)\quad\text{(where $n>6$)}$\\\hline
+&$\;\mathsf{input}\;6=(4,1)\quad$ & $\mathsf{input}\;n=(n-1,0)\quad\text{(where $n>6$)}$\\
 
-$\mathsf{delay}\;n$ \T & $\;\mathsf{delay}\;0=1$\\
-&\multicolumn{2}{|l}{$\;\mathsf{delay}\;n=\mathsf{delay}\;n'\times((\mathsf{tap}\;n'\;x)+1)$}\\
-&\multicolumn{2}{|l}{$\qquad\qquad\qquad\text{where $(n',x)=\mathsf{input\;n}$ (and $n>0$)}$} \B \\\hline
+$\mathsf{delay}\;n$ & $\;\mathsf{delay}\;0=1$\\
+&\multicolumn{2}{l}{$\;\mathsf{delay}\;n=\mathsf{delay}\;n'\times((\mathsf{tap}\;n'\;x)+1)$}\\
+&\multicolumn{2}{l}{$\qquad\qquad\qquad\text{where $(n',x)=\mathsf{input\;n}$ (and $n>0$)}$}\\
 
-$\mathsf{source}\;D\;n\;m\;t$ \T & \multicolumn{2}{|l}{\;$\mathsf{source}\;D\;n\;0\;t=\mathsf{output}\;D\;n'\;x\;t\quad\text{where $(n',x)=\mathsf{input\;n}$}$}\\
-&\multicolumn{2}{|l}{$\;\mathsf{source}\;D\;n\;m\;t=\;\mathsf{SR}\;D\;n\;(m-1)\;\quad\text{(where $m>0$)}$} \B \\\hline
+$\mathsf{source}\;D\;n\;m\;t$ & \multicolumn{2}{l}{\;$\mathsf{source}\;D\;n\;0\;t=\mathsf{output}\;D\;n'\;x\;t\quad\text{where $(n',x)=\mathsf{input\;n}$}$}\\
+&\multicolumn{2}{l}{$\;\mathsf{source}\;D\;n\;m\;t=\;\mathsf{SR}\;D\;n\;(m-1)\;\quad\text{(where $m>0$)}$}\\
 
-$\mathsf{SR}\;D\;n\;m\;t$ \T &  \multicolumn{2}{|l}{\;$\mathsf{SR}\;D\;n\;m\;0=0$}\\
-&\multicolumn{2}{|l}{$\;\mathsf{SR}\;D\;n\;m\;t=\text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
+$\mathsf{SR}\;D\;n\;m\;t$ &  \multicolumn{2}{l}{\;$\mathsf{SR}\;D\;n\;m\;0=0$}\\
+&\multicolumn{2}{l}{$\;\mathsf{SR}\;D\;n\;m\;t=\text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
 &&$\mathsf{source}\;D\;n\;m\;(t-1)$\\
-&\multicolumn{2}{|l}{$\qquad\qquad\qquad\quad\text{else }\mathsf{SR}\;D\;n\;m\;t\qquad\text{(where $t>0$)}$}\B \\\hline
+&\multicolumn{2}{l}{$\qquad\qquad\qquad\quad\text{else }\mathsf{SR}\;D\;n\;m\;t\qquad\text{(where $t>0$)}$}\\
 
-$\mathsf{output}\;D\;n\;x\;t$ \T &\multicolumn{2}{|l}{$\;\mathsf{output}\;D\;0\;x\;t=D\;t$}\\
-&\multicolumn{2}{|l}{$\;\mathsf{output}\;D\;n\;x\;0=0$}\\
-&\multicolumn{2}{|l}{$\;\mathsf{output}\;D\;n\;x\;t = \text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
-&\multicolumn{2}{|l}{$\qquad\quad((\mathsf{output}\;D\;n\;x\;(t-1))+(\mathsf{source}\;D\;n\;0\;(t-1)))-$}\\
+$\mathsf{output}\;D\;n\;x\;t$ &\multicolumn{2}{l}{$\;\mathsf{output}\;D\;0\;x\;t=D\;t$}\\
+&\multicolumn{2}{l}{$\;\mathsf{output}\;D\;n\;x\;0=0$}\\
+&\multicolumn{2}{l}{$\;\mathsf{output}\;D\;n\;x\;t = \text{if $\mathsf{update\_time}\;n\;t$}\;\;\;\text{then }$}\\
+&\multicolumn{2}{l}{$\qquad\quad((\mathsf{output}\;D\;n\;x\;(t-1))+(\mathsf{source}\;D\;n\;0\;(t-1)))-$}\\
 &&$\qquad\qquad\qquad(\mathsf{SR}\;D\;n(\mathsf{tap}\;n\;x)\;(t-1))$\\
-&\multicolumn{2}{|l}{$\qquad\qquad\qquad\qquad\text{else }\mathsf{output}\;D\;n\;x\;(t-1)\qquad\text{(where $t>0$)}$}\B\\\hline
+&\multicolumn{2}{l}{$\qquad\qquad\qquad\qquad\text{else }\mathsf{output}\;D\;n\;x\;(t-1)\qquad\text{(where $t>0$)}$}\\
 
-$\mathsf{RS}\;D\;n\;t$ \T \B & \multicolumn{2}{|l}{$\;\mathsf{RS}\;D\;n\;t=\mathsf{output}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)$}\\\hline
+$\mathsf{RS}\;D\;n\;t$ & \multicolumn{2}{l}{$\;\mathsf{RS}\;D\;n\;t=\mathsf{output}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)$}\\
 
-$\mathsf{update\_time}\;n\;t$ \T & \multicolumn{2}{|l}{$\;\mathsf{update\_time}\;n\;t\iff(t\operatorname{mod}\mathsf{delay}\;n=0)$}
+$\mathsf{update\_time}\;n\;t$ & \multicolumn{2}{l}{$\;\mathsf{update\_time}\;n\;t\iff(t\operatorname{mod}\mathsf{delay}\;n=0)$}
 \end{tabular}
 \end{figure}
 
