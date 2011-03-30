@@ -88,28 +88,25 @@ Due to demanding performance requirements, BLETCs are implemented on FPGAs, whic
 Figure~\ref{fig:BLETC} shows a block diagram of the processes on a BLETC FPGA.
 In the following, we briefly describe each of the four processing blocks on a BLETC card.
 
+\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives the data direct from the tunnel, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms.{\bf references for these algorithms?}
 
-\emph{(a) Receive, Check, and Compare (RCC)}: RCC is responsible for facilitating the reception process at the entry stage of the surface FPGA.
-It ensures the correct reception and detection of erroneous transmissions by redundancy in transmissions and using Cyclic Redundancy Check (CRC) and the 8B/10B algorithms.
+\emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
+Given the tolerance acceptable for quench prevention, the loss level versus loss duration is approximated by sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.{\bf not entirely sure what this sentence means}
+In order to achieve the \emph{dynamic range} (domain of variation of losses) requested by the specification, the detectors use both Current-to-Frequency converters and ADC circuitries.{\bf ADC?}
+The data processing block merges these two types of data coming from the detector so as to send a single count value to the SRS block.
+The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 
-\emph{(b) Data Processing}: Quench of magnets that result from proton loss depends on the loss duration and the beam energy.
-Given the tolerance acceptable for quench prevention, the quench threshold versus loss time is approximated with a minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.
-In order to achieve the \emph{dynamic range} (i.e. the domain of variation of the beam losses) requested by the specification, the detectors use both Current-to-Frequency Converters (CFCs) and ADC circuitries.
-The data processing block merges these two types of data coming from the same detector into one value and send it to the SRS block.
-The implementation of the SRS is discussed in more detail in the next section.
+\emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold for the beam energy reading at that moment.
+The comparator initiates a beam dump request if any of the running sums is higher than its corresponding threshold.
+Beam dump requests are forwarded to the Beam Interlock System which initiates the beam dump.
+There are 12 running sums calculated for each 16-detector channel allocated to a BLETC card.
+The beam energy information is scaled to 32 levels (0.45 to 7 TeV) and each processing module holds data only for those 16 connected detectors.
+Thus a total of 6,144 threshold values need to be held on each card.
 
-\emph{(c) Threshold Comparator}: Every new calculated running sum need to be compared with the corresponding threshold that was chosen by the beam energy reading given that moment.
-The comparator will initiate a beam dump request if any of the running sums is higher than its corresponding threshold.
-The beam dump requests are forwarded to the Beam Interlock System which will initiate the beam dump.
-There are 12 running sums calculated for each 16 detector channels allocated to a BLETC card.
-The beam energy information is scaled into 32 levels (0.45 to 7 TeV) and each processing module will hold data only for those 16 detectors connected.
-That would give a total of 6,144 threshold values needed to be held on each card.
-
-\emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, BLM should store the loss measurement data.
-This data will be sent over the VME-bus for online viewing and storage by the Logging and Post-Mortem systems.
-For the purpose of supervision, the BLM system will drive an online event display to show error and status information recorded by tunnel electronics and the RCC process as well as the maximum loss rates seen by the running sums.
-BLETC card also provides data to Collimation system for the correct alignment and setup of the collimators.
-
+\emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, the BLMS stores the loss measurement data.
+This data is sent over the VME-bus {\bf what's the VME-bus?} for online viewing and storage by the Logging and Post-Mortem systems.
+For the purpose of supervision, the BLMS drives an online event display to show error and status information recorded by the tunnel electronics and the RCC process as well as the maximum loss rates seen by the running sums.
+Each BLETC card also provides data to the Collimation system for the correct alignment and setup of the collimators.
 
 \section{Successive Running Sums (SRS)}
 \label{sec-SRS}
