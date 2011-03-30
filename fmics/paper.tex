@@ -72,20 +72,21 @@ Finally, we reflect on the process, summarising lessons learned and future direc
 
 \begin{figure}[t]
   \centering  \scalebox{0.7}{ \includegraphics{BLETC.eps}}
-   \caption{Block diagram of the processes assigned to BLETC card.}
+   \caption{Block diagram of a BLETC card.}
   \label{fig:BLETC}
 \end{figure}
 
-The loss measurement principle \cite{Dehning-IPAC,Chris-FPGA} is based on the energy deposition detection of secondary shower particles using a specially-designed detector called \emph{ionization chamber}.
-There are around 4000 ionization chambers strategically placed on the sides of the magnets all around the tunnel.
-These detectors convert the signal given by the recording of shower particles into electrical signals and send them to tunnel cards.
-Tunnel cards, which are located in the tunnel and implemented by radiation-tolerant electronics, acquire and digitize the data from the detectors and transmit those to the surface using optical links.
-There, the data processing cards, named BLETCs, receive those data and decide whether or not the beam should be permitted to be injected or continue circulating.
-Each tunnel card receives data from eight detectors and each surface card receives data from two tunnel cards.
-The surface card provides data to the Logging, the Post Mortem and the Collimation systems that will be used to drive on-line displays in the control room, perform long-term storage for offline analysis, and to setup the collimators automatically.
-Due to demanding performance requirements, the BLMS is implemented on modern FPGAs, which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes.
-Figure~\ref{fig:BLETC} shows a block diagram of the processes assigned in BLETC FPGA.
-In the following, we give a brief overview of each of the four main processing blocks in BLETC card.
+The purpose of the BLMS is to measure particle loss, and to request beam extraction if the loss level indicates that a quench is likely to occur.
+The physical principle underlying particle loss measurement \cite{Dehning-IPAC,Chris-FPGA} is the detection of energy deposited by \emph{shower particles} in \emph{ionization chambers}.
+There are around 4000 ionization chambers strategically placed on the sides of the magnets all around the LHC tunnel underground.
+The ionization chambers produce an electrical signal, based on the recording of shower particles, and transmit the signal to \emph{tunnel cards}.
+Tunnel cards, which are implemented by radiation-tolerant electronics, digitize the data and transmit the digitized data to the surface above the tunnel using optical links.
+At the surface, data processing cards named \emph{BLETCs} receive the data and decide whether or not the beam should be permitted to continue circulating.
+Each tunnel card receives data from eight ionization chambers, and each BLETC receives data from two tunnel cards.
+A BLETC provides data to the Logging, Post Mortem, and Collimation systems that drive on-line displays in the control room, perform long-term storage for offline analysis, and setup the collimators automatically {\bf What is a collimator? Why is it necessary to mention all this?}.
+Due to demanding performance requirements, BLETCs are implemented on FPGAs, which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes.
+Figure~\ref{fig:BLETC} shows a block diagram of the processes on a BLETC FPGA.
+In the following, we briefly describe each of the four processing blocks on a BLETC card.
 
 
 \emph{(a) Receive, Check, and Compare (RCC)}: RCC is responsible for facilitating the reception process at the entry stage of the surface FPGA.
