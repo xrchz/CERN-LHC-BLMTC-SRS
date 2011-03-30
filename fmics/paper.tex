@@ -56,9 +56,9 @@ There is a degree of regularity in how the output of each layer is used as input
 There is also a degree of regularity in the timing of each layer with respect to its position in the stack of layers.
 This regularity serves as a basis for inductive reasoning, which makes the amount of verification effort impervious to the number of layers in the structure.
 
-Compared to test-based methods, like simulation, formal methods not only offer a much higher confidence in correctness of a system's behavior, but also help improve our understanding of its specification.
-One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team with different backgrounds and expertise.
-Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool at the end of a long and intense effort.
+Compared to test-based methods, like simulation, formal methods not only offer much higher confidence in the correctness of a system's behavior, but also help improve our understanding of its specification.
+One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team of different backgrounds and expertise.
+Our confidence in the SRS design ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool.
 In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
 The most important use of HOL4  was its role as an ``implacable skeptic" that compelled us to really understand the details~\cite{rushby}.
 
