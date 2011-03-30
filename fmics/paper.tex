@@ -404,9 +404,10 @@ t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{dela
 \end{theorem}
 \begin{proof}
 By applying Theorem~\ref{output_eq_exact}, we are left with an equation involving $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
-Our assumption on $t$ ensures that the case where the function is equal to $0$ in Theorem~\ref{output_eq_exact} or in the definition of $\mathsf{exact}$ never applies.
+Our assumption on $t$ ensures that we are never in the $0$ case of either Theorem~\ref{output_eq_exact} or of the definition of $\mathsf{exact}$.
 Now, $\mathsf{exact}$ is defined as a sum of consecutive values of $D$, so we simply need to bound the difference between one such sum and another earlier one of the same size.
-If at each step the maximum difference is $k$, then the total difference is at most $k$ times the distance between the ends of the two sums, which is the bound stated in the theorem <actually the theorem may have an additional factor increasing the size of the bound, that made it easier to prove - not sure>.
+But if at each step the maximum difference is $k$, then the total difference is at most $k$ times the distance between the ends of the two sums, as required.
+(We use the fact that $\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n$ and, in general, that $a\operatorname{mod}b<b$.)
 \end{proof}
 
 
