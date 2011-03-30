@@ -62,15 +62,13 @@ Our confidence in the SRS design ultimately rests upon our deep understanding of
 In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
 The most important use of HOL4  was its role as an ``implacable skeptic" that compelled us to really understand the details~\cite{rushby}.
 
-The rest of the paper is organized as follows.
-An overview of BLMS and its main components is given in Section~\ref{sec-BLM} and is followed by a description of SRS implementation in Section~\ref{sec-SRS}.
-The verification approach of SRS is presented in Section~\ref{sec-verification}.
-We conclude in Section~\ref{sec-conclusions} with a summary of lessons learned and future directions.
-
+Our contributions in this paper are: a formal model of the SRS component of the BLMS, and commentary on the process and outcomes of taking a formal approach.
+We give an overview of the BLMS in Section~\ref{sec-BLM}, and describe the SRS component in particular in Section~\ref{sec-SRS}.
+In Section~\ref{sec-verification} we describe our approach to formal verification, and present the formal model and results.
+Finally, we reflect on the process, summarising lessons learned and future directions, in Section~\ref{sec-conclusions}.
 
 \section{BLMS Overview}
 \label{sec-BLM}
-
 
 \begin{figure}[t]
   \centering  \scalebox{0.7}{ \includegraphics{BLETC.eps}}
