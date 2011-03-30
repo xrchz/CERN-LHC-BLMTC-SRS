@@ -195,6 +195,7 @@ As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reac
 \section{Verification of the SRS Implementation using HOL4}
 \label{sec-verification}
 
+\subsection{Introduction}
 Our formal verification effort uses mechanised logical deduction, or \emph{theorem proving}.
 In general, theorem proving is used to show that desired properties of a system are logically implied by a formal model of the system.
 We use the HOL4 open source software tool~\cite{HOL4,DBLP:conf/tphol/SlindN08}, which was developed initially at the University of Cambridge, but now by an international team.
@@ -220,6 +221,7 @@ We formalize the input stream as a function of time: $D\;t$ denotes the input va
 In addition, the terms in the above statement depend on this stream of input counts.
 With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{true\_sum}\;D\;n\;t\pm\text{acceptable error}\]
 
+\subsection{Formal Model of SRS}
 The first natural step to prove the correctness statement is to build a logical model of the SRS structure.
 We model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
 
@@ -335,7 +337,7 @@ The function $\mathsf{delay\_sum}\;n$ represents the cumulative delay of the pre
 For example, $\mathsf{delay\_sum}\;4 = \mathsf{delay}\;3 + \mathsf{delay}\;1 + \mathsf{delay}\;0 = 2 +1 +1 = 4$.
 The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th slice last updated, and $\mathsf{exact}\;D\;n\;x\;t$ computes the exact sum of consecutive input counts, without delay, that $\mathsf{output}\;D\;n\;x\;t$ is supposed to approximate.
 
-
+\subsection{Theorems about the Model}
 Our central result equates the output of a slice to a sum of consecutive input counts.
 More precisely, it says that if slice $n$ was just updated, then the output at tap $x$ is equal to the sum of $((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)$ input values, starting from the input $\mathsf{delay\_sum}\;n$ time steps ago.
 
