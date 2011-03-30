@@ -117,17 +117,15 @@ Each BLETC card also provides data to the Collimation system for the correct ali
   \label{fig:RS-basic}
 \end{figure}
 
-Beam losses can happen either in a single cycle of the beam in the tunnel, with a sudden beam loss, or in progressive losses during numerous cycles.
+Beam losses can happen at different rates, compared to the number of cycles of the beam around the tunnel.
 One-cycle failures are called \emph{ultra-fast} losses.
-Multi-cycle losses can be divided between \emph{very fast} losses those which happen in less than 10 ms, \emph{fast} losses which happen in more than 10 ms and \emph{steady} losses, where the beam is lost over one second or more~\cite{Schmidt-ICFA}.
+Multi-cycle losses can be classified as: \emph{very fast} losses, which happen in less than 10 ms; \emph{fast} losses, which happen between 10 ms and 1 s; and, \emph{steady} losses, where the beam is lost over one second or more~\cite{Schmidt-ICFA}.
 
-
-The processing of the data collected by the detectors involves a proper analysis of the loss patterns over time and a proper account of the energy of the beam.
-The procedure for the data processing is based on the idea that a constantly updated moving window can be kept by adding to a register the incoming newest value and subtracting its oldest value (see Figure~\ref{fig:RS-basic}).
-The number of values that are kept under the window defines the integration time it represents.
-The ideal strategy is to have an infinite number of constantly updated moving windows with various lengths to cover the whole time region from 40 micro-seconds (the data arrival rate to BLETC card)  to 100 seconds for detecting ultra-fast losses to steady losses, respectively.
-Such an implementation is not feasible due to the limited amount of resources.
-Therefore, given the tolerance acceptable for quench prevention, the quench threshold versus loss time curve is approximated by a minimum number of steps that fulfill this tolerance.
+Processing the data collected by the detectors, referred to as \emph{count} values, involves an analysis of the loss pattern over time, accounting for the energy of the beam.
+The processing procedure is based on the idea that a constantly updated moving window can be maintained in an accumulator by adding the incoming (newest) value and subtracting the oldest value (see Figure~\ref{fig:RS-basic}).
+The number of values in the window is its \emph{integration time}.
+Ideally, we would have an infinite number of windows with lengths covering the whole spectrum of times from 40 micro-seconds (the rate at which count values enter a BLETC card) to 100 seconds, for detecting all losses from ultra-fast up to steady.
+To approximate this ideal with finite resources, the BLMS is given the tolerance acceptable for quench prevention, and the quench threshold versus loss time curve is approximated by the minimum number of windows that meet the tolerance.
 
 \begin{figure}[t]
   \centering \includegraphics{SRS-basic.eps}
@@ -135,21 +133,23 @@ Therefore, given the tolerance acceptable for quench prevention, the quench thre
   \label{fig:SRS-basic}
 \end{figure}
 
-
-In order to construct long moving windows, it is required to keep long histories of received data, referred to as \emph{count} values.
-The technique employed to reach long integration periods with relatively small in length shift registers uses consecutive storage of sums of the counts.
-Instead of storing all values needed for the sum, this technique stores successively parts of the total sum using only a fraction of the otherwise needed memory space.
+Long moving windows, that is, windows with large integration times, are required, which means keeping long histories of received count values.
+To accomplish this goal with relatively narrow shift registers, the SRS uses
+consecutive storage of sums of counts.
+Instead of storing all the values needed for a sum, the SRS accumulates many values as a partial sum, thereby using only a fraction of the memory space.
+The partial sums for a window with a large integration time are chosen so that they also serve as the sums calculated by a window with a smaller intergration time.
 This technique works by feeding the sum of one shift register's contents, every time its contents become completely updated, to the input of another shift register (see Figure~\ref{fig:SRS-basic}).
-By cascading more of these elements, very long moving windows could be constructed with significantly small memory space.
-The above scheme is the basis for the SRS implementation in BLETC.
+By cascading shift registers like this, very long moving windows can be constructed using a significantly small amount of memory.
+This scheme is the basis for the SRS implementation in each BLETC.
 
-SRS implementation minimizes the resource usage by using the already calculated running sums in order to calculate bigger in length running sums without the need of extra summation points.
+The SRS implementation minimizes resource usage by using smaller, previously calculated, running sums in the calculation of larger, later running sums, which therefore do not need extra summation values to be stored.
 In addition, it makes use of multipoint shift registers that are configured to give intermediate outputs, referred to as \emph{taps}.
-The taps provide data outputs at certain points in the shift register chain thus contribute towards the efficient use of resources.
+The taps provide data outputs at certain points in the shift register chain, thus contributing to the efficient use of resources.
 
-As in the SRS implementation the sum of one shift register's content is fed to the input of another shift register, the optimal achievable latency in the response of each stage is equal to the refreshing time of the preceding shift registers, i.e. the time needed to completely update its contents.
-The \emph{read delay} signal (see Figure~\ref{fig:SRS-basic}) of each shift register holds a delay equal to this latency to guarantee the correct operation.
-Thus, the delay is every time equal to the preceding shift register's delay multiplied by the elements planned to be used in the sum.
+In the SRS implementation, one shift register's sum is fed as input to another shift register.
+Therefore, the best achievable latency of each shift register is equal to the refreshing time of all preceding shift registers, i.e. the time needed to completely update their contents.
+The \emph{read delay} signal (see Figure~\ref{fig:SRS-basic}) of each shift register holds a delay equal to this latency to ensure correct operation.
+The delay is equal to the preceding shift register's delay multiplied by the number of cells to be used in the sum.
 
 \begin{figure}[t]
   \centering \scalebox{0.65}{ \includegraphics{srs-modified.eps}}
@@ -157,11 +157,10 @@ Thus, the delay is every time equal to the preceding shift register's delay mult
   \label{fig:srs}
 \end{figure}
 
+Figure~\ref{fig:srs} shows the implementation of SRS in a BLETC.
+It consists of 6 \emph{slices}, where each slice computes two running sums (denoted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
 
-Figure~\ref{fig:srs} shows the implementation of SRS in BLETC card.
-It consists of 6 \emph{slices}, where each slice computes two running sums (noted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
-
-As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reach the 100 second upper integration limit requested by the specifications.
+As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reach the 100 second integration limit requested by the specifications.
 
 \begin{figure}[t]
   \centering \scalebox{0.8}{ \includegraphics{multi-rs.eps}}
@@ -192,7 +191,6 @@ As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reac
 \caption{{\bf<missing caption>}
 \label{fig:example-bakery}}
 \end{table}
-
 
 \section{Verification of the SRS Implementation using HOL4}
 \label{sec-verification}
