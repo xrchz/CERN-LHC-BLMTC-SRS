@@ -281,7 +281,6 @@ The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th sl
 
 
 \begin{figure}[t]
-\label{fig:definitions}
 \begin{tabular}{ll}
 $\;\mathsf{tap}\;0\;0=0\quad\quad$ & $\mathsf{tap}\;0\;x=0$\\
 $\;\mathsf{tap}\;1\;0=1-1\quad$ &  $\mathsf{tap}\;1\;x=2-1$\\
@@ -318,13 +317,13 @@ $\;\mathsf{delay}\;0=1$\\
 \end{tabular}
 \vspace{2ex}
 \caption{
+\label{fig:definitions}
 Definitions of the HOL functions comprising our model of the SRS structure.
 \(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}.
 Slice $0$ is a virtual slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.}
 \end{figure}
 
 \begin{figure}[t]
-\label{fig:auxdefs}
 \begin{tabular}{l}
 $\mathsf{delay\_sum}\;0=0$\\
 $\mathsf{delay\_sum}\;n=\mathsf{delay}\;n'+\mathsf{delay\_sum}\;n'\quad\text{where $(n',\_)=\mathsf{input}\;n$}$\\[1ex]
@@ -337,6 +336,7 @@ $\mathsf{exact}\;D\;n\;x\;t=\displaystyle\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\ti
 \end{tabular}
 \vspace{2ex}
 \caption{
+\label{fig:auxdefs}
 Definitions of auxiliary HOL functions used while proving theorems about the model of the SRS structure.}
 \end{figure}
 
