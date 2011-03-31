@@ -437,11 +437,17 @@ It is likely that the configuration of the slices and shift registers will need 
 Thus, the parameterization in our model was crucial to make it applicable to the future upgrades.
 
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
+There are three different sources of complexity that are inherent elements of understanding why the SRS structure implements its intended behavior:
+(a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any previous slice or even the global input;
+(b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on its position of the shift register in the layered structure of the SRS;
+(c) arithmetic relationships that are not always intuitively apparent at first glance.
+While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is matter of grappling with all three sources of complexity at once. {\bf Ramana can you add an example here?}
+
 To understand the structure of the SRS, we started with a model of a simplified structure, which had a more regular arrangements of the slices and ignored the middle taps, and proceeded to a model which is closer to the SRS implementation in BLMS.
 In addition, we used a basic spreadsheet simulation model for a few slices for sanity testing the correctness formulae.
 However, some sanity tests related to Theorem 1 led us astray when we did not know the correct formula for that theorem.
 The formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only on large values of $n$.
-The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the intricate details of the SRS structure and behavior.
+The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the intricate details of the SRS structure and behavior. {\bf not sure if we should keep this paragraph after adding the previous one}
 
 The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
 This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
