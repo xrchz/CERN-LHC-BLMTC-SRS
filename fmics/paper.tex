@@ -398,12 +398,12 @@ The function $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$
 Since $\mathsf{RS}$ is similarly defined in terms of the $\mathsf{output}$, Theorem~\ref{output_eq_exact} establishes a relationship between the values of $\mathsf{RS}$ and of $\mathsf{true\_sum}$.
 
 We formulate the difference between the $\mathsf{RS}$ values and their corresponding $\mathsf{true\_sum}$s, caused by the delay, as $\mathsf{error}$.
-To meet the tolerance acceptable for quench prevention, the specification of SRS requires a bound on the value of this $\mathsf{error}$.
-Considering any possible input stream to SRS, such a bound on the $\mathsf{error}$ value will be infinite.
+To meet the tolerance acceptable for quench prevention, the SRS specification requires a bound on this $\mathsf{error}$.
+Without restricting the input stream, the $\mathsf{error}$ is unbounded\footnote{For any bound, we can construct an input stream that causes the bound to be exceeded by, for example, having a sequence of zeroes followed by a sequence of count values much higher than the bound.}.
 However, according to extensive experimental analysis, the beam loss over time follows some patterns.
-Thus, formulating some characterization of the input stream to SRS structure as constraints on $D$, will help defining a tighter bound on the $\mathsf{error}$.
-One of these constraints is a maximum value on the difference between two consecutive count values.
-This value can be inferred from the highest quench level thresholds.
+By formulating some characterization of the input stream as constraints on $D$, we can recover a bound on the $\mathsf{error}$.
+One of these constraints is a maximum value for the difference between two consecutive count values.
+This ``maximum jump size'' can be inferred from the highest quench level thresholds.
 
 Under such a constraint, we have proved a preliminary result bounding the error of $\mathsf{output}\;D\;n\;x\;t$ compared to $\mathsf{exact}\;D\;n\;x\;t$.
 \begin{theorem}\label{max_error}
