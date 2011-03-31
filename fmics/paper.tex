@@ -223,7 +223,8 @@ With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \c
 
 \subsection{Formal Model of SRS}
 The first step to prove the correctness statement is to build a logical model of the SRS structure.
-We model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL\footnote{Here, use of acronym HOL refers to the formal notation that can be parsed by HOL4. In this paper, we use a slightly variant of this notation to improve readability.} that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
+We model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL\footnote{The acronym HOL refers to higher-order logic rather than the software tool HOL4.
+We use the tool to define a function in the logic.}
 
 Our model is both a simplification and a generalization of the actual structure of SRS in BLMS in the following sense.
 We model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
