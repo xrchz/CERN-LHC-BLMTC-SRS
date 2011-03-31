@@ -415,8 +415,12 @@ But if at each step the maximum difference is $k$, then the total difference is 
 (We use the fact that $\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n$ and, in general, that $a\operatorname{mod}b<b$.)
 \end{proof}
 
-Our HOL4 proof script for verification of SRS consists of 800 lines of code. We proved 69 theorems, including 14 definitions. In addition, we had to prove approximately 30 generic theorems that were added to HOL4 libraries during this work.
-
+The proof of Theorem~\ref{max_error} is straightforward when summarized, as above.
+However, as for all of our theorems, there are some tricky details underlying the high-level summary.
+For example, \emph{proving} that the maximum difference between the end terms in a sum is the maximum difference between consecutive elements multiplied by the number of terms requires an inductive argument.
+Our HOL4 proof script for verification of SRS consists of 750 lines of code.
+We proved 69 theorems, including 14 definitions.
+In addition, we had to prove approximately 30 generic theorems that were added to HOL4 libraries during this work.
 
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
