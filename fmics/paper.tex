@@ -425,7 +425,7 @@ In addition, we had to prove approximately 30 generic theorems that were added t
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
 
-We described a case study in which HOL4 theorem prover is used to formally verify properties of the SRS structure within the LHC machine protection system.
+We described a case study in which the HOL4 theorem prover is used to formally verify properties of the SRS structure within the LHC machine protection system.
 In this case study, we built a parameterized model of the SRS structure and showed that its behavior is correct with respect to its specification.
 It is likely that the configuration of the slices and shift registers will need to change in the future as the understanding of the LHC and its weaknesses increases to accommodate more targeted protections
 Thus, the parameterization in our model was crucial to make it applicable to the future upgrades.
@@ -434,18 +434,18 @@ One of our main challenges in this effort was building the formal model and form
 To understand the structure of the SRS, we started with a model of a simplified structure, which had a more regular arrangements of the slices and ignored the middle taps, and proceeded to a model which is closer to the SRS implementation in BLMS.
 In addition, we used a basic spreadsheet simulation model for a few slices for sanity testing the correctness formulae.
 However, some sanity tests related to Theorem 1 led us astray when we did not know the correct formula for that theorem.
-Because the formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only on large values of $n$.
-The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted on us providing the justification and compelled us to clarify the intricate details of the SRS structure and behavior.
+The formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only on large values of $n$.
+The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the intricate details of the SRS structure and behavior.
 
 The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
 This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
-Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have the maximum 20\% relative error.
+Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have a maximum 20\% relative error.
 On the contrary, the results in this paper apply to all possible input steams, not just a limited number of input stream scenarios performed at CERN.
 
-But, the error bound given in Theorem~\ref{max_error} does not satisfy the maximum 20\% relative error.
+But, the error bound given in Theorem~\ref{max_error} does not satisfy the maximum 20\% relative error bound.
 In order to make this bound tighter, we need to provide more characterization of the input as constraints on $D$.
 Due to the nature of the problem, such a characterization of input is not trivial.
-Therefore, the SRS structure in LHC is an interesting example in which the formal verification does not completely replace conventional verification approaches such as simulation.
+Therefore, the SRS structure in LHC is an interesting example in which formal verification does not completely replace conventional verification approaches such as simulation.
 
 HOL4 has highly developed tools  for reasoning about bitstrings (words, bytes etc).
 One possible future research direction os to refine the natural number model to a more hardware-realistic one and even verifying a model extracted from the HDL used to synthesize the FPGA.
