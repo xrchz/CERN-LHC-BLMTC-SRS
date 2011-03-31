@@ -391,8 +391,8 @@ For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n>0$ at all
 The proof follows from Theorem~\ref{output_input_at_update_times}, using the definition of $\mathsf{exact}$, and the fact that $\mathsf{output}\;D\;n\;x\;t$ has the same value as at the last update time.\qed
 \end{proof}
 
-The function $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$, that is $\mathsf{true\_sum}\;D\;n\;t = \mathsf{exact}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)\;t$.
-Since $\mathsf{RS}$ is also similarly defined in terms of the $\mathsf{output}$, Theorem~\ref{output_eq_exact} establishes a relationship between the values of the $\mathsf{RS}$ and $\mathsf{true\_sum}$.
+The function $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$, namely, $\mathsf{true\_sum}\;D\;n\;t = \mathsf{exact}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)\;t$.
+Since $\mathsf{RS}$ is similarly defined in terms of the $\mathsf{output}$, Theorem~\ref{output_eq_exact} establishes a relationship between the values of $\mathsf{RS}$ and of $\mathsf{true\_sum}$.
 
 We formulate the difference between the $\mathsf{RS}$ values and their corresponding $\mathsf{true\_sum}$s, caused by the delay, as $\mathsf{error}$.
 In order to define a maximum bound on the $\mathsf{error}$, we had to formulate some characterization of the input stream to the SRS structure as constraints on $D$.
