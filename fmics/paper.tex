@@ -92,7 +92,7 @@ In the following, we briefly describe each of the four processing blocks on a BL
 
 \emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
 Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by the minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.
-In order to achieve the \emph{dynamic range} (domain of variation of losses) requested by the specification, the detectors use both Current-to-Frequency converter and Analogue to Digital convertor circuitries.
+In order to achieve the \emph{dynamic range} (domain of variation of losses) required by the specification, the detectors use both Current-to-Frequency converter and Analogue to Digital convertor circuitries.
 The data processing block merges these two types of data coming from a detector so as to send a single count value to the SRS block.
 The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 
@@ -157,9 +157,9 @@ The delay is equal to the preceding shift register's delay multiplied by the num
 \end{figure}
 
 Figure~\ref{fig:srs} shows the implementation of SRS in a BLETC.
-It consists of 6 \emph{slices}, where each slice computes two running sums (denoted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
+It consists of 6 \emph{slices}, where each slice computes two running sums (e.g., slice 4 computes the fourth and fifth running sums: RS6 and RS7) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
 
-As shown in Table~\ref{fig:SRS-table}, cascading 6 slices is enough to reach the 100 second integration limit requested by the specifications given by the scientists and engineers who designed the machine protection strategy for the LHC.
+As shown in Table~\ref{fig:SRS-table}, cascading 6 slices is enough to reach the 100 second integration limit required by the specifications given by the scientists and engineers who designed the machine protection strategy for the LHC.
 
 \begin{figure}[t]
   \centering \scalebox{0.8}{ \includegraphics{multi-rs.eps}}
@@ -212,7 +212,7 @@ While offering less ``push-button'' automation than other kinds of formal verifi
 Our goal is to build a generic model of the SRS structure, and to prove that it satisfies its specification, that it calculates approximate running sums of received count values within acceptable error margins.
 Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the $n$-th output of the SRS structure, which is supposed to compute a sum of received count values, and let $\mathsf{true\_sum}\;n$ denote this sum.
 The multi-layered structure of the SRS and the read delay of each shift register result in the outputs of SRS being delayed from the $\mathsf{true\_sum}$ values.
-A sketch of the desired correctness statement is \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{true\_sum}\; n \pm\text{acceptable error}\]
+A sketch of the desired correctness statement is: \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{true\_sum}\; n \pm\text{acceptable error}\]
 Although Figure~\ref{fig:srs} suggests that the SRS structure has only twelve outputs  (i.e. $0\leq{n}\leq11$), we obtain a more generic result (that is useful in future upgrades of the system) by proving the correctness of the above statement for all values of $n$.
 
 To make the above correctness statement more precise, we need to include the notion of time.
@@ -229,8 +229,11 @@ We use the tool to define a function in the logic.}
 Our model is both a simplification and a generalization of the actual structure of SRS in BLMS in the following sense.
 We model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
 This parameterization makes the model more likely to be applicable to future versions of the system, but also fits more naturally into HOL than would a finite model.
-Our model of SRS is at a level of abstraction above the details of circuity that implements basic arithmetic operations.
-We use natural numbers throughout, rather than, for example, finite words that would more accurately model count values.{\bf Do we meed to give a reason why we chose this level of abstraction?}
+We defined our formal model to be at a level of abstraction above the details of circuity that implements basic arithmetic operations.
+We use natural numbers throughout, rather than, for example, finite words that would more accurately model count values.
+This level of abstraction is sufficient for the SRS correctness properties we are interested in.
+A separate verification effort can focus on showing that a more realistic model of hardware circuitry accurately implements natural number arithmetic.
+
 
 \begin{table}[t]
 \begin{tabular}{lp{0.8\textwidth}}
@@ -395,9 +398,12 @@ The function $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$
 Since $\mathsf{RS}$ is similarly defined in terms of the $\mathsf{output}$, Theorem~\ref{output_eq_exact} establishes a relationship between the values of $\mathsf{RS}$ and of $\mathsf{true\_sum}$.
 
 We formulate the difference between the $\mathsf{RS}$ values and their corresponding $\mathsf{true\_sum}$s, caused by the delay, as $\mathsf{error}$.
-In order to define a maximum bound on the $\mathsf{error}$, we had to formulate some characterization of the input stream to the SRS structure as constraints on $D$.
-One of these constraints is a bound on the difference between two consecutive count values.
-Such a bound can be inferred from the highest quench level thresholds.
+To meet the tolerance acceptable for quench prevention, the specification of SRS requires a bound on the value of this $\mathsf{error}$.
+Considering any possible input stream to SRS, such a bound on the $\mathsf{error}$ value will be infinite.
+However, according to extensive experimental analysis, the beam loss over time follows some patterns.
+Thus, formulating some characterization of the input stream to SRS structure as constraints on $D$, will help defining a tighter bound on the $\mathsf{error}$.
+One of these constraints is a maximum value on the difference between two consecutive count values.
+This value can be inferred from the highest quench level thresholds.
 
 Under such a constraint, we have proved a preliminary result bounding the error of $\mathsf{output}\;D\;n\;x\;t$ compared to $\mathsf{exact}\;D\;n\;x\;t$.
 \begin{theorem}\label{max_error}
@@ -416,7 +422,7 @@ But if at each step the maximum difference is $k$, then the total difference is 
 \end{proof}
 
 The proof of Theorem~\ref{max_error} is straightforward when summarized, as above.
-However, as for all of our theorems, there are some tricky details underlying the high-level summary.
+However, as for all of our theorems, there are several non-trivial details underlying the high-level summary provided.
 For example, \emph{proving} that the maximum difference between the end terms in a sum is the maximum difference between consecutive elements multiplied by the number of terms requires an inductive argument.
 Our HOL4 proof script for verification of SRS consists of 750 lines of code.
 We proved 69 theorems, including 14 definitions.
@@ -449,6 +455,11 @@ Therefore, the SRS structure in LHC is an interesting example in which formal ve
 
 HOL4 has highly developed tools  for reasoning about bitstrings (words, bytes etc).
 One possible future research direction os to refine the natural number model to a more hardware-realistic one and even verifying a model extracted from the HDL used to synthesize the FPGA.
+
+The general method (I think Mike mentioned) of subjecting a formal
+model to "obviousness" tests, collecting small theorems about it along
+the way, seems to be a good one.
+
 
 
 
