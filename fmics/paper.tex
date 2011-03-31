@@ -29,14 +29,14 @@ The use of a formal method has compelled the stakeholders to clarify intricate d
 \section{Introduction}
 
 The Large Hadron Collider (LHC) at the European Organization for Nuclear Research (CERN) is a high-energy particle accelerator.
-It provides head-on collisions of protons at a center of a mass energy of 14 TeV for high-energy particle physics research.
+It is designed to provide head-on collisions of protons at a center of a mass energy of 14 TeV for high-energy particle physics research.
 In order to reach the required magnetic field strengths, the LHC has superconducting magnets cooled with superfluid helium.
 Due to the high energy stored in the circulating beams (700 MJ), if even a small fraction of the beam particles deposit their energy in the equipment, they can cause the superconductors to transition to their normal conducting state.
 Such a transition is called a \emph{quench}.
 The consequences of a quench range from several hours of downtime (for cooling the magnets down to their superconducting state), to months of repairs (in the case of equipment damage).
 
 The main strategy for protecting the LHC is based on the Beam Loss Monitoring System (BLMS), which triggers the safe extraction of the beams if particle loss exceeds thresholds that are likely to result in a quench.
-At each cycle of the beams around the LHC, the BLMS records and processes several thousands of data points to decide whether the beams should be permitted to continue circulating or whether their safe extraction should be triggered.
+At each cycle of the two counter-rotating beams around the 27 km tunnel of LHC, the BLMS records and processes several thousands of data points to decide whether the beams should be permitted to continue circulating or whether their safe extraction should be triggered.
 The processing includes analysis of the loss pattern over time and of the energy of the beam.
 
 The BLMS must respond to dangerous losses quickly, but determining whether losses are dangerous may require analysis of loss data recorded over a long period of time.
@@ -47,8 +47,7 @@ The SRS component is implemented in hardware, in order to be fast enough to work
 
 The SRS component has a complex structure and the correctness of its behaviour is critical for safe and productive use of the LHC.
 Any error in the SRS implementation would either compromise the availability of the LHC (unnecessary request for beam dump) or safety (not triggering a necessary beam dump).
-The current approach for analyzing the SRS implementation is simulation of its behavior on sample streams of input~\cite{}.
-{\bf one more sentence needs to be added on the current verification process}
+The current approach for analyzing the SRS implementation relies on the simulation of its behavior on sample streams of input for different loss scenarios~\cite{Chris-thesis}.
 
 In this paper, we describe a formal verification approach based on logical deduction for analyzing the SRS implementation.
 Our high level proof strategy takes advantage of the regular structure of the SRS, which consists of multiple layers of shift registers and some simple arithmetic hardware.
@@ -58,13 +57,13 @@ This regularity serves as a basis for inductive reasoning, which makes the amoun
 
 Compared to test-based methods, like simulation, formal methods not only offer much higher confidence in the correctness of a system's behavior, but also help improve our understanding of its specification.
 One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team of different backgrounds and expertise.
-Our confidence in the SRS design ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool.
+Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool.
 In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
 The most important use of HOL4  was its role as an ``implacable skeptic" that compelled us to really understand the details~\cite{rushby}.
 
-Our contributions in this paper are: a formal model of the SRS component of the BLMS, and commentary on the process and outcomes of taking a formal approach.
+Our contributions in this paper are: a formal model of the SRS component of the BLMS, a formal analysis of its behavior, and commentary on the process and outcomes of taking a formal approach.
 We give an overview of the BLMS in Section~\ref{sec-BLM}, and describe the SRS component in particular in Section~\ref{sec-SRS}.
-In Section~\ref{sec-verification} we describe our approach to formal verification, and present the formal model and results.
+In Section~\ref{sec-verification}, we describe our approach to formal verification, and present the formal model and results.
 Finally, we reflect on the process, summarising lessons learned and future directions, in Section~\ref{sec-conclusions}.
 
 \section{BLMS Overview}
@@ -76,35 +75,36 @@ Finally, we reflect on the process, summarising lessons learned and future direc
   \label{fig:BLETC}
 \end{figure}
 
-The purpose of the BLMS is to measure particle loss, and to request beam extraction if the loss level indicates that a quench is likely to occur.
-The physical principle underlying particle loss measurement \cite{Dehning-IPAC,Chris-FPGA} is the detection of energy deposited by \emph{shower particles} in \emph{ionization chambers}.
-There are around 4000 ionization chambers strategically placed on the sides of the magnets all around the LHC tunnel underground.
-The ionization chambers produce an electrical signal, based on the recording of shower particles, and transmit the signal to \emph{tunnel cards}.
-Tunnel cards, which are implemented by radiation-tolerant electronics, digitize the data and transmit the digitized data to the surface above the tunnel using optical links.
-At the surface, data processing cards named \emph{BLETCs} receive the data and decide whether or not the beam should be permitted to continue circulating.
-Each tunnel card receives data from eight ionization chambers, and each BLETC receives data from two tunnel cards.
-A BLETC provides data to the Logging, Post Mortem, and Collimation systems that drive on-line displays in the control room, perform long-term storage for offline analysis, and setup the collimators automatically {\bf What is a collimator? Why is it necessary to mention all this?}.
-Due to demanding performance requirements, BLETCs are implemented on FPGAs, which include the resources needed to design complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes.
+The main purpose of the BLMS is to measure particle loss, and to request beam extraction if the loss level indicates that a quench is likely to occur.
+The physical principle underlying particle loss measurement \cite{Dehning-IPAC,Chris-FPGA} is the detection of energy deposited by \emph{secondary shower particles} using specially-designed detectors called  \emph{ionization chambers}.
+There are approximately 4000 ionization chambers strategically placed on the sides of the magnets all around the LHC tunnel underground.
+The ionization chambers produce an electrical signal, based on the recording of shower particles, which are readout by \emph{acquisition cards}.
+Acquisition cards, located also in the tunnel and thus implemented by radiation-tolerant electronics, acquire and digitize the data and transmit the digitized data to the surface above the tunnel using optical links.
+At the surface, data processing cards named \emph{BLETCs} receive the data and decide whether or not the beam should be permitted to be injected or continue circulating.
+Each acquisition card receives data from eight ionization chambers, and each BLETC receives data from two acquisition cards.
+A BLETC provides data to the Logging, Post Mortem, and Collimation systems that drive on-line displays in the control room, perform long-term storage for offline analysis, and setup the collimators automatically.
+Due to demanding performance requirements, BLETCs are implemented on FPGAs, which include the resources needed to implement complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes.
+
 Figure~\ref{fig:BLETC} shows a block diagram of the processes on a BLETC FPGA.
 In the following, we briefly describe each of the four processing blocks on a BLETC card.
 
-\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives the data direct from the tunnel, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms.{\bf references for these algorithms?}
+\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives the data directly from the acquisition card, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms~\cite{CRC,8B10B}.
 
 \emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
-Given the tolerance acceptable for quench prevention, the loss level versus loss duration is approximated by sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.{\bf not entirely sure what this sentence means}
-In order to achieve the \emph{dynamic range} (domain of variation of losses) requested by the specification, the detectors use both Current-to-Frequency converters and ADC circuitries.{\bf ADC?}
-The data processing block merges these two types of data coming from the detector so as to send a single count value to the SRS block.
+Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by a minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.
+In order to achieve the \emph{dynamic range} (domain of variation of losses) requested by the specification, the detectors use both Current-to-Frequency converter and Analogue to Digital convertor circuitries.
+The data processing block merges these two types of data coming from a detector so as to send a single count value to the SRS block.
 The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 
-\emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold for the beam energy reading at that moment.
+\emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold that was chosen by the beam energy reading at that moment.
 The comparator initiates a beam dump request if any of the running sums is higher than its corresponding threshold.
 Beam dump requests are forwarded to the Beam Interlock System which initiates the beam dump.
 There are 12 running sums calculated for each 16-detector channel allocated to a BLETC card.
 The beam energy information is scaled to 32 levels (0.45 to 7 TeV) and each processing module holds data only for those 16 connected detectors.
-Thus a total of 6,144 threshold values need to be held on each card.
+Thus, a total of 6,144 threshold values need to be held on each card.
 
 \emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, the BLMS stores the loss measurement data.
-This data is sent over the VME-bus {\bf what's the VME-bus?} for online viewing and storage by the Logging and Post-Mortem systems.
+This data is sent to Logging and Post-Mortem systems for online viewing and storage.
 For the purpose of supervision, the BLMS drives an online event display to show error and status information recorded by the tunnel electronics and the RCC process as well as the maximum loss rates seen by the running sums.
 Each BLETC card also provides data to the Collimation system for the correct alignment and setup of the collimators.
 
@@ -124,8 +124,8 @@ Multi-cycle losses can be classified as: \emph{very fast} losses, which happen i
 Processing the data collected by the detectors, referred to as \emph{count} values, involves an analysis of the loss pattern over time, accounting for the energy of the beam.
 The processing procedure is based on the idea that a constantly updated moving window can be maintained in an accumulator by adding the incoming (newest) value and subtracting the oldest value (see Figure~\ref{fig:RS-basic}).
 The number of values in the window is its \emph{integration time}.
-Ideally, we would have an infinite number of windows with lengths covering the whole spectrum of times from 40 micro-seconds (the rate at which count values enter a BLETC card) to 100 seconds, for detecting all losses from ultra-fast up to steady.
-To approximate this ideal with finite resources, the BLMS is given the tolerance acceptable for quench prevention, and the quench threshold versus loss time curve is approximated by the minimum number of windows that meet the tolerance.
+Ideally, we would have an unbounded number of windows with lengths covering the whole spectrum of times from 40 micro-seconds (the rate at which count values enter a BLETC card) to 100 seconds, for detecting all losses from ultra-fast up to steady.
+To approximate this ideal with finite resources, the BLMS is given the tolerance acceptable for quench prevention, and the quench threshold versus loss duration curve is approximated by the minimum number of windows that meet the tolerance.
 
 \begin{figure}[t]
   \centering \includegraphics{SRS-basic.eps}
@@ -134,9 +134,8 @@ To approximate this ideal with finite resources, the BLMS is given the tolerance
 \end{figure}
 
 Long moving windows, that is, windows with large integration times, are required, which means keeping long histories of received count values.
-To accomplish this goal with relatively narrow shift registers, the SRS uses
-consecutive storage of sums of counts.
-Instead of storing all the values needed for a sum, the SRS accumulates many values as a partial sum, thereby using only a fraction of the memory space.
+To accomplish this goal with relatively narrow shift registers, the SRS uses consecutive storage of sums of counts.
+Instead of storing all the values needed for a sum, the SRS accumulates many values as a partial sum, thereby using only a fraction of the otherwise needed memory space.
 The partial sums for a window with a large integration time are chosen so that they also serve as the sums calculated by a window with a smaller intergration time.
 This technique works by feeding the sum of one shift register's contents, every time its contents become completely updated, to the input of another shift register (see Figure~\ref{fig:SRS-basic}).
 By cascading shift registers like this, very long moving windows can be constructed using a significantly small amount of memory.
@@ -147,23 +146,24 @@ In addition, it makes use of multipoint shift registers that are configured to g
 The taps provide data outputs at certain points in the shift register chain, thus contributing to the efficient use of resources.
 
 In the SRS implementation, one shift register's sum is fed as input to another shift register.
-Therefore, the best achievable latency of each shift register is equal to the refreshing time of all preceding shift registers, i.e. the time needed to completely update their contents.
+Therefore, the best achievable latency of each shift register is equal to the refreshing time of its preceding shift register, i.e., the time needed to completely update its contents.
 The \emph{read delay} signal (see Figure~\ref{fig:SRS-basic}) of each shift register holds a delay equal to this latency to ensure correct operation.
 The delay is equal to the preceding shift register's delay multiplied by the number of cells to be used in the sum.
 
 \begin{figure}[t]
   \centering \scalebox{0.65}{ \includegraphics{srs-modified.eps}}
-   \caption{The block diagram showing the Successive Running Sums implementation in BLETC card.}
+   \caption{The block diagram showing the implementation of SRS in BLETC.}
   \label{fig:srs}
 \end{figure}
 
 Figure~\ref{fig:srs} shows the implementation of SRS in a BLETC.
 It consists of 6 \emph{slices}, where each slice computes two running sums (denoted by RS) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
 
-As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reach the 100 second integration limit requested by the specifications.
+As shown in Table~\ref{fig:SRS-table}, cascading 6 slices is enough to reach the 100 second integration limit requested by the specifications given by the scientists and engineers who conceived the machine protection strategy for the LHC.
 
 \begin{figure}[t]
   \centering \scalebox{0.8}{ \includegraphics{multi-rs.eps}}
+  \vspace{-0.1in}
    \caption{The block diagram showing the implementation of each slice.}
   \label{fig:slice}
 \end{figure}
@@ -187,9 +187,9 @@ As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reac
 524288 & 2097.52 & 16384 & 655.36 & slice 6 &RS10 \\\hline
 2097152 & 83886.08 & 16384 & 655.36 & slice 6 & RS11 \\\hline
 \end{tabular}
-\vspace{0.04in}
-\caption{{\bf<missing caption>}
-\label{fig:example-bakery}}
+\vspace{2ex}
+\caption{SRS configuration in BLETC.}
+\label{fig:SRS-table}
 \end{table}
 
 \section{Verification of the SRS Implementation using HOL4}
@@ -199,7 +199,7 @@ As shown in Table~\ref{fig:example-bakery}, cascading 6 slices is enough to reac
 Our formal verification effort uses mechanised logical deduction, or \emph{theorem proving}.
 In general, theorem proving is used to show that desired properties of a system are logically implied by a formal model of the system.
 We use the HOL4 open source software tool~\cite{HOL4,DBLP:conf/tphol/SlindN08}, which was developed initially at the University of Cambridge, but now by an international team.
-HOL4 enables the construction of theories in higher-order logic~\cite{DBLP:journals/jsyml/Church40}, a formal logic with a similar expressive power to set theory that is widely used for formalising hardware and software models and statements about them.
+HOL4 enables the construction of theories in Higher-Order Logic (HOL)~\cite{DBLP:journals/jsyml/Church40}, a formal logic with a similar expressive power to set theory that is widely used for formalising hardware and software models and statements about them.
 The implementation of HOL4 uses Milner's LCF approach~\cite{Milner:1972:LCF:891954}: a small ``kernel'' implementing the primitive rules of the logic, and convenient derived rules and tactics implemented in terms of the kernel.
 Every theorem ultimately comes from the kernel, and this fact provides high assurance of the logical soundness of the verification results obtained using the system.
 
@@ -222,19 +222,16 @@ In addition, the terms in the above statement depend on this stream of input cou
 With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{true\_sum}\;D\;n\;t\pm\text{acceptable error}\]
 
 \subsection{Formal Model of SRS}
-The first natural step to prove the correctness statement is to build a logical model of the SRS structure.
-We model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
+The first step to prove the correctness statement is to build a logical model of the SRS structure.
+We model each building block of the SRS structure that holds a count value -- for example, each cell in each shift register -- as a function in HOL\footnote{Here, use of acronym HOL refers to the formal notation that can be parsed by HOL4. In this paper, we use a slightly variant of this notation to improve readability.} that takes the input stream and current time step as inputs and returns the value the corresponding building block holds at that time.
 
 Our model is both a simplification and a generalization of the actual structure of SRS in BLMS in the following sense.
 We model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
 This parameterization makes the model more likely to be applicable to future versions of the system, but also fits more naturally into HOL than would a finite model.
-We use natural numbers throughout, rather than, for example, finite words that would more accurately model count values.
+Our model of SRS is at a level of abstraction above the details of circuity that implements basic arithmetic operations.
+We use natural numbers throughout, rather than, for example, finite words that would more accurately model count values.{\bf Do we meed to give a reason why we chose this level of abstraction?}
 
 \begin{table}[t]
-\caption{
-Descriptions of the HOL functions comprising our model of the SRS structure.
-\label{tab:descriptions}
-}
 \begin{tabular}{lp{0.8\textwidth}}
 Function&Intended meaning\\
 \hline
@@ -247,6 +244,11 @@ Function&Intended meaning\\
 \(\mathsf{RS}\;D\;n\;t\)&The $n$-th running sum at time $t$, given input stream $D$.\\
 \(\mathsf{update\_time}\;n\;t\)&A boolean indicating whether $t$ is an update time for slice $n$.
 \end{tabular}
+\vspace{2ex}
+\caption{
+Descriptions of the HOL functions comprising our model of the SRS structure.
+\label{tab:descriptions}
+}
 \end{table}
 
 Table~\ref{tab:descriptions} lists the HOL functions comprising our model along with their intended meanings.
@@ -271,13 +273,14 @@ The output of each slice is computed every time the contents of its shift regist
 The content of each cell of a shift register, $\mathsf{SR}\;D\;n\;m\;t$  is also computed at every update time based on the value of its source.
 Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represents a small part of the SRS structure) and therefore verification against its intended meaning is relatively straightforward.
 
-\begin{figure}
-\caption{
-Definitions of the HOL functions comprising our model of the SRS structure.
-\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}.
-Slice $0$ is a fake slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.
-\vspace{2ex}
-\label{fig:definitions}}
+Figure~\ref{fig:auxdefs} shows the definition of a set of additional functions required to prove our main results.
+The function $\mathsf{delay\_sum}\;n$ represents the cumulative delay of the preceding shift registers of a slice.
+For example, $\mathsf{delay\_sum}\;4 = \mathsf{delay}\;3 + \mathsf{delay}\;1 + \mathsf{delay}\;0 = 2 +1 +1 = 4$.
+The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th slice last updated, and $\mathsf{exact}\;D\;n\;x\;t$ computes the exact sum of consecutive input counts, without delay, that $\mathsf{output}\;D\;n\;x\;t$ is supposed to approximate.
+
+
+\begin{figure}[t]
+\label{fig:definitions}
 \begin{tabular}{ll}
 $\;\mathsf{tap}\;0\;0=0\quad\quad$ & $\mathsf{tap}\;0\;x=0$\\
 $\;\mathsf{tap}\;1\;0=1-1\quad$ &  $\mathsf{tap}\;1\;x=2-1$\\
@@ -312,14 +315,15 @@ $\;\mathsf{delay}\;0=1$\\
 
 \multicolumn{2}{l}{$\;\mathsf{update\_time}\;n\;t\iff(t\operatorname{mod}\mathsf{delay}\;n=0)$}
 \end{tabular}
+\vspace{2ex}
+\caption{
+Definitions of the HOL functions comprising our model of the SRS structure.
+\(\mathsf{tap}\) and \(\mathsf{input}\) are defined to match Figure~\ref{fig:srs}.
+Slice $0$ is a virtual slice representing the SRS input; this enables a succinct definition of $\mathsf{source}$.}
 \end{figure}
 
-\begin{figure}
-\caption{
-Definitions of auxiliary HOL functions used while proving theorems about the model of the SRS structure.
+\begin{figure}[t]
 \label{fig:auxdefs}
-}
-\vspace{2ex}
 \begin{tabular}{l}
 $\mathsf{delay\_sum}\;0=0$\\
 $\mathsf{delay\_sum}\;n=\mathsf{delay}\;n'+\mathsf{delay\_sum}\;n'\quad\text{where $(n',\_)=\mathsf{input}\;n$}$\\[1ex]
@@ -330,12 +334,12 @@ $\quad\;\;\qquad\qquad\qquad\text{else }\mathsf{last\_update}\;n\;(t-1)\quad\tex
 
 $\mathsf{exact}\;D\;n\;x\;t=\displaystyle\sum_{m=0}^{((\mathsf{tap}\;n\;x)+1)\times(\mathsf{delay}\;n)}\begin{cases}0&t<m+1\\D\;(t-m-1)&\text{otherwise}\end{cases}$
 \end{tabular}
+\vspace{2ex}
+\caption{
+Definitions of auxiliary HOL functions used while proving theorems about the model of the SRS structure.}
 \end{figure}
 
-Figure~\ref{fig:auxdefs} defines a set of additional functions required to prove our main results.
-The function $\mathsf{delay\_sum}\;n$ represents the cumulative delay of the preceding shift registers of a slice.
-For example, $\mathsf{delay\_sum}\;4 = \mathsf{delay}\;3 + \mathsf{delay}\;1 + \mathsf{delay}\;0 = 2 +1 +1 = 4$.
-The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th slice last updated, and $\mathsf{exact}\;D\;n\;x\;t$ computes the exact sum of consecutive input counts, without delay, that $\mathsf{output}\;D\;n\;x\;t$ is supposed to approximate.
+
 
 \subsection{Theorems about the Model}
 Our central result equates the output of a slice to a sum of consecutive input counts.
@@ -386,13 +390,13 @@ For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n>0$ at all
 The proof follows from Theorem~\ref{output_input_at_update_times}, using the definition of $\mathsf{exact}$, and the fact that $\mathsf{output}\;D\;n\;x\;t$ has the same value as at the last update time.\qed
 \end{proof}
 
-Note that $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$, that is $\mathsf{true\_sum}\;D\;n\;t = \mathsf{exact}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)\;t$.
+The function $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$, that is $\mathsf{true\_sum}\;D\;n\;t = \mathsf{exact}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)\;t$.
 Since $\mathsf{RS}$ is also similarly defined in terms of the $\mathsf{output}$, Theorem~\ref{output_eq_exact} establishes a relationship between the values of the $\mathsf{RS}$ and $\mathsf{true\_sum}$.
 
 We formulate the difference between the $\mathsf{RS}$ values and their corresponding $\mathsf{true\_sum}$s, caused by the delay, as $\mathsf{error}$.
 In order to define a maximum bound on the $\mathsf{error}$, we had to formulate some characterization of the input stream to the SRS structure as constraints on $D$.
 One of these constraints is a bound on the difference between two consecutive count values.
-Such a bound can be derived from the highest quench level thresholds.
+Such a bound can be inferred from the highest quench level thresholds.
 
 Under such a constraint, we have proved a preliminary result bounding the error of $\mathsf{output}\;D\;n\;x\;t$ compared to $\mathsf{exact}\;D\;n\;x\;t$.
 \begin{theorem}\label{max_error}
@@ -405,10 +409,12 @@ t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{dela
 \begin{proof}
 By applying Theorem~\ref{output_eq_exact}, we are left with an equation involving $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
 Our assumption on $t$ ensures that we are never in the $0$ case of either Theorem~\ref{output_eq_exact} or of the definition of $\mathsf{exact}$.
-Now, $\mathsf{exact}$ is defined as a sum of consecutive values of $D$, so we simply need to bound the difference between one such sum and another earlier one of the same size.
+The function $\mathsf{exact}$ is defined as a sum of consecutive values of $D$, so we simply need to bound the difference between one such sum and another earlier one of the same size.
 But if at each step the maximum difference is $k$, then the total difference is at most $k$ times the distance between the ends of the two sums, as required.
 (We use the fact that $\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n$ and, in general, that $a\operatorname{mod}b<b$.)
 \end{proof}
+
+Our HOL4 proof script for verification of SRS consists of 800 lines of code. We proved 69 theorems, including 14 definitions. In addition, we had to prove approximately 30 generic theorems that were added to HOL4 libraries during this work.
 
 
 \section{Conclusions and Lessons Learned}
@@ -416,7 +422,7 @@ But if at each step the maximum difference is $k$, then the total difference is 
 
 We described a case study in which HOL4 theorem prover is used to formally verify properties of the SRS structure within the LHC machine protection system.
 In this case study, we built a parameterized model of the SRS structure and showed that its behavior is correct with respect to its specification.
-It is likely that the configuration of the slices and shift registers will change in the future to accommodate higher precision.
+It is likely that the configuration of the slices and shift registers will need to change in the future as the understanding of the LHC and its weaknesses increases to accommodate more targeted protections
 Thus, the parameterization in our model was crucial to make it applicable to the future upgrades.
 
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
@@ -426,14 +432,18 @@ However, some sanity tests related to Theorem 1 led us astray when we did not kn
 Because the formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only on large values of $n$.
 The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted on us providing the justification and compelled us to clarify the intricate details of the SRS structure and behavior.
 
-The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification based on simulation performed at CERN.
-The simulation was mainly based on two scenarios one for recording fast losses and  another for the situation when a loss gradually builds up in the accelerator.
-The results of the simulation showed that the current implementation of SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have  the maximum 20\% relative error.
-On the contrary, the results in this paper apply to all possible input steams, not just a limited number of input streams simulating fast or slow loss scenarios.
+The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
+This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
+Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have the maximum 20\% relative error.
+On the contrary, the results in this paper apply to all possible input steams, not just a limited number of input stream scenarios performed at CERN.
+
 But, the error bound given in Theorem~\ref{max_error} does not satisfy the maximum 20\% relative error.
 In order to make this bound tighter, we need to provide more characterization of the input as constraints on $D$.
 Due to the nature of the problem, such a characterization of input is not trivial.
 Therefore, the SRS structure in LHC is an interesting example in which the formal verification does not completely replace conventional verification approaches such as simulation.
+
+HOL4 has highly developed tools  for reasoning about bitstrings (words, bytes etc).
+One possible future research direction os to refine the natural number model to a more hardware-realistic one and even verifying a model extracted from the HDL used to synthesize the FPGA.
 
 
 
