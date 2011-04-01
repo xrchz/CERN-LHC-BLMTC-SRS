@@ -453,33 +453,33 @@ Thus, the parameterization in our model was crucial to make it applicable to the
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
 There are three different sources of complexity that are inherent elements of understanding why the SRS structure implements its intended behavior:
 (a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any previous slice or even the global input;
-(b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on its position of the shift register in the layered structure of the SRS;
+(b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on the position of the shift register in the layered structure of the SRS;
 (c) arithmetic relationships that are not always intuitively apparent at first glance.
 {\bf Ramana can you add an example here?}
 While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is matter of grappling with all three sources of complexity at once.
 
-To understand the structure of the SRS, we started with a model of a simplified structure, which had a more regular arrangements of the slices and ignored the middle taps, and proceeded to a model which is closer to the SRS implementation in BLMS.
+To understand the structure of the SRS, we started with a model of a simplified structure, which had a more regular arrangement of the slices and ignored the middle taps, and proceeded to a model which is closer to the SRS implementation in BLMS.
 In addition, we used a basic spreadsheet simulation model for a few slices for sanity testing the correctness formulae.
 However, some sanity tests related to Theorem 1 led us astray when we did not know the correct formula for that theorem.
-The formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only on large values of $n$.
-The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the intricate details of the SRS structure and behavior. {\bf not sure if we should keep this paragraph after adding the previous one, maybe should be combined with the previous}
+The formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only to be found at large values of $n$.
+%The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the intricate details of the SRS structure and behavior.
+{\bf not sure if we should keep this paragraph after adding the previous one, maybe should be combined with the previous}
 
 The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
 This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
-Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have a maximum 20\% relative error ($|\mathsf{RS}\;D\;n\;t - \mathsf{true\_sum}\;D\;n\;t| < 20\%(\mathsf{true\_sum}))$.
+Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have a maximum 20\% relative error ($|\mathsf{RS}\;D\;n\;t - \mathsf{true\_sum}\;D\;n\;t| < 20\%\times(\mathsf{true\_sum}))$.
 
-On the contrary, the results in this paper apply to a larger set of input streams, not just a limited number of sample inputs considered at CERN.
-However, the error bound proved in Theorem~\ref{max_error} is not tight enough to satisfy the maximum 20\% relative error.
-One of the potential reasons for this problem is the lack of knowledge to characterize the input stream to the SRS.
-Due to the nature of this problem, such a characterization of input is not trivial.
-While testing and simulation of the SRS on a limited set of input streams offer a level of confidence that the behavior of SRS satisfies this particular specification, constructing a formal proof for all possible behaviors requires a better understanding of the characteristics of the input stream.
+By contrast, the results in this paper apply to all possible input streams, not just the sample inputs considered at CERN.
+However, the bound proved in Theorem~\ref{max_error} is not tight enough to satisfy the maximum 20\% relative error bound.
+One of the potential reasons for this problem is not knowing how to characterize the input stream to the SRS.
+Due to the physical nature of this problem, such a characterization of the input stream is not trivial.
+While testing and simulation of the SRS on a limited set of input streams offers a level of confidence that the behavior of SRS satisfies this particular specification, constructing a formal proof for all possible behaviors requires a better understanding of the characteristics of the input stream.
 One future research direction is to investigate whether constructing such a formal proof is feasible for the SRS component of BLMS.
 
 Another future research direction is to refine our formal model to a lower level of abstraction and closer to the hardware model (e.g., representing the count values by words instead of natural number).
 We are also considering verifying a model extracted from the Hardware Description Language (HDL) used to synthesize the BLETC FPGA.
 
 %The BLMS detects beam loss in the form of counts proportional to the number of stray particles. Dangerous loss levels can be expressed as thresholds on the rate of counts over time. The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated. It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected. But stopping the beam when the loss level is not dangerous is time consuming and costly. Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
-
 
 %The calculation of running sums is a critical component of the BLMS.
 %If there is no dangerous loss, the BLMS should not inhibit the beam.
@@ -491,14 +491,10 @@ We are also considering verifying a model extracted from the Hardware Descriptio
 %(isn't all this in the introduction now? is this the right place to repeat it/give more details?)
 %In this paper we present a formal verification approach for the analysis of SRS implementation in BLM.
 
-
-
 \bibliographystyle{plain}
 \bibliography{refs}
 
-
 \end{document}
-
 
 %\begin{figure}
 %\caption{
