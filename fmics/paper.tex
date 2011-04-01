@@ -195,7 +195,7 @@ As shown in Table~\ref{fig:SRS-table}, cascading 6 slices is enough to reach the
 \section{Verification of the SRS Implementation using HOL4}
 \label{sec-verification}
 
-In this section, we describe our approach to formal verification of the SRS component in BLETC and present the formal model and results.
+In this section, we describe our approach to formal verification of the SRS component of a BLETC, and present the formal model and results.
 
 \subsection{Introduction}
 Our formal verification effort uses mechanised logical deduction, or \emph{theorem proving}.
@@ -212,8 +212,8 @@ The first three use essentially the same higher-order logic as HOL4, whilst PVS 
 While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
 
 Our goal is to build a generic model of the SRS structure, and to prove that it satisfies its specification, that it calculates approximate running sums of received count values within acceptable error margins.
-Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, the $n$-th output of the SRS structure, which is supposed to compute a sum of received count values, and let $\mathsf{true\_sum}\;n$ denote this sum.
-The multi-layered structure of the SRS and the read delay of each shift register result in the outputs of SRS being delayed from the $\mathsf{true\_sum}$ values.
+Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, output $n$ of the SRS structure, which is supposed to compute a sum of received count values, and let $\mathsf{true\_sum}\;n$ denote this sum.
+The multi-layered structure of the SRS and the read delay of each shift register result in the outputs being delayed from the $\mathsf{true\_sum}$ values.
 A sketch of the desired correctness statement is: \[\forall{n} \cdot \, \mathsf{RS}\;n= \mathsf{true\_sum}\; n \pm\text{acceptable error}\]
 Although Figure~\ref{fig:srs} suggests that the SRS structure has only twelve outputs  (i.e. $0\leq{n}\leq11$), we obtain a more generic result (that is useful in future upgrades of the system) by proving the correctness of the above statement for all values of $n$.
 
@@ -223,8 +223,8 @@ We formalize the input stream as a function of time: $D\;t$ denotes the input va
 In addition, the terms in the above statement depend on this stream of input counts.
 With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{true\_sum}\;D\;n\;t\pm\text{acceptable error}\]
 
-Prior to defining a formal model of the SRS and the theorems on the model, we developed an informal ``white board"-level argument for why the SRS implements its intended behavior.
-The essence of this argument relies on four facts which can be established from the structure of the SRS and some details about timing relationship between layers:
+Prior to defining a formal model of the SRS and the theorems on the model, we developed an informal ``white board-level'' argument for why the SRS implements its intended behavior.
+The essence of this argument relies on four facts which can be established from the structure of the SRS and some details about the timing relationship between layers:
 \begin{enumerate}
 \item The shift register of each slice (except the first) is updated once the content of the shift register of its previous slice is completely updated.
 \item The integration window of a given shift register in a slice (except the first slice) can be decomposed into a sequence of  non-overlapping consecutive segments, $S_1, S_2, \ldots, S_w$ (where $w$ is the width of the shift register) each of which is equal to the size of the integration window of the shift register of the previous slice.
