@@ -59,7 +59,7 @@ Compared to test-based methods, like simulation, formal methods not only offer m
 One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team of different backgrounds and expertise.
 Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool.
 In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
-The most important use of HOL4  was its role as an ``implacable skeptic" that compelled us to really understand the details~\cite{rushby}.
+The most important use of HOL4  was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the details~\cite{rushby}.
 
 Our contributions in this paper are: a formal model of the SRS component of the BLMS, a formal analysis of its behavior, and commentary on the process and outcomes of taking a formal approach.
 We give an overview of the BLMS in Section~\ref{sec-BLM}, and describe the SRS component in particular in Section~\ref{sec-SRS}.
@@ -92,8 +92,8 @@ In the following, we briefly describe each of the four main processing blocks on
 
 \emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
 Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by the minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.
-In order to achieve the required \emph{dynamic range} (domain of variation of losses), the detectors use both Current-to-Frequency converter and Analogue to Digital convertor circuitries.
-The data processing block merges these two types of data coming from a detector so as to send a single value, referred to as a \emph{count}, to the SRS block.
+In order to achieve the required \emph{dynamic range} (domain of variation of losses), the detectors use both Current-to-Frequency converter and Analogue-to-Digital converter circuitries.
+The data combine block merges these two types of data coming from a detector so as to send a single value, referred to as a \emph{count}, to the SRS block.
 The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 
 \emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold determined by the beam energy reading at that moment.
@@ -206,7 +206,7 @@ The implementation of HOL4 uses Milner's LCF approach~\cite{Milner:1972:LCF:8919
 Every theorem ultimately comes from the kernel, and this fact provides high assurance of the logical soundness of the verification results obtained using the system.
 
 HOL4 is an \emph{interactive} theorem prover: the user provides the high level proof strategy by composing functions that automate common chains of logical deduction.
-The work described here could have been done using other systems such as HOL Light~\cite{HOLLight}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS,DBLP:conf/tphol/OwreS08} or Coq~\cite{Coq}.
+The work described here could have been done using other systems such as HOL Light~\cite{HOLLight}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS} or Coq~\cite{Coq}.
 The first three use essentially the same higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
 %<What about ACL2?>
 While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
@@ -226,8 +226,8 @@ With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \c
 Prior to defining a formal model of the SRS and proving theorems about it, we developed an informal ``white board-level'' argument for why the SRS implements its intended behavior.
 The essence of this argument relies on four facts which can be established from the structure of the SRS and some details about the timing relationship between layers:
 \begin{enumerate}
-\item The shift register of each slice (except the first) is updated once the shift register of its previous\footnote{Here, previous slice refers to the slice whose output is used as input to this slice.} slice is completely updated, that is, when a count value has propagated down the full length of the previous slice's shift register.
-\item The integration window of a given shift register in a slice (except the first slice) can be decomposed into a sequence of non-overlapping consecutive segments, $S_1, S_2, \ldots, S_w$ (where $w$ is the width of the shift register) each of which is equal to the size of the integration window of the shift register of the previous slice.
+\item The shift register of each slice (except the first) is updated once the shift register of its previous\footnote{Here, the phrase ``previous slice" refers to the slice whose output is used as input to this slice.} slice is completely updated, that is, when a count value has propagated down the full length of the previous slice's shift register.
+\item The integration window of a given shift register in a slice (except the first slice) can be decomposed into a sequence of non-overlapping segments, $S_1, S_2, \ldots, S_w$ (where $w$ is the width of the shift register) each of which is equal to the size of the integration window of the shift register of the previous slice.
 \item After a period of initialization, the values stored in the shift register of a given slice (except the first) are the $w$ outputs of the previous slice, where $w$ is the width of the shift register of this slice.
 \item After a period of initialization, the output of each slice is always equal to the sum of the contents of its shift register.
 \end{enumerate}
@@ -244,11 +244,11 @@ We model each building block of the SRS structure that holds a count value -- fo
 We use the tool to define a function in the logic.}.
 
 Our model is both a simplification and a generalization of the actual structure of SRS in BLMS in the following sense.
-We model an infinite number of slices (rather than six slices), each with an infinite number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
-This parameterization makes the model more likely to be applicable to future versions of the system, but also fits more naturally into HOL than would a finite model.
+We model an unbounded number of slices (rather than six slices), each with an unbounded number of shift register cells and taps (rather than fixed width shift registers and only two taps), simply by letting indices range over the natural numbers without explicitly giving limits.
+This parameterization makes the model more likely to be applicable to future versions of the system, but also fits more naturally into HOL than would a bounded model.
 We defined our formal model to be at a level of abstraction above the details of circuity that implements basic arithmetic operations.
 We use natural numbers throughout, rather than, for example, finite words that would more accurately model count values.
-This level of abstraction is sufficient to prove our desired correctness properties of SRS.
+This level of abstraction is sufficient to answer the questions that originally motivated this work.
 A separate verification effort can focus on showing that a more realistic model of hardware circuitry accurately implements natural number arithmetic.
 
 
@@ -383,7 +383,7 @@ By induction on $m$, using the above,
 \begin{equation*}
 \mathsf{SR}\;D\;n\;m\;t=\mathsf{SR}\;D\;n\;0\;(t-(m\times\mathsf{delay}\;n))
 \end{equation*}
-By induction on $t$, we can show that $\mathsf{output}\;D\;n\;x\;t$ is a sum of values of consecutive shift register cells
+By induction on $t$, we can show that $\mathsf{output}\;D\;n\;x\;t$ is a sum of values of consecutive shift register cells,
 \begin{equation*}
 \mathsf{output}\;D\;n\;x\;t=\sum_{m=0}^{\mathsf{tap}\;n\;x}\mathsf{SR}\;D\;n\;m\;t
 \end{equation*}
@@ -453,7 +453,7 @@ Thus, the parameterization in our model was crucial to make it applicable to the
 
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
 There are three different sources of complexity that are inherent in understanding why the SRS structure implements its intended behavior:
-(a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any previous slice or even the global input;
+(a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any earlier slice or even the global input;
 (b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on the position of the shift register in the layered structure of the SRS;
 (c) arithmetic relationships that are not always intuitively apparent at first glance.
 While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is a matter of grappling with all three sources of complexity at once.
