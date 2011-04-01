@@ -452,11 +452,11 @@ It is likely that the configuration of the slices and shift registers will need 
 Thus, the parameterization in our model was crucial to make it applicable to the future upgrades.
 
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
-There are three different sources of complexity that are inherent elements of understanding why the SRS structure implements its intended behavior:
+There are three different sources of complexity that are inherent in understanding why the SRS structure implements its intended behavior:
 (a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any previous slice or even the global input;
 (b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on the position of the shift register in the layered structure of the SRS;
 (c) arithmetic relationships that are not always intuitively apparent at first glance.
-While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is matter of grappling with all three sources of complexity at once.
+While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is a matter of grappling with all three sources of complexity at once.
 
 To understand the structure of the SRS, we started with a model of a simplified structure, which had a more regular arrangement of the slices and ignored the middle taps, and proceeded to a model which is closer to the SRS implementation in BLMS.
 In addition, we used a basic spreadsheet simulation model for a few slices for sanity testing the correctness formulae.
@@ -476,7 +476,7 @@ Due to the physical nature of this problem, such a characterization of the input
 While testing and simulation of the SRS on a limited set of input streams offers a level of confidence that the behavior of SRS satisfies this particular specification, constructing a formal proof for all possible behaviors requires a better understanding of the characteristics of the input stream.
 One future research direction is to investigate whether constructing such a formal proof is feasible for the SRS component of BLMS.
 
-Another future research direction is to refine our formal model to a lower level of abstraction and closer to the hardware model (e.g., representing the count values by words instead of natural number).
+Another future research direction is to refine our formal model to a lower level of abstraction, closer to the hardware level (e.g., by representing count values as finite words instead of natural numbers).
 We are also considering verifying a model extracted from the Hardware Description Language (HDL) used to synthesize the BLETC FPGA.
 
 %The BLMS detects beam loss in the form of counts proportional to the number of stray particles. Dangerous loss levels can be expressed as thresholds on the rate of counts over time. The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated. It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected. But stopping the beam when the loss level is not dangerous is time consuming and costly. Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
