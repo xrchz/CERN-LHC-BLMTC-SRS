@@ -58,7 +58,7 @@ This regularity serves as a basis for inductive reasoning, which makes the amoun
 Compared to test-based methods, like simulation, formal methods not only offer much higher confidence in the correctness of a system's behavior, but also help improve our understanding of its specification.
 One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team of different backgrounds and expertise.
 Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool.
-In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``white board level" argument or explanation for why the implementation achieves the intended behaviors.
+In particular, our use of mechanized logical deduction was a highly iterative process that incrementally refined our understanding of (1) the implementation (2) the intended behavior and (3) the ``whiteboard-level" argument or explanation for why the implementation achieves the intended behaviors.
 The most important use of HOL4  was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the details~\cite{rushby}.
 
 Our contributions in this paper are: a formal model of the SRS component of the BLMS, a formal analysis of its behavior, and commentary on the process and outcomes of taking a formal approach.
@@ -91,9 +91,9 @@ In the following, we briefly describe each of the four main processing blocks on
 \emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives data directly from the acquisition cards, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms~\cite{CRC,8B10B}.
 
 \emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
-Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by the minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.
+Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by the minimum number of sliding integration windows (called \emph{running sums}) fulfilling the tolerance.
 In order to achieve the required \emph{dynamic range} (domain of variation of losses), the detectors use both Current-to-Frequency converter and Analogue-to-Digital converter circuitries.
-The data combine block merges these two types of data coming from a detector so as to send a single value, referred to as a \emph{count}, to the SRS block.
+The Data Combine block merges these two types of data coming from a detector so as to send a single value, referred to as a \emph{count}, to the SRS block.
 The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 
 \emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold determined by the beam energy reading at that moment.
@@ -223,7 +223,7 @@ We formalize the input stream as a function of time: $D\;t$ denotes the input va
 In addition, the terms in the above statement depend on this stream of input counts.
 With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \cdot \,\mathsf{RS}\;D\;n\;t = \mathsf{true\_sum}\;D\;n\;t\pm\text{acceptable error}\]
 
-Prior to defining a formal model of the SRS and proving theorems about it, we developed an informal ``white board-level'' argument for why the SRS implements its intended behavior.
+Prior to defining a formal model of the SRS and proving theorems about it, we developed an informal ``whiteboard-level'' argument for why the SRS implements its intended behavior.
 The essence of this argument relies on four facts which can be established from the structure of the SRS and some details about the timing relationship between layers:
 \begin{enumerate}
 \item The shift register of each slice (except the first) is updated once the shift register of its previous\footnote{Here, the phrase ``previous slice" refers to the slice whose output is used as input to this slice.} slice is completely updated, that is, when a count value has propagated down the full length of the previous slice's shift register.
@@ -262,7 +262,7 @@ Function&Intended meaning\\
 \(\mathsf{source}\;D\;n\;m\;t\)&The value of the cell that is the direct input to cell $m$ of slice $n$, at time $t$, given input stream $D$.\\
 \(\mathsf{SR}\;D\;n\;m\;t\)&The value of cell $m$ of slice $n$, at time $t$, given input stream $D$.\\
 \(\mathsf{output}\;D\;n\;x\;t\)&The output at tap $x$ of slice $n$, at time $t$, given input stream $D$.\\
-\(\mathsf{RS}\;D\;n\;t\)&The $n$-th running sum at time $t$, given input stream $D$.\\
+\(\mathsf{RS}\;D\;n\;t\)&The value of running sum $n$ at time $t$, given input stream $D$.\\
 \(\mathsf{update\_time}\;n\;t\)&A boolean indicating whether $t$ is an update time for slice $n$.
 \end{tabular}
 \vspace{2ex}
@@ -286,7 +286,7 @@ A similar comment applies to other definitions when $n$, representing a slice nu
 We define all excess taps (where $x > 1$) to be in the same position as the last tap.
 
 %Some text description for Figure 7, we can remove it later on
-As explained in Section~\ref{sec-SRS}, the delay of each slice is equal to the delay of the slice it receives its input from multiplied by the number of the elements in the input slice used for the sum.
+As explained in Section~\ref{sec-SRS}, the delay of each slice is equal to the delay of the slice it receives its input from multiplied by the number of elements in the input slice used for the sum.
 For example in Figure~\ref{fig:srs}, $\mathsf{delay}\;4 = \mathsf{delay}\;3 \times \mathsf{tap}\;3\;0 = 2 \times 32$.
 The definition of the $\mathsf{source}$ function states that the source of each cell $m$ in a shift register is cell $m-1$, except for the first cell whose source is the output of the input slice.
 For example, $\mathsf{source}\;D\;4\;7\;t = \mathsf{SR}\;D\;4\;6\;t$ and $\mathsf{source}\;D\;4\;0\;t = \mathsf{output}\;D\;3\;0\;t$.
@@ -297,7 +297,7 @@ Every definition in Figure~\ref{fig:definitions} is \emph{local} (only represent
 Figure~\ref{fig:auxdefs} shows the definition of a set of additional functions required to prove our main results.
 The function $\mathsf{delay\_sum}\;n$ represents the cumulative delay of the preceding shift registers of a slice.
 For example, $\mathsf{delay\_sum}\;4 = \mathsf{delay}\;3 + \mathsf{delay}\;1 + \mathsf{delay}\;0 = 2 +1 +1 = 4$.
-The function $\mathsf{last\_update}\;n\;t$ specifies the time that the $n$-th slice last updated, and $\mathsf{exact}\;D\;n\;x\;t$ computes the exact sum of consecutive input counts, without delay, that $\mathsf{output}\;D\;n\;x\;t$ is supposed to approximate.
+The function $\mathsf{last\_update}\;n\;t$ returns the latest time not after $t$ at which slice $n$ updates, and $\mathsf{exact}\;D\;n\;x\;t$ computes the exact sum of consecutive input counts, without delay, that $\mathsf{output}\;D\;n\;x\;t$ is supposed to approximate.
 
 \begin{figure}[p]
 \begin{tabular}{ll}
@@ -374,7 +374,7 @@ For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n>0$ at an 
 \begin{proof}
 The shift register of slice $n$ is updated every $\mathsf{delay}\;n$ time steps.
 When updated, the values in its cells are shifted one cell.
-Therefore\footnote{For presentation convenience, here, we do not provide the details regarding the case when $t$ is small, for example $t<m\times\mathsf{delay}\;n$.
+Therefore\footnote{For presentational convenience, here, we do not provide details for the case when $t$ is small (e.g., when $t<m\times\mathsf{delay}\;n$).
 For complete theorem statements and the proof script, please refer to {\scriptsize \url{https://github.com/xrchz/CERN-LHC-BLMTC-SRS/blob/master/hol/srsScript.sml}.}},
 \begin{equation*}
 \mathsf{SR}\;D\;n\;(m+1)\;t=\mathsf{SR}\;D\;n\;m\;(t-\mathsf{delay}\;n)
@@ -412,11 +412,11 @@ The proof follows from Theorem~\ref{output_input_at_update_times}, using the def
 The function $\mathsf{true\_sum}$ is easily defined in terms of $\mathsf{exact}$, namely, $\mathsf{true\_sum}\;D\;n\;t = \mathsf{exact}\;D\;\left(\left\lfloor\frac{n}{2}\right\rfloor+1\right)\;(n\operatorname{mod}2)\;t$.
 Since $\mathsf{RS}$ is similarly defined in terms of the $\mathsf{output}$, Theorem~\ref{output_eq_exact} establishes a relationship between the values of $\mathsf{RS}$ and of $\mathsf{true\_sum}$.
 
-We formulate the difference between the $\mathsf{RS}$ values and their corresponding $\mathsf{true\_sum}$s, caused by the delay, as $\mathsf{error}$.
-To meet the tolerance acceptable for quench prevention, the SRS specification requires a bound on this $\mathsf{error}$.
-Without restricting the input stream, the $\mathsf{error}$ is unbounded\footnote{For any bound, we can construct an input stream that causes the bound to be exceeded by, for example, having a sequence of zeroes followed by a sequence of count values much higher than the bound.}.
+We call the difference between the $\mathsf{RS}$ values and their corresponding $\mathsf{true\_sum}$s, caused by the delay, the \emph{error}.
+To meet the tolerance acceptable for quench prevention, the SRS specification requires a bound on this error.
+Without restricting the input stream, the error is unbounded\footnote{For any bound, we can construct an input stream that causes the bound to be exceeded by, for example, having a sequence of zeroes followed by a sequence of count values much higher than the bound.}.
 However, according to extensive experimental analysis, the beam loss over time follows some patterns.
-By formulating some characterization of the input stream as constraints on $D$, we can recover a bound on the $\mathsf{error}$.
+By formulating some characterization of the input stream as constraints on $D$, we can recover a bound on the error.
 One of these constraints is a maximum value for the difference between two consecutive input count values.
 This ``maximum jump size'' can be inferred from the highest quench level thresholds.
 
@@ -446,14 +446,14 @@ In addition, we had to prove approximately 30 generic theorems that were added t
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
 
-We described a case study in which the HOL4 theorem prover is used to verify properties of the SRS structure within the LHC machine protection system.
+We have described a case study in which we used HOL4 theorem prover to verify properties of the SRS structure within the LHC machine protection system.
 In this case study, we built a parameterized model of the SRS structure and showed that its behavior is correct with respect to its specification.
 It is likely that the configuration of the slices and shift registers will need to change in the future as the understanding of the LHC and its possible weaknesses increases to accommodate more targeted protections.
-Thus, the parameterization in our model was crucial to make it applicable to the future upgrades.
+Thus, the parameterization in our model is crucial to make it applicable to the future upgrades.
 
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
 There are three different sources of complexity that are inherent in understanding why the SRS structure implements its intended behavior:
-(a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any earlier slice or even the global input;
+(a) the structure of the SRS: although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any earlier slice or even the global input;
 (b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on the position of the shift register in the layered structure of the SRS;
 (c) arithmetic relationships that are not always intuitively apparent at first glance.
 While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is a matter of grappling with all three sources of complexity at once.
@@ -467,7 +467,7 @@ The formulae we conjectured worked for small values of $n$, and simulating large
 
 The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
 This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
-Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is the running sums have a maximum 20\% relative error ($|\mathsf{RS}\;D\;n\;t - \mathsf{true\_sum}\;D\;n\;t| < 20\%\times(\mathsf{true\_sum}))$.
+Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is, the running sums have a maximum 20\% relative error ($|\mathsf{RS}\;D\;n\;t - \mathsf{true\_sum}\;D\;n\;t| < 20\%\times(\mathsf{true\_sum}))$.
 
 By contrast, the results in this paper apply to all possible input streams, not just the sample inputs considered at CERN.
 However, the bound proved in Theorem~\ref{max_error} is not tight enough to satisfy the maximum 20\% relative error bound.
