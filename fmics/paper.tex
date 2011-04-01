@@ -226,7 +226,7 @@ With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \c
 Prior to defining a formal model of the SRS and proving theorems about it, we developed an informal ``white board-level'' argument for why the SRS implements its intended behavior.
 The essence of this argument relies on four facts which can be established from the structure of the SRS and some details about the timing relationship between layers:
 \begin{enumerate}
-\item The shift register of each slice (except the first) is updated once the shift register of its previous\footnote{Here, previous slice refers to the slice whose output is used as input to this slice.} slice is completely updated, that is, it flushes out all of the values entered its shift register since the previous update. 
+\item The shift register of each slice (except the first) is updated once the shift register of its previous\footnote{Here, previous slice refers to the slice whose output is used as input to this slice.} slice is completely updated; an update means refreshing the value of every cell in the shift register.
 \item The integration window of a given shift register in a slice (except the first slice) can be decomposed into a sequence of non-overlapping consecutive segments, $S_1, S_2, \ldots, S_w$ (where $w$ is the width of the shift register) each of which is equal to the size of the integration window of the shift register of the previous slice.
 \item After a period of initialization, the values stored in the shift register of a given slice (except the first) are the $w$ outputs of the previous slice, where $w$ is the width of the shift register of this slice.
 \item After a period of initialization, the output of each slice is always equal to the sum of the contents of its shift register.
@@ -235,7 +235,8 @@ The essence of this argument relies on four facts which can be established from 
 Using Facts 1, 2 and 3 in an inductive argument, we show that each cell of the shift register of a given slice, after a period of initialization, always contains the sum of the SRS inputs for one of the non-overlapping consecutive segments that make up the integration window of this slice.
 Then using Fact 4 and arithmetic reasoning, we can show that the output of this slice, after a period of initialization, contains the sum of the SRS inputs over its integration window.
 
-While the above paragraph gives the appearance of a straightforward argument for the correctness of the SRS (corresponding roughly to Theorem~\ref{output_input_at_update_times} in Section~\ref{subsec:theorems}), in fact the argument involves consideration of many details that arise from the formal model of the SRS presented in the next section. Using a theorem proving tool enables us to keep track of these details without losing sight of the overall goal. 
+While the above paragraph gives the appearance of a straightforward argument for the correctness of the SRS (corresponding roughly to Theorem~\ref{output_input_at_update_times} in Section~\ref{subsec:theorems}), in fact the argument involves consideration of many details that arise from the formal model of the SRS presented in the next section.
+Using a theorem proving tool enables us to keep track of these details without losing sight of the overall goal.
 
 \subsection{Formal Model of SRS}
 The first step to prove the correctness statement is to build a logical model of the SRS structure.
