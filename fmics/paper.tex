@@ -49,7 +49,7 @@ The SRS component has a complex structure and the correctness of its behaviour i
 Any error in the SRS implementation would compromise either the availability of the LHC (unnecessary request for a beam dump) or its safety (not triggering a necessary beam dump).
 The current approach for analyzing the SRS implementation is simulation of its behavior on sample streams of input for different loss scenarios~\cite{Chris-thesis}.
 
-In this paper, we describe a formal verification approach, based on logical deduction using HOL4 theorem prover~\cite{HOL4,DBLP:conf/tphol/SlindN08}, to analyzing the SRS implementation.
+In this paper, we describe a formal verification approach, based on logical deduction using HOL4 theorem prover~\cite{HOL4,DBLP:conf/tphol/SlindN08}, to analyze the SRS implementation.
 Our high level proof strategy takes advantage of the regular structure of the SRS, which consists of multiple layers of shift registers and some simple arithmetic hardware.
 There is a degree of regularity in how the output of each layer is used as input to the next layer.
 There is also a degree of regularity in the timing of each layer with respect to its position in the stack of layers.
@@ -206,7 +206,7 @@ The implementation of HOL4 uses Milner's LCF approach~\cite{Milner:1972:LCF:8919
 Every theorem ultimately comes from the kernel, and this fact provides high assurance of the logical soundness of the verification results obtained using the system.
 
 HOL4 is an \emph{interactive} theorem prover: the user provides the high level proof strategy by composing functions that automate common chains of logical deduction.
-The work described here could have been done using other systems such as HOL Light~\cite{HOLLight,DBLP:conf/tphol/Harrison09a}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS,DBLP:conf/tphol/OwreS08} or Coq~\cite{Coq}.
+The work described here could have been done using other systems such as HOL Light~\cite{HOLLight}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS,DBLP:conf/tphol/OwreS08} or Coq~\cite{Coq}.
 The first three use essentially the same higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
 %<What about ACL2?>
 While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
@@ -226,7 +226,7 @@ With these refinements, the correctness statement becomes: \[\forall{D\,n\,t} \c
 Prior to defining a formal model of the SRS and proving theorems about it, we developed an informal ``white board-level'' argument for why the SRS implements its intended behavior.
 The essence of this argument relies on four facts which can be established from the structure of the SRS and some details about the timing relationship between layers:
 \begin{enumerate}
-\item The shift register of each slice (except the first) is updated once the shift register of its previous slice is completely updated.
+\item The shift register of each slice (except the first) is updated once the shift register of its previous\footnote{Here, previous slice refers to the slice whose output is used as input to this slice.} slice is completely updated, that is, it flushes out all of the values entered its shift register since the previous update. 
 \item The integration window of a given shift register in a slice (except the first slice) can be decomposed into a sequence of non-overlapping consecutive segments, $S_1, S_2, \ldots, S_w$ (where $w$ is the width of the shift register) each of which is equal to the size of the integration window of the shift register of the previous slice.
 \item After a period of initialization, the values stored in the shift register of a given slice (except the first) are the $w$ outputs of the previous slice, where $w$ is the width of the shift register of this slice.
 \item After a period of initialization, the output of each slice is always equal to the sum of the contents of its shift register.
@@ -235,7 +235,7 @@ The essence of this argument relies on four facts which can be established from 
 Using Facts 1, 2 and 3 in an inductive argument, we show that each cell of the shift register of a given slice, after a period of initialization, always contains the sum of the SRS inputs for one of the non-overlapping consecutive segments that make up the integration window of this slice.
 Then using Fact 4 and arithmetic reasoning, we can show that the output of this slice, after a period of initialization, contains the sum of the SRS inputs over its integration window.
 
-While the above paragraph gives the appearance of a straightforward argument for the correctness of the SRS (corresponding roughly to Theorem~\ref{output_input_at_update_times} in Section~\ref{subsec:theorems}), in fact the argument involves consideration of many details that arise from the formal model of the SRS presented in the next section. Using a software theorem prover enables us to keep track of these details without losing sight of the overall goal. {\bf one possibility is to move the paragraph about sources of complexities currently in section 5 to here.}
+While the above paragraph gives the appearance of a straightforward argument for the correctness of the SRS (corresponding roughly to Theorem~\ref{output_input_at_update_times} in Section~\ref{subsec:theorems}), in fact the argument involves consideration of many details that arise from the formal model of the SRS presented in the next section. Using a theorem proving tool enables us to keep track of these details without losing sight of the overall goal. 
 
 \subsection{Formal Model of SRS}
 The first step to prove the correctness statement is to build a logical model of the SRS structure.
@@ -374,7 +374,7 @@ For all values of $D$, $n$, and $x$, the $\mathsf{output}$ of slice $n>0$ at an 
 The shift register of slice $n$ is updated every $\mathsf{delay}\;n$ time steps.
 When updated, the values in its cells are shifted one cell.
 Therefore\footnote{For presentation convenience, here, we do not provide the details regarding the case when $t$ is small, for example $t<m\times\mathsf{delay}\;n$.
-For complete theorem statements and the proof script, please refer to \url{https://github.com/xrchz/CERN-LHC-BLMTC-SRS/blob/master/hol/srsScript.sml}.},
+For complete theorem statements and the proof script, please refer to {\scriptsize \url{https://github.com/xrchz/CERN-LHC-BLMTC-SRS/blob/master/hol/srsScript.sml}.}},
 \begin{equation*}
 \mathsf{SR}\;D\;n\;(m+1)\;t=\mathsf{SR}\;D\;n\;m\;(t-\mathsf{delay}\;n)
 \end{equation*}
@@ -428,7 +428,7 @@ t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{dela
 \end{multline*}
 \end{theorem}
 \begin{proof}
-By applying Theorem~\ref{output_eq_exact}, we are left with an equation involving $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
+By applying Theorem~\ref{output_eq_exact}, we are left with an equation involving the function $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
 Our assumption on $t$ ensures that we are never in the $0$ case of either Theorem~\ref{output_eq_exact} or of the definition of $\mathsf{exact}$.
 The function $\mathsf{exact}$ is defined as a sum of consecutive values of $D$, so we simply need to bound the difference between one such sum and another earlier one of the same size.
 But if at each step the maximum difference is $k$, then the total difference is at most $k$ times the distance between the ends of the two sums, as required.
@@ -445,9 +445,9 @@ In addition, we had to prove approximately 30 generic theorems that were added t
 \section{Conclusions and Lessons Learned}
 \label{sec-conclusions}
 
-We described a case study in which the HOL4 theorem prover is used to formally verify properties of the SRS structure within the LHC machine protection system.
+We described a case study in which the HOL4 theorem prover is used to verify properties of the SRS structure within the LHC machine protection system.
 In this case study, we built a parameterized model of the SRS structure and showed that its behavior is correct with respect to its specification.
-It is likely that the configuration of the slices and shift registers will need to change in the future as the understanding of the LHC and its weaknesses increases to accommodate more targeted protections.
+It is likely that the configuration of the slices and shift registers will need to change in the future as the understanding of the LHC and its possible weaknesses increases to accommodate more targeted protections.
 Thus, the parameterization in our model was crucial to make it applicable to the future upgrades.
 
 One of our main challenges in this effort was building the formal model and formulating the correctness statements.
@@ -455,7 +455,6 @@ There are three different sources of complexity that are inherent elements of un
 (a) the structure of the SRS; although it features considerable regularity, it includes exceptions to this regularity that complicate reasoning, e.g., the input of one slice may not be the output of the immediately previous slice, but may be the first or second output of any previous slice or even the global input;
 (b) the non-trivial timing relationships between different elements of the SRS; e.g., the frequency of updates to the contents of a shift register depends on the position of the shift register in the layered structure of the SRS;
 (c) arithmetic relationships that are not always intuitively apparent at first glance.
-{\bf Ramana can you add an example here?}
 While each of these sources of complexity is manageable on its own, reasoning about the correctness of the SRS is matter of grappling with all three sources of complexity at once.
 
 To understand the structure of the SRS, we started with a model of a simplified structure, which had a more regular arrangement of the slices and ignored the middle taps, and proceeded to a model which is closer to the SRS implementation in BLMS.
@@ -463,7 +462,7 @@ In addition, we used a basic spreadsheet simulation model for a few slices for s
 However, some sanity tests related to Theorem 1 led us astray when we did not know the correct formula for that theorem.
 The formulae we conjectured worked for small values of $n$, and simulating large values of $n$ was expensive, but the counterexamples were only to be found at large values of $n$.
 %The most important use of mechanized logical deduction in this effort was its role as an ``implacable skeptic" that insisted we provide justification and compelled us to clarify the intricate details of the SRS structure and behavior.
-{\bf not sure if we should keep this paragraph after adding the previous one, maybe should be combined with the previous}
+
 
 The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
 This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
