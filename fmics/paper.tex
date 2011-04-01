@@ -49,7 +49,7 @@ The SRS component has a complex structure and the correctness of its behaviour i
 Any error in the SRS implementation would compromise either the availability of the LHC (unnecessary request for a beam dump) or its safety (not triggering a necessary beam dump).
 The current approach for analyzing the SRS implementation is simulation of its behavior on sample streams of input for different loss scenarios~\cite{Chris-thesis}.
 
-In this paper, we describe a formal verification approach, based on logical deduction using HOL4 theorem prover~\cite{HOL4,DBLP:conf/tphol/SlindN08}, to analyze the SRS implementation.
+In this paper, we describe a formal verification approach, based on logical deduction using HOL4 theorem prover~\cite{HOL4,DBLP:conf/tphol/SlindN08}, to analyzing the SRS implementation.
 Our high level proof strategy takes advantage of the regular structure of the SRS, which consists of multiple layers of shift registers and some simple arithmetic hardware.
 There is a degree of regularity in how the output of each layer is used as input to the next layer.
 There is also a degree of regularity in the timing of each layer with respect to its position in the stack of layers.
