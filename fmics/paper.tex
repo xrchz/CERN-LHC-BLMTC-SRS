@@ -86,17 +86,17 @@ A BLETC provides data to the Logging, Post Mortem, and Collimation systems that 
 Due to demanding performance requirements, BLETCs are implemented on FPGAs, which include the resources needed to implement complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes.
 
 Figure~\ref{fig:BLETC} shows a block diagram of the processes on a BLETC FPGA.
-In the following, we briefly describe each of the main four processing blocks on a BLETC card.
+In the following, we briefly describe each of the four main processing blocks on a BLETC card.
 
-\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives the data directly from the acquisition card, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms~\cite{CRC,8B10B}.
+\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives data directly from the acquisition cards, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms~\cite{CRC,8B10B}.
 
 \emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
 Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by the minimum number of sliding integration windows (called \emph{Running Sums}) fulfilling the tolerance.
-In order to achieve the \emph{dynamic range} (domain of variation of losses) required by the specification, the detectors use both Current-to-Frequency converter and Analogue to Digital convertor circuitries.
-The data processing block merges these two types of data coming from a detector so as to send a single value, referred to as \emph{count}, to the SRS block.
+In order to achieve the required \emph{dynamic range} (domain of variation of losses), the detectors use both Current-to-Frequency converter and Analogue to Digital convertor circuitries.
+The data processing block merges these two types of data coming from a detector so as to send a single value, referred to as a \emph{count}, to the SRS block.
 The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 
-\emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold that was chosen by the beam energy reading at that moment.
+\emph{(c) Threshold Comparator}: Every running sum needs to be compared to the threshold determined by the beam energy reading at that moment.
 The comparator initiates a beam dump request if any of the running sums is higher than its corresponding threshold.
 Beam dump requests are forwarded to the Beam Interlock System which initiates the beam dump.
 There are 12 running sums calculated for each 16-detector channel allocated to a BLETC card.
@@ -104,7 +104,7 @@ The beam energy information is scaled to 32 levels (0.45 to 7 TeV) and each proc
 Thus, a total of 6,144 threshold values need to be held on each card.
 
 \emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, the BLMS stores the loss measurement data.
-This data is sent to Logging and Post-Mortem systems for online viewing and storage.
+This data is sent to the Logging and Post-Mortem systems for online viewing and storage.
 For the purpose of supervision, the BLMS drives an online event display to show error and status information recorded by the tunnel electronics and the RCC process as well as the maximum loss rates seen by the running sums.
 Each BLETC card also provides data to the Collimation system for the correct alignment and setup of the collimators.
 
@@ -117,7 +117,7 @@ Each BLETC card also provides data to the Collimation system for the correct ali
   \label{fig:RS-basic}
 \end{figure}
 
-Beam losses can happen at different rates, compared to the number of cycles of the beam around the tunnel.
+Beam losses can happen at different rates, compared to the number of cycles of the beams around the tunnel.
 One-cycle failures are called \emph{ultra-fast} losses.
 Multi-cycle losses can be classified as: \emph{very fast} losses, which happen in less than 10 ms; \emph{fast} losses, which happen between 10 ms and 1 s; and, \emph{steady} losses, where the beam is lost over one second or more~\cite{Schmidt-ICFA}.
 
@@ -157,7 +157,7 @@ The delay is equal to the preceding shift register's delay multiplied by the num
 \end{figure}
 
 Figure~\ref{fig:srs} shows the implementation of SRS in a BLETC.
-It consists of 6 \emph{slices}, where each slice computes two running sums (e.g., slice 4 computes the sixth and seventh running sums: RS6 and RS7) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
+It consists of 6 \emph{slices}, where each slice computes two running sums (e.g., slice 4 computes running sums RS6 and RS7) with the use of a multipoint shift register, two subtractors and two accumulators (see Figure~\ref{fig:slice}).
 
 As shown in Table~\ref{fig:SRS-table}, cascading 6 slices is enough to reach the approximately 100 second integration limit required by the specifications given by the scientists and engineers who designed the machine protection strategy for the LHC.
 
