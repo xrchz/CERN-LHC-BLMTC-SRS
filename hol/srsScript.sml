@@ -688,9 +688,23 @@ fsrw_tac [ARITH_ss][NOT_LESS])
 
 val ABS_DIFF_SUM_IMAGE_eq = Q.store_thm(
 "ABS_DIFF_SUM_IMAGE_eq",
-`?f g. FINITE s ==> (ABS_DIFF (SIGMA f s) (SIGMA g s) = SIGMA (\x. ABS_DIFF (f x) (g x)) s)`,
-ntac 2 (qexists_tac `\x. 0`) >>
-srw_tac [][SUM_IMAGE_ZERO])
+`!s. FINITE s ==> ∀f g. (∀x. x ∈ s ⇒ f x ≤ g x) ==> (ABS_DIFF (SIGMA f s) (SIGMA g s) = SIGMA (\x. ABS_DIFF (f x) (g x)) s)`,
+ho_match_mp_tac FINITE_INDUCT >>
+srw_tac [][ABS_DIFF_def,SUM_IMAGE_THM] >>
+fsrw_tac [][DELETE_NON_ELEMENT] >>
+`f e <= g e` by metis_tac [] >>
+Cases_on `f e = g e` >- (
+  first_x_assum (qspecl_then [`f`,`g`] (mp_tac o GSYM)) >>
+  srw_tac [][] >> srw_tac [ARITH_ss][] ) >>
+`f e < g e` by DECIDE_TAC >>
+first_x_assum (qspecl_then [`f`,`g`] (mp_tac o GSYM)) >>
+srw_tac [][] >> srw_tac [ARITH_ss][] >>
+fsrw_tac [ARITH_ss][NOT_LESS] >> srw_tac [][] >>
+`SIGMA f s <= SIGMA g s` by (
+  match_mp_tac (MP_CANON SUM_IMAGE_MONO_LESS_EQ) >>
+  srw_tac [][] ) >>
+`SIGMA f s = SIGMA g s` by DECIDE_TAC >>
+fsrw_tac [ARITH_ss][]);
 
 val output_eq_exact = Q.store_thm(
 "output_eq_exact",
@@ -762,22 +776,160 @@ reverse (srw_tac [][Abbr`f`,Abbr`a`,Abbr`b`]) >- (
 fsrw_tac [ARITH_ss][MULT,last_update_thm])
 
 (*
-val max_error_eq = Q.store_thm(
-"max_error_eq",
-`?D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
-(!n x t. 0 < n /\ t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
-     (error D n x t = SUC (tap n x) * delay n * k * (delay n + delay_sum n)))`,
-srw_tac [][error_def,output_eq_exact,last_update_thm,delay_above_0] >>
-`!n x t. 0 < n /\ t > SUC (tap n x) * delay n + delay n + delay_sum n ==> ~(t < t MOD delay n + delay n)` by (
-  gen_tac >>
-  assume_tac delay_above_0 >>
-  srw_tac [ARITH_ss][MULT,delay_thm,tap_thm,delay_sum_thm,tap_def,NOT_LESS] >>
-  `0 < delay_sum n` by imp_res_tac delay_sum_above_0 >>
-  `t MOD delay n < delay n` by PROVE_TAC [MOD_LESS] >>
-  DECIDE_TAC ) >>
-srw_tac [boolSimps.DNF_ss][]
+val max_error_relative = Q.store_thm(
+"max_error_relative",
+`(∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
+ 0 < n ∧
+ t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
+ error D n x t ≤ k * ∑ (λm. D (t − m − 1) + D (t - m - 1 - (SUC (tap n x) * delay n))) (count ((delay_sum n) -1))
 *)
 
+val input_0 = Q.store_thm(
+"input_0",
+`(FST (input n) = 0) = (n < 3)`,
+srw_tac [][EQ_IMP_THM] >- (
+  qmatch_rename_tac `m < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  qmatch_rename_tac `SUC m < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  qmatch_rename_tac `SUC (SUC m) < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  qmatch_rename_tac `SUC (SUC (SUC m)) < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  qmatch_rename_tac `SUC (SUC (SUC (SUC m))) < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  qmatch_rename_tac `SUC (SUC (SUC (SUC (SUC m)))) < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  qmatch_rename_tac `SUC (SUC (SUC (SUC (SUC (SUC m))))) < 3` [] >>
+  Cases_on `m` >> fsrw_tac [][input_def] >>
+  fsrw_tac [ARITH_ss][] ) >>
+qmatch_rename_tac `FST (input m) = 0` [] >>
+Cases_on `m` >- srw_tac [][input_def] >>
+qmatch_rename_tac `FST (input (SUC m)) = 0` [] >>
+Cases_on `m` >- srw_tac [][input_def] >>
+qmatch_rename_tac `FST (input (SUC (SUC m))) = 0` [] >>
+Cases_on `m` >- srw_tac [][input_def] >>
+fsrw_tac [ARITH_ss][]);
+
+val delay_sum_0 = Q.store_thm(
+"delay_sum_0",
+`(delay_sum n = 0) = (n = 0)`,
+srw_tac [][EQ_IMP_THM,delay_sum_thm] >>
+pop_assum mp_tac >>
+qid_spec_tac `n` >>
+ho_match_mp_tac COMPLETE_INDUCTION >>
+Cases >- srw_tac [][delay_sum_thm] >>
+strip_tac >>
+simp_tac (srw_ss()) [delay_sum_def] >>
+qmatch_rename_tac `delay (FST (input (SUC n))) ≠ 0 ∨ X` ["X"] >>
+`0 < delay (FST (input (SUC n)))` by srw_tac [][delay_above_0] >>
+fsrw_tac [ARITH_ss][]);
+
+val delay_sum_1 = Q.store_thm(
+"delay_sum_1",
+`(delay_sum n = 1) = ((n = 1) ∨ (n = 2))`,
+srw_tac [][EQ_IMP_THM] >>
+srw_tac [][delay_sum_thm] >>
+pop_assum mp_tac >>
+qid_spec_tac `n` >>
+ho_match_mp_tac COMPLETE_INDUCTION >>
+Cases >- srw_tac [][delay_sum_thm] >>
+strip_tac >>
+simp_tac (srw_ss()) [delay_sum_def,ADD_EQ_1,delay_sum_0] >>
+strip_tac >- (
+  fsrw_tac [][input_0] >>
+  qmatch_assum_rename_tac `SUC n < 3` [] >>
+  Cases_on `n` >- fsrw_tac [][input_def] >>
+  qmatch_assum_rename_tac `SUC (SUC n) < 3` [] >>
+  Cases_on `n` >- fsrw_tac [][input_def] >>
+  fsrw_tac [ARITH_ss][] ) >>
+qmatch_assum_rename_tac `delay_sum (FST (input (SUC n))) = 1` [] >>
+`FST (input (SUC n)) < SUC n` by (
+  match_mp_tac input_earlier >>
+  srw_tac [][] ) >>
+res_tac >>
+fsrw_tac [][delay_thm]);
+
+(*
+val max_error_eq = Q.store_thm(
+"max_error_eq",
+`∃D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
+     (!n x t. 0 < n /\ t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
+              (error D n x t = SUC (tap n x) * delay n * k * (delay n + delay_sum n)))`,
+qexists_tac `λn. (n + q) * k` >>
+srw_tac [][] >- (
+  srw_tac [][ABS_DIFF_def,MULT,RIGHT_ADD_DISTRIB] >>
+  DECIDE_TAC ) >>
+`0 < delay n` by srw_tac [][delay_above_0] >>
+`t MOD delay n < delay n` by srw_tac [][MOD_LESS] >>
+`SUC (t - t MOD delay n) > delay_sum n` by DECIDE_TAC >>
+srw_tac [][error_def,output_eq_exact,last_update_thm] >-
+  fsrw_tac [ARITH_ss][] >>
+srw_tac [][exact_def] >>
+qmatch_abbrev_tac `ABS_DIFF (SIGMA f s) (SIGMA g s) = z` >>
+`ABS_DIFF (SIGMA f s) (SIGMA g s) = SIGMA (λx. ABS_DIFF (f x) (g x)) s` by (
+  match_mp_tac (MP_CANON ABS_DIFF_SUM_IMAGE_eq) >>
+  srw_tac [][Abbr`f`,Abbr`g`,Abbr`s`] >>
+  fsrw_tac [ARITH_ss][] >>
+  fsrw_tac [ARITH_ss][NOT_LESS] >> srw_tac [][] >>
+  srw_tac [ARITH_ss][ADD1] >>
+  mp_tac delay_sum_above_0 >>
+  srw_tac [ARITH_ss][] ) >>
+srw_tac [][] >>
+qsuff_tac `∀m. m ∈ s ⇒ (ABS_DIFF (f m) (g m) = k * (delay n + delay_sum n))` >- (
+  strip_tac >>
+  qmatch_abbrev_tac `SIGMA ff s = z` >>
+  Q.ISPECL_THEN [`s`,`ff`,`0`] mp_tac (MP_CANON SUM_SAME_IMAGE) >>
+  `0 ∈ s` by (
+    srw_tac [][Abbr`s`,MULT] >> DECIDE_TAC ) >>
+  `∀q. q ∈ s ⇒ (ff 0 = ff q)` by (
+    srw_tac [][Abbr`s`,Abbr`ff`] ) >>
+  srw_tac [][Abbr`s`,Abbr`z`,Abbr`ff`] >>
+  srw_tac [ARITH_ss][] ) >>
+srw_tac [][Abbr`s`,Abbr`g`] >- DECIDE_TAC >>
+srw_tac [][Abbr`f`] >- DECIDE_TAC >>
+srw_tac [][ABS_DIFF_def] >- (
+  `SUC m + (t - SUC m) = t` by (
+    pop_assum mp_tac >>
+    rpt (pop_assum (K ALL_TAC)) >>
+    DECIDE_TAC ) >>
+  fsrw_tac [][NOT_LESS]
+
+) >>
+  pop_assum mp_tac >>
+  simp_tac (std_ss) [NOT_LESS] >>
+  Cases_on `k=0` >- srw_tac [][] >>
+  fsrw_tac [][NOT_LESS] >>
+  Cases_on `t ≤ SUC m` >- (
+    `t = SUC m` by metis_tac [LESS_EQ_ANTISYM,LESS_OR_EQ] >>
+    srw_tac [][] >>
+    srw_tac [ARITH_ss][] ) >>
+  fsrw_tac [][] >>
+  `SUC m + (t - SUC m) = t` by (
+    srw_tac [ARITH_ss][] ) >>
+  fsrw_tac [][] >>
+  `0 < delay_sum n` by srw_tac [][delay_sum_above_0] >>
+  `delay_sum n + t = SUC t + (delay_sum n - 1)` by (
+    pop_assum mp_tac >>
+    rpt (pop_assum (K ALL_TAC)) >>
+    DECIDE_TAC ) >>
+  `SUC (t - t MOD delay n) = (SUC t) - t MOD delay n` by (
+    `t MOD delay n <= t` by metis_tac [MOD_LESS_EQ]  >>
+    pop_assum mp_tac >>
+    rpt (pop_assum (K ALL_TAC)) >>
+    DECIDE_TAC ) >>
+  fsrw_tac [][] >>
+  strip_tac >>
+  `delay_sum n = 1` by (
+    pop_assum mp_tac >>
+    qpat_assum `0 < delay_sum n` mp_tac >>
+    rpt (pop_assum (K ALL_TAC)) >>
+    DECIDE_TAC ) >>
+  fsrw_tac [][delay_sum_1] >> srw_tac [][delay_sum_thm,delay_thm] >>
+  fsrw_tac [][delay_sum_thm,delay_thm] >> srw_tac [][] >>
+  Cases_on `x` >> fsrw_tac [][tap_def,COUNT_SUC,SUM_IMAGE_count_SUM_GENLIST,NOT_LESS,NOT_LESS_EQUAL,ADD1] >>
+  fsrw_tac [ARITH_ss][] >> srw_tac [][]
+*)
 
 (*
 some sanity checks
