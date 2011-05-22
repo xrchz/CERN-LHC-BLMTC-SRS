@@ -775,13 +775,113 @@ reverse (srw_tac [][Abbr`f`,Abbr`a`,Abbr`b`]) >- (
   fsrw_tac [ARITH_ss][last_update_thm]) >>
 fsrw_tac [ARITH_ss][MULT,last_update_thm])
 
+val ABS_DIFF_SUB_SAME = Q.store_thm(
+"ABS_DIFF_SUB_SAME",
+`!n m p. ABS_DIFF (n - p) (m - p) = if n ≤ p then m - p else if m ≤ p then n - p else ABS_DIFF n m`,
+SRW_TAC [][] THEN1 (
+  `n - p = 0` by SRW_TAC [][] THEN SRW_TAC [][] )
+THEN1 (
+  `m - p = 0` by SRW_TAC [][] THEN SRW_TAC [][] ) THEN
+FULL_SIMP_TAC (srw_ss()) [ABS_DIFF_def,NOT_LESS_EQUAL,GSYM SUB_LESS_0] THEN
+SRW_TAC [ARITH_ss][])
+
+val better_max_error = Q.store_thm(
+"better_max_error",
+`(∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
+ 0 < n ∧
+ t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
+ error D n x t ≤ SUC (tap n x) * delay n * k * (t MOD delay n - 1 + delay_sum n)`,
+srw_tac [][error_def] >>
+`0 < delay n` by srw_tac [][delay_above_0] >>
+`t MOD delay n < delay n` by srw_tac [][MOD_LESS] >>
+`∀m. m < SUC (tap n x) * delay n ⇒ ¬(SUC (last_update n t) < delay_sum n + SUC m)` by (
+  srw_tac [][last_update_thm] >>
+  srw_tac [][SUB_LEFT_SUC] >>
+  DECIDE_TAC ) >>
+srw_tac [][output_eq_exact] >- (
+  first_x_assum (qspec_then `0` mp_tac) >>
+  srw_tac [][MULT] >> DECIDE_TAC ) >>
+srw_tac [][exact_def] >>
+qmatch_abbrev_tac `ABS_DIFF (SIGMA f s) (SIGMA g s) <= p * k * q` >>
+`∀m. m ∈ s ⇒ (f m = D (SUC (last_update n t) - delay_sum n - SUC m))` by (
+  srw_tac [][Abbr`f`,Abbr`s`] ) >>
+`∀m. m ∈ s ⇒ (g m = D (t - SUC m))` by (
+  srw_tac [][Abbr`g`,Abbr`s`] >>
+  DECIDE_TAC ) >>
+qpat_assum `Abbrev (f = X)` (K ALL_TAC) >>
+qpat_assum `Abbrev (g = X)` (K ALL_TAC) >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `SIGMA (λm. ABS_DIFF (f m) (g m)) s` >>
+conj_tac >- srw_tac [][ABS_DIFF_SUM_IMAGE,Abbr`s`] >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `CARD s * (k * (delay_sum n + t MOD delay n - 1))` >>
+conj_tac >- (
+  match_mp_tac (MP_CANON SUM_IMAGE_upper_bound) >>
+  srw_tac [][Abbr`s`] >>
+  qmatch_assum_rename_tac `m < p` [] >>
+  match_mp_tac LESS_EQ_TRANS >>
+  qexists_tac `k * ABS_DIFF (SUC (last_update n t) - delay_sum n - SUC m) (t - SUC m)` >>
+  conj_tac >- srw_tac [][max_diff] >>
+  srw_tac [][last_update_thm] >>
+  Cases_on `k=0` >> srw_tac [][] >>
+  srw_tac [][ABS_DIFF_SUB_SAME] >- DECIDE_TAC >- DECIDE_TAC >>
+  srw_tac [][ABS_DIFF_def] >- DECIDE_TAC >>
+  reverse (fsrw_tac [][NOT_LESS]) >- DECIDE_TAC >>
+  `0 < delay_sum n` by srw_tac [][delay_sum_above_0] >>
+  DECIDE_TAC ) >>
+srw_tac [ARITH_ss][] >>
+srw_tac [][GSYM MULT_ASSOC] >>
+Cases_on `k=0` >> srw_tac [][Abbr`s`] >>
+srw_tac [ARITH_ss][Abbr`q`]);
+
 (*
 val max_error_relative = Q.store_thm(
 "max_error_relative",
 `(∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
  0 < n ∧
  t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
- error D n x t ≤ k * ∑ (λm. D (t − m − 1) + D (t - m - 1 - (SUC (tap n x) * delay n))) (count ((delay_sum n) -1))
+ error D n x t ≤ k * ∑ (λm. D (t − SUC m) + D (t - SUC m - (SUC (tap n x) * delay n))) (count ((delay_sum n) - 1))`,
+srw_tac [][error_def] >>
+`0 < delay n` by srw_tac [][delay_above_0] >>
+`t MOD delay n < delay n` by srw_tac [][MOD_LESS] >>
+`∀m. m < SUC (tap n x) * delay n ⇒ ¬(SUC (last_update n t) < delay_sum n + SUC m)` by (
+  srw_tac [][last_update_thm] >>
+  srw_tac [][SUB_LEFT_SUC] >>
+  DECIDE_TAC ) >>
+srw_tac [][output_eq_exact] >- (
+  first_x_assum (qspec_then `0` mp_tac) >>
+  srw_tac [][MULT] >> DECIDE_TAC ) >>
+srw_tac [][exact_def] >>
+qmatch_abbrev_tac `ABS_DIFF (SIGMA f s) (SIGMA g s) <= k * (SIGMA h u)` >>
+`∀m. m ∈ s ⇒ (f m = D (SUC (last_update n t) - delay_sum n - SUC m))` by (
+  srw_tac [][Abbr`f`,Abbr`s`] ) >>
+`∀m. m ∈ s ⇒ (g m = D (t - SUC m))` by (
+  srw_tac [][Abbr`g`,Abbr`s`] >>
+  DECIDE_TAC ) >>
+qpat_assum `Abbrev (f = X)` (K ALL_TAC) >>
+qpat_assum `Abbrev (g = X)` (K ALL_TAC) >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `SIGMA (λm. ABS_DIFF (f m) (g m)) s` >>
+conj_tac >- srw_tac [][ABS_DIFF_SUM_IMAGE,Abbr`s`] >>
+match_mp_tac LESS_EQ_TRANS >>
+qexists_tac `CARD s * (k * (delay_sum n + t MOD delay n - 1))` >>
+conj_tac >- (
+  match_mp_tac (MP_CANON SUM_IMAGE_upper_bound) >>
+  srw_tac [][Abbr`s`] >>
+  qmatch_assum_rename_tac `m < SUC (tap n x) * delay n` [] >>
+  match_mp_tac LESS_EQ_TRANS >>
+  qexists_tac `k * ABS_DIFF (SUC (last_update n t) - delay_sum n - SUC m) (t - SUC m)` >>
+  conj_tac >- srw_tac [][max_diff] >>
+  srw_tac [][last_update_thm] >>
+  Cases_on `k=0` >> srw_tac [][] >>
+  srw_tac [][ABS_DIFF_SUB_SAME] >- DECIDE_TAC >- DECIDE_TAC >>
+  srw_tac [][ABS_DIFF_def] >- DECIDE_TAC >>
+  reverse (fsrw_tac [][NOT_LESS]) >- DECIDE_TAC >>
+  `0 < delay_sum n` by srw_tac [][delay_sum_above_0] >>
+  DECIDE_TAC ) >>
+srw_tac [ARITH_ss][] >>
+srw_tac [][GSYM MULT_ASSOC] >>
+Cases_on `k=0` >> srw_tac [][Abbr`s`] >>
 *)
 
 val input_0 = Q.store_thm(
