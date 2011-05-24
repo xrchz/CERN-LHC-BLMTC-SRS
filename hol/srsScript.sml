@@ -640,6 +640,33 @@ val exact_def = Define`
 val error_def = Define`
   error D n x t = ABS_DIFF (output D n x t) (exact D n x t)`
 
+val within_def = Define`
+  within p q D n x t = q * (error D n x t) < p * (exact D n x t)`;
+
+val within_wider = Q.store_thm(
+"within_wider",
+`within p q D n x t ∧ (q' <= q) /\ (p <= p') ⇒ within p' q' D n x t`,
+srw_tac [][within_def] >>
+match_mp_tac LESS_EQ_LESS_TRANS >>
+qexists_tac `q * error D n x t` >>
+srw_tac [ARITH_ss][] >>
+match_mp_tac LESS_LESS_EQ_TRANS >>
+qexists_tac `p * exact D n x t` >>
+srw_tac [][]);
+
+val within_MULT = Q.store_thm(
+"within_MULT",
+`0 < m ==> (within p q D n x t = within (p * m) (q * m) D n x t)`,
+srw_tac [ARITH_ss][within_def,EQ_IMP_THM] >>
+fsrw_tac [][LT_MULT_LCANCEL,GSYM MULT_ASSOC]);
+
+val error_bound_within = Q.store_thm(
+"error_bound_within",
+`(0 < exact D n x t) ∧ (error D n x t < b) ==> (within b 1 D n x t)`,
+srw_tac [][within_def,GSYM MULT_ASSOC,LT_MULT_LCANCEL] >>
+match_mp_tac LESS_LESS_EQ_TRANS >>
+qexists_tac `b` >> srw_tac [][]);
+
 val ABS_DIFF_SUC = Q.store_thm(
 "ABS_DIFF_SUC",
 `ABS_DIFF (SUC n) m <= SUC (ABS_DIFF n m) /\
@@ -1067,6 +1094,86 @@ srw_tac [][] >>
 mp_tac delay_sum_above_0 >>
 srw_tac [][] >>
 DECIDE_TAC);
+
+val LEFT_SUM_IMAGE_DISTRIB = Q.store_thm(
+"LEFT_SUM_IMAGE_DISTRIB",
+`!s. FINITE s ==> !n f. (n * (SIGMA f s) = SIGMA (\x. n * f x) s)`,
+HO_MATCH_MP_TAC FINITE_INDUCT THEN
+SRW_TAC [][SUM_IMAGE_THM] THEN
+SRW_TAC [][LEFT_ADD_DISTRIB] THEN
+FULL_SIMP_TAC std_ss [DELETE_NON_ELEMENT]);
+
+val bound_within = Q.store_thm(
+"bound_within",
+`∀k D. (∀t. ABS_DIFF (D t ) (D (SUC t)) ≤ k) ⇒
+   ∀n x t. 0 < n ∧
+           t > SUC (tap n x) * delay n + delay n + delay_sum n ∧
+           (∀m. m < SUC (tap n x) * delay n ⇒ 0 < D (t - SUC m)) ⇒
+  SUC (tap n x) * delay n * k * (delay_sum n - 1 + t MOD delay n)
+  <=
+  (k * (delay_sum n - 1 + t MOD delay n)) * exact D n x t`,
+srw_tac [][exact_def,LEFT_SUM_IMAGE_DISTRIB] >>
+qmatch_abbrev_tac `X <= SIGMA f s` >>
+`∀m. m ∈ s ⇒ (f m = (k * (delay_sum n - 1 + t MOD delay n)) * D (t - SUC m))` by (
+  srw_tac [][Abbr`f`,Abbr`s`] >>
+  DECIDE_TAC ) >>
+qunabbrev_tac `X` >>
+qpat_assum `Abbrev (f = X)` (K ALL_TAC) >>
+qsuff_tac `CARD s * (k * (delay_sum n - 1 + t MOD delay n)) <= SIGMA f s` >- (
+  srw_tac [][Abbr`s`,MULT_ASSOC] ) >>
+match_mp_tac (MP_CANON SUM_IMAGE_lower_bound) >>
+srw_tac [][Abbr`s`]);
+
+val max_relative_error = Q.store_thm(
+"max_relative_error",
+`∀k D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ⇒
+  ∀n x t. 0 < n ∧ t > SUC (tap n x) * delay n + delay n + delay_sum n ∧
+          (∀m. m < SUC (tap n x) * delay n ⇒ 0 < D (t - SUC m)) ⇒
+            error D n x t ≤ (k * (delay_sum n - 1 + t MOD delay n)) * exact D n x t`,
+metis_tac [better_max_error,bound_within,LESS_EQ_TRANS]);
+
+(*
+val bound_within_eq = Q.store_thm(
+"bound_within_eq",
+`∀k. 0 < k ⇒ ∃D.
+  (∀t. ABS_DIFF (D t ) (D (SUC t)) ≤ k) ∧
+  ∀n x t. 0 < n ∧
+          t > SUC (tap n x) * delay n + delay n + delay_sum n ⇒
+  (∀m. m < SUC (tap n x) * delay n ⇒ 0 < D (t - SUC m)) ∧
+  (SUC (tap n x) * delay n * k * (delay_sum n - 1 + t MOD delay n)
+   =
+   (k * (delay_sum n - 1 + t MOD delay n)) * exact D n x t)`,
+gen_tac >> strip_tac >>
+qexists_tac `λt. k * (SUC t)` >>
+srw_tac [][] >- (
+  srw_tac [ARITH_ss][ABS_DIFF_def,MULT_SUC] )
+>- srw_tac [ARITH_ss][MULT_SUC] >>
+srw_tac [][MULT_COMM,MULT_ASSOC] >>
+srw_tac [][GSYM MULT_ASSOC,EQ_MULT_LCANCEL] >>
+disj2_tac >>
+srw_tac [][Once MULT_COMM,SimpLHS] >>
+srw_tac [][Once MULT_COMM,GSYM MULT_ASSOC,SimpLHS] >>
+srw_tac [][Once MULT_COMM,SimpRHS] >>
+srw_tac [][EQ_MULT_LCANCEL] >>
+srw_tac [][exact_def]
+EQ_MULT_RCANCEL
+DB.match [] ``a * b = c * b``
+DB.match [] ``a * b = a * c``
+
+val exact_might_be = Q.store_thm(
+"exact_might_be",
+`∀k. ∃D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k) ∧
+    ∀n x t. 100 * exact D n x t = 20 * SUC (tap n x) * delay n * k`,
+gen_tac >>
+qexists_tac `λt. t * k` >>
+srw_tac [][] >- (
+  srw_tac [ARITH_ss][ABS_DIFF_def,MULT] ) >>
+srw_tac [][exact_def]
+
+val relative_error_eq = Q.store_thm(
+"relative_error_eq",
+`∀k. ∃D. (∀t. ABS_DIFF (D t) (D (SUC t)) ≤ k)
+*)
 
 (*
 some sanity checks
