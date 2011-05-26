@@ -433,16 +433,23 @@ Under such a constraint, we have proved a preliminary result bounding the error 
 For all $k$ and $D$ satisfying $|D\;(t'+1)-D\;t'|\leq k$ at all times, the following holds for all slices $n>0$, tap positions $x$, and times $t$:
 \begin{multline*}
 t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{delay\_sum}\;n\implies\\
-|\mathsf{output}\;D\;n\;x\;t-\mathsf{exact}\;D\;n\;x\;t|\leq(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times(\mathsf{delay}\;n+\mathsf{delay\_sum}\;n)
+|\mathsf{output}\;D\;n\;x\;t-\mathsf{exact}\;D\;n\;x\;t|\leq(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times(\mathsf{delay\_sum}\;n-1+t\operatorname{mod}\mathsf{delay}\;n)
 \end{multline*}
+Furthermore, for all $k$ there exists an input stream $D_k$ satisfying $|D_k\;(t'+1)-D_k\;t'|\leq k$ for all $t'$ and $|\mathsf{output}\;D_k\;n\;x\;t-\mathsf{exact}\;D_k\;n\;x\;t|=(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times(\mathsf{delay\_sum}\;n-1+t\operatorname{mod}\mathsf{delay}\;n)$ for all $n>0$, $x$, and $t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{delay\_sum}\;n$.
 \end{theorem}
 \begin{proof}
-By applying Theorem~\ref{output_eq_exact}, we are left with an equation involving the function $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
+By applying Theorem~\ref{output_eq_exact}, we are left with an inequation involving the function $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
 Our assumption on $t$ ensures that we are never in the $0$ case of either Theorem~\ref{output_eq_exact} or of the definition of $\mathsf{exact}$.
-The function $\mathsf{exact}$ is defined as a sum of consecutive values of $D$, so we simply need to bound the difference between one such sum and another earlier one of the same size.
+The function $\mathsf{exact}$ is defined as a sum of consecutive values of $D$; we need to bound the difference between one such sum and another earlier one of the same size.
 But if at each step the maximum difference is $k$, then the total difference is at most $k$ times the distance between the ends of the two sums, as required.
-(We use the fact that $\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n$ and, in general, that $a\operatorname{mod}b<b$.) \qed
+(We use the fact that $\mathsf{last\_update}\;n\;t=t-t\operatorname{mod}\mathsf{delay}\;n$.)
+The input stream achieving this bound is given by $D_k\;t=k\times t$. \qed
 \end{proof}
+
+Theorem~\ref{max_error} gives a bound on the error of an SRS output at a given time in terms of the time step, the slice and tap numbers, and the assumed bound on the difference between consecutive counts.
+This bound is tight for the conditions we assume, namely that the time step is sufficiently high and that the difference between consecutive counts is bounded, in the sense that it is achievable by an input stream satisfying those conditions.
+To determine whether an error bound is safe, however, it turns out to be more useful to know the relative size of the error as a fraction of the true sum.
+We have not yet characterized the relationship between our error bound at a given time and the true sum at that time.
 
 The proof of Theorem~\ref{max_error} is straightforward when summarized, as above.
 However, as for all of our theorems, there are several non-trivial details underlying the high-level summary provided.
