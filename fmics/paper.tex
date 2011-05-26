@@ -55,6 +55,7 @@ There is a degree of regularity in how the output of each layer is used as input
 There is also a degree of regularity in the timing of each layer with respect to its position in the stack of layers.
 This regularity serves as a basis for inductive reasoning, which makes the amount of verification effort impervious to the number of layers in the structure.
 
+Our interest in using formal methods was originally motivated by questions about the SRS that arose in the course of an external technical audit of the BLMS performed by two of the co-authors, Ghafari and Joyce, and their colleagues.
 Compared to test-based methods, like simulation, formal methods not only offer much higher confidence in the correctness of a system's behavior, but also help improve our understanding of its specification.
 One of the challenges in pursuing a formal verification approach for SRS was capturing the intricate details of the system's specification via experiment and refinement with a team of different backgrounds and expertise.
 Our confidence in the SRS design as a result of this effort ultimately rests upon our deep understanding of why the design is correct rather than the fact that we obtained ``Theorem Proved" as the final output of a software tool.
@@ -88,7 +89,7 @@ Due to demanding performance requirements, BLETCs are implemented on FPGAs, whic
 Figure~\ref{fig:BLETC} shows a block diagram of the processes on a BLETC FPGA.
 In the following, we briefly describe each of the four main processing blocks on a BLETC card.
 
-\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives data directly from the acquisition cards, and attempts to detect and correct erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms~\cite{CRC,8B10B}.
+\emph{(a) Receive, Check, and Compare (RCC)}: The RCC block receives data directly from the acquisition cards, and attempts to detect erroneous transmissions by using Cyclic Redundancy Check and 8B/10B algorithms~\cite{CRC,8B10B}.
 
 \emph{(b) Data Processing}: Whether or not a quench results from particle loss depends on the loss duration and the beam energy.
 Given the tolerance acceptable for quench prevention, the quench threshold versus loss duration is approximated by the minimum number of sliding integration windows (called \emph{running sums}) fulfilling the tolerance.
@@ -100,7 +101,8 @@ The implementation of the SRS block is described in Section~\ref{sec-SRS}.
 The comparator initiates a beam dump request if any of the running sums is higher than its corresponding threshold.
 Beam dump requests are forwarded to the Beam Interlock System which initiates the beam dump.
 There are 12 running sums calculated for each 16-detector channel allocated to a BLETC card.
-The beam energy information is scaled to 32 levels (0.45 to 7 TeV) and each processing module holds data only for those 16 connected detectors.
+There are 32 levels (0.45 to 7 TeV) of beam energy and each processing module holds data only for those 16 connected detectors.
+%The beam energy information is scaled to 32 levels (0.45 to 7 TeV) and each processing module holds data only for those 16 connected detectors.
 Thus, a total of 6,144 threshold values need to be held on each card.
 
 \emph{(d) Logging, Post Mortem and Collimation}:  To be able to trace back the loss signal development, the BLMS stores the loss measurement data.
@@ -209,7 +211,9 @@ HOL4 is an \emph{interactive} theorem prover: the user provides the high level p
 The work described here could have been done using other systems such as HOL Light~\cite{HOLLight}, Isabelle/HOL~\cite{Isabelle}, ProofPower~\cite{ProofPower}, PVS~\cite{PVS} or Coq~\cite{Coq}.
 The first three use essentially the same higher-order logic as HOL4, whilst PVS and Coq support more powerful logics.
 %<What about ACL2?>
-While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving is appropriate for verifying the SRS, since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
+While offering less ``push-button'' automation than other kinds of formal verification such as model-checking, machine-assisted theorem proving using HOL4 is appropriate for verifying the SRS, 
+since it generates correctness theorems; in addition, it gives a way to very explicitly parameterize the model.
+%since it is unlikely that the correctness theorems, which need lemmas proved by manually guided mathematical induction, could be generated automatically.
 
 Our goal is to build a generic model of the SRS structure, and to prove that it satisfies its specification, that it calculates approximate running sums of received count values within acceptable error margins.
 Let $\mathsf{RS}\;n$ denote, as in Figure~\ref{fig:srs}, output $n$ of the SRS structure, which is supposed to compute a sum of received count values, and let $\mathsf{true\_sum}\;n$ denote this sum.
@@ -304,7 +308,11 @@ The function $\mathsf{last\_update}\;n\;t$ returns the latest time not after $t$
 $\;\mathsf{tap}\;0\;0=0\quad\quad$ & $\mathsf{tap}\;0\;x=0$\\
 $\;\mathsf{tap}\;1\;0=1-1\quad$ &  $\mathsf{tap}\;1\;x=2-1$\\
 $\;\mathsf{tap}\;2\;0=8-1\quad$ &  $\mathsf{tap}\;2\;x=16-1$\\
-$\;\dots\quad$ & $\mathsf{tap}\;6\;x=128-1\quad\text{(where each $x>0$)}$\\[1ex]
+$\;\mathsf{tap}\;3\;0=32-1\quad$ &  $\mathsf{tap}\;3\;x=128-1$\\
+$\;\mathsf{tap}\;4\;0=32-1\quad$ &  $\mathsf{tap}\;4\;x=256-1$\\
+$\;\mathsf{tap}\;5\;0=16-1\quad$ &  $\mathsf{tap}\;5\;x=64-1$\\
+$\;\mathsf{tap}\;6\;0=32-1\quad$ &  $\mathsf{tap}\;6\;x=128-1\quad\text{(where each $x>0$)}$\\
+$\;\dots\quad$ & $\mathsf{tap}\;n\;x=0\quad\text{(where $x\geq0$ and $n>6$)}$\\[1ex]
 
 $\;\mathsf{input}\;0=(0,0)\quad$ & $\mathsf{input}\;1=(0,0)$\\
 $\;\mathsf{input}\;2=(0,0)\quad$ & $\mathsf{input}\;3=(1,1)$\\
@@ -394,7 +402,7 @@ Finally, by induction on $n$, we can express $\mathsf{output}\;D\;n\;x\;t$ as a 
 \end{proof}
 
 Since the outputs of a slice stay constant between update times for the slice, Theorem~\ref{output_input_at_update_times} suffices to characterize all outputs at all times.
-Thus, the SRS structure's outputs are equal to the exact running sums of the input counts over windows whose sizes depend on the the width of the slice's shift register and position of the taps.
+Thus, the SRS structure's outputs are equal to the exact running sums of the input counts over windows whose sizes depend on the width of the slice's shift register and position of the taps.
 However, the sums are delayed by the total delay across all previous slices (represented by $\mathsf{delay\_sum}$).
 
 The fact that the SRS calculates exact, but delayed, sums, is captured in the next theorem, which relates $\mathsf{output}\;D\;n\;x\;t$ to $\mathsf{exact}\;D\;n\;x$ at an earlier time.
@@ -478,6 +486,9 @@ One future research direction is to investigate whether constructing such a form
 
 Another future research direction is to refine our formal model to a lower level of abstraction, closer to the hardware level (e.g., by representing count values as finite words instead of natural numbers).
 We are also considering verifying a model extracted from the Hardware Description Language (HDL) used to synthesize the BLETC FPGA.
+\\
+
+{\bf Acknowledgment:} The authors thank Mike Gordon at the University of Cambridge for his insightful and helpful feedback during the course of this work. 
 
 %The BLMS detects beam loss in the form of counts proportional to the number of stray particles. Dangerous loss levels can be expressed as thresholds on the rate of counts over time. The SRS maintains approximate sums of counts over time windows of various sizes, from which loss rates can be calculated. It is preferable for the SRS sum to be above the exact sum over a particular time window, so that dangerous losses are always detected. But stopping the beam when the loss level is not dangerous is time consuming and costly. Therefore, the discrepancy between the SRS sum and the exact sum needs to be small.
 
