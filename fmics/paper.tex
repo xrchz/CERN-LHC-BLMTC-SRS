@@ -86,6 +86,14 @@ Each acquisition card receives data from eight ionization chambers, and each BLE
 A BLETC provides data to the Logging, Post Mortem, and Collimation systems that drive on-line displays in the control room, perform long-term storage for offline analysis, and setup the collimators automatically.
 Due to demanding performance requirements, BLETCs are implemented on FPGAs, which include the resources needed to implement complex processing and can be reprogrammed making them ideal for future upgrades or system specification changes.
 
+\begin{figure}[t]
+  \centering \includegraphics{rs.eps}
+   \caption{Block diagram showing how to produce and maintain a continuous running sum of arriving values.}
+  \label{fig:RS-basic}
+\end{figure}
+
+
+
 Figure~\ref{fig:BLETC} shows a block diagram of the processes on a BLETC FPGA.
 In the following, we briefly describe each of the four main processing blocks on a BLETC card.
 
@@ -113,11 +121,6 @@ Each BLETC card also provides data to the Collimation system for the correct ali
 \section{Successive Running Sums (SRS)}
 \label{sec-SRS}
 
-\begin{figure}[t]
-  \centering \includegraphics{rs.eps}
-   \caption{Block diagram showing how to produce and maintain a continuous running sum of arriving values.}
-  \label{fig:RS-basic}
-\end{figure}
 
 Beam losses can happen at different rates, compared to the number of cycles of the beams around the tunnel.
 One-cycle failures are called \emph{ultra-fast} losses.
@@ -428,17 +431,27 @@ By formulating some characterization of the input stream as constraints on $D$, 
 One of these constraints is a maximum value for the difference between two consecutive input count values.
 This ``maximum jump size'' can be inferred from the highest quench level thresholds.
 
-Under such a constraint, we have proved a preliminary result bounding the error of $\mathsf{output}\;D\;n\;x\;t$ compared to $\mathsf{exact}\;D\;n\;x\;t$.
+Under such a constraint, we have proved the follwoing result bounding the error of $\mathsf{output}\;D\;n\;x\;t$ compared to $\mathsf{exact}\;D\;n\;x\;t$.
 \begin{theorem}\label{max_error}
 For all $k$ and $D$ satisfying $|D\;(t'+1)-D\;t'|\leq k$ at all times, the following holds for all slices $n>0$, tap positions $x$, and times $t$:
 \begin{multline*}
 t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{delay\_sum}\;n\implies\\
-|\mathsf{output}\;D\;n\;x\;t-\mathsf{exact}\;D\;n\;x\;t|\leq(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times(\mathsf{delay\_sum}\;n-1+t\operatorname{mod}\mathsf{delay}\;n)
+|\mathsf{output}\;D\;n\;x\;t-\mathsf{exact}\;D\;n\;x\;t|\leq(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times\\
+(\mathsf{delay\_sum}\;n-1+t\operatorname{mod}\mathsf{delay}\;n)
 \end{multline*}
-Furthermore, for all $k$ there exists an input stream $D_k$ satisfying $|D_k\;(t'+1)-D_k\;t'|\leq k$ for all $t'$ and $|\mathsf{output}\;D_k\;n\;x\;t-\mathsf{exact}\;D_k\;n\;x\;t|=(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times(\mathsf{delay\_sum}\;n-1+t\operatorname{mod}\mathsf{delay}\;n)$ for all $n>0$, $x$, and $t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{delay\_sum}\;n$.
+Furthermore, for all $k$ there exists an input stream $D_k$ satisfying $|D_k\;(t'+1)-D_k\;t'|\leq k$ for all $t'$ and 
+\begin{multline*}
+|\mathsf{output}\;D_k\;n\;x\;t-\mathsf{exact}\;D_k\;n\;x\;t|=(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay\;n})\times k\times\\
+(\mathsf{delay\_sum}\;n-1+t\operatorname{mod}\mathsf{delay}\;n)
+\end{multline*}
+
+for all $n>0$, $x$, and $t>(\mathsf{tap}\;n\;x+1)\times(\mathsf{delay}\;n)+\mathsf{delay}\;n+\mathsf{delay\_sum}\;n$.
+
 \end{theorem}
 \begin{proof}
-By applying Theorem~\ref{output_eq_exact}, we are left with an inequation involving the function $\mathsf{exact}$ but not $\mathsf{output}$, specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
+By applying Theorem~\ref{output_eq_exact}, we are left with an inequation involving the function $\mathsf{exact}$ 
+%but not $\mathsf{output}$
+specifically between $\mathsf{exact}\;D\;n\;x\;t$ and $\mathsf{exact}\;D\;n\;x\;(\mathsf{last\_update}\;n\;t+1-\mathsf{delay\_sum}\;n)$.
 Our assumption on $t$ ensures that we are never in the $0$ case of either Theorem~\ref{output_eq_exact} or of the definition of $\mathsf{exact}$.
 The function $\mathsf{exact}$ is defined as a sum of consecutive values of $D$; we need to bound the difference between one such sum and another earlier one of the same size.
 But if at each step the maximum difference is $k$, then the total difference is at most $k$ times the distance between the ends of the two sums, as required.
@@ -446,9 +459,11 @@ But if at each step the maximum difference is $k$, then the total difference is 
 The input stream achieving this bound is given by $D_k\;t=k\times t$. \qed
 \end{proof}
 
-Theorem~\ref{max_error} gives a bound on the error of an SRS output at a given time in terms of the time step, the slice and tap numbers, and the assumed bound on the difference between consecutive counts.
+Theorem~\ref{max_error} gives a bound on the error of a running sum at a given time in terms of the time step, the slice and tap numbers, and the assumed bound on the difference between consecutive counts.
 This bound is tight for the conditions we assume, namely that the time step is sufficiently high and that the difference between consecutive counts is bounded, in the sense that it is achievable by an input stream satisfying those conditions.
-To determine whether an error bound is safe, however, it turns out to be more useful to know the relative size of the error as a fraction of the true sum.
+To determine whether an error bound is acceptable with respect to the specification of SRS, however, it turns out to be more useful to know the relative size of the error as a fraction of the true sum. 
+According to the specification of SRS, the running sums should have a maximum 20\% relative error (($|\mathsf{RS}\;D\;n\;t - \mathsf{true\_sum}\;D\;n\;t| < 20\%\times(\mathsf{true\_sum}))$.
+%To determine whether an error bound is safe, however, it turns out to be more useful to know the relative size of the error as a fraction of the true sum.
 We have not yet characterized the relationship between our error bound at a given time and the true sum at that time.
 
 The proof of Theorem~\ref{max_error} is straightforward when summarized, as above.
@@ -482,10 +497,11 @@ The formulae we conjectured worked for small values of $n$, and simulating large
 
 The use of mechanized theorem proving to verify the correctness of the SRS behavior complements an intensive verification effort based on simulation performed at CERN.
 This effort targeted the validity of the SRS as an accurate and fast enough method by analyzing its behavior (a) in the boundaries of the threshold limits and (b) in expected types of beam losses, e.g., fast and steady losses.
-Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is, the running sums have a maximum 20\% relative error ($|\mathsf{RS}\;D\;n\;t - \mathsf{true\_sum}\;D\;n\;t| < 20\%\times(\mathsf{true\_sum}))$.
+Its results showed that the current implementation of the SRS, given in Figure~\ref{fig:srs}, satisfies the specification, that is, the running sums have a maximum 20\% relative error.
 
-By contrast, the results in this paper apply to all possible input streams, not just the sample inputs considered at CERN.
-However, the bound proved in Theorem~\ref{max_error} is not tight enough to satisfy the maximum 20\% relative error bound.
+By contrast, the results in this paper apply to all possible input streams, not just the sample inputs considered at CERN -- our main contribution, as stated in Theorem 2, showed that the behavior of the SRS is correct for all possible input streams.
+However, we do not know if the constraint on input stream given in Theorem 3 is sufficient to satisfy the maximum 20\% relative error bound.
+%However, the bound proved in Theorem~\ref{max_error} is not tight enough to satisfy the maximum 20\% relative error bound.
 One of the potential reasons for this problem is not knowing how to characterize the input stream to the SRS.
 Due to the physical nature of this problem, such a characterization of the input stream is not trivial.
 While testing and simulation of the SRS on a limited set of input streams offers a level of confidence that the behavior of SRS satisfies this particular specification, constructing a formal proof for all possible behaviors requires a better understanding of the characteristics of the input stream.
